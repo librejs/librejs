@@ -1,0 +1,158 @@
+2015-01-17 Nik Nyby <nikolas@gnu.org>
+	* Include the Eclipse Public License in license definitions.
+	Thanks to Daniel Ziltener for the patch.
+
+2014-12-06 Nik Nyby <nikolas@gnu.org>
+	* You can now specify multiple licenses for a JavaScript file
+	that's been compiled or concatenated from more than one source
+	file. Info on how to do this is in the manual - search for
+	"Specifying multiple licenses". Thanks to Arne Möhle for
+	starting a discussion that led to this change.
+
+2014-12-06 Nik Nyby <nikolas@gnu.org>
+	* You can now move the "Complain" button out of the way if it's
+	blocking something on the website you're looking at. Thanks to
+	Alexandre Garreau for pointing out this problem.
+
+2014-12-01 Nik Nyby <nikolas@gnu.org>
+	* Applied a patch from Lutz Horn: updating the whitelisted
+	scripts to include some more libraries, and improving the
+	gethash.sh script.
+
+2014-11-30 Nik Nyby <nikolas@gnu.org>
+	* Add support for using the BSD 3-Clause license in a JavaScript
+	Web Labels table. Thanks to Enoch Root for pointing out that this
+	wasn't working.
+	* Add a "Web Labels pages being used for this session" list on
+	the main display panel.
+
+2014-11-20 Nik Nyby <nikolas@gnu.org>
+	* Recognize the JS Web Labels link with data-jslicense=1, as
+	well as rel="jslicense", in case you want the page to be
+	HTML5-valid. Savannah ticket #13366. Thanks to Marco Bresciani
+	for bringing this up.
+	* Fixed a bug on the whitelist page (Tools -> LibreJS) where
+	the "Reset whitelist to default" button wasn't working.
+
+2014-11-10 Nik Nyby <nikolas@gnu.org>
+	* LibreJS now works in private browsing mode, and with Tor.
+	* The complaint email's default subject and body are now
+	configurable.
+
+2014-11-03 Nik Nyby <nikolas@gnu.org>
+	* Fix a bug where the complain button on the main LibreJS panel
+	would never appear.
+
+2014-10-26 Nik Nyby <nikolas@gnu.org>
+	* Fixed bug #43403 - LibreJS was marking all scripts as nonfree
+	if the page returned a 404 status code. Thanks to Rubén
+	Rodríguez for reporting this.
+
+2014-10-25 Nik Nyby <nikolas@gnu.org>
+	* Fixed a bug where some sites would hang until you reload them.
+	Savannah bug #43466
+
+2014-10-24 Nik Nyby <nikolas@gnu.org>
+	* Fixed a bug where the complaint box would sometimes get
+	mis-rendered.
+
+2014-10-22 Nik Nyby <nikolas@gnu.org>
+	* Removed dependency to addon-tab library.
+
+	* Updated node.js libraries for url_handler to node v0.10.33.
+
+2014-10-20 Nik Nyby <nikolas@gnu.org>
+	* Disable JS analysis when JavaScript is turned off in the
+	browser.
+
+2014-08-28 Nik Nyby <nikolas@gnu.org>
+	* Updated Google Analytics regex, and added tests for this.
+
+2014-08-23 Nik Nyby <nikolas@gnu.org>
+	* Fixed a bug on pages with lots of embedded onclick= script
+	attributes.
+
+	* Fixed whitelisting table not loading any whitelisted scripts.
+
+2012-11-25 Loic J. Duros <lduros@gnu.org>
+	* Accepted scripts are displayed at the top of the main panel by
+	default. This allows LibreJS to emphasize those scripts that are
+	allowed, this list being usually shorter than those that are
+	blocked.
+
+	* The script list in the main panel is generated when clicking on
+	the addon toolbar widget instead of at load time. This allows to
+	display those scripts that are embedded dynamically after a
+	certain amount of time (such as with setTimeout and with
+	asynchronous function calls.)
+
+	* A <th> element (table header) in the JS Web Labels table would
+	throw an exception and prevent the JavaScript files from being
+	flagged as free when applicable. (Thanks to Mark Burdett for
+	reporting this issue.)
+
+2012-11-14 Loic J. Duros <lduros@gnu.org>
+	* Fixed issue with JS Web Labels when a Facebook iFrame was found
+	in the JS Web Labels page. (It would prevent page from loading.)
+
+2012-11-06 Loic J. Duros <lduros@gnu.org>
+	* Fixed issue with missing third column in JS Web Labels reported
+	by Mark Burdett. This bug would lead a page to never render if a
+	column was missing from the JS Web Labels table.
+
+	* Now ignoring the fragment part from the canonical URL of
+	licenses. This issue was reported by Nicolas Cesar with the
+	XFree86 URL.
+
+	* More than one canonical URL can now be added to the license
+	definitions, as it is now the case with the XFree86 license that
+	links to both http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3 and
+	the new url http://www.xfree86.org/current/LICENSE4.html that is
+	now commonly used.
+
+	* Packaged with the Addon SDK version 1.11.
+
+	* New and improved scripts for configure and make have been
+	provided by Brandon Invergo.
+
+2012-10-31 Loic J. Duros <lduros@gnu.org>
+	* Fixed character encoding issues with koi8-r and many other
+	  encoding problems.
+	* Fixed issue with about:home and about:startpage, which was
+	  crashing IceCat/Firefox when visiting the page while LibreJS was
+	  enabled.
+	* Now using DOMParser instead of the XUL hidden iframe.
+	* Now using nsIDocumentEncoder instead of the innerHTML hack and
+	  the DOMserializer.
+	* Updated list of free JavaScript libraries from 275 versions to
+	  306 versions.
+
+2012-07-04 Loic J. Duros <lduros@gnu.org>
+	* Bug fix with character encoding of certain pages.
+	* Bug fix with <body> contents which were not parsed properly for
+	certain pages (like article page on money.cnn.com)
+	* Updated list of free libraries.
+
+2012-06-04 Loic J. Duros <lduros@gnu.org>
+	* Try catch clause for request module convert to unicode.
+	  This should fix the gimp.org bug.
+
+2012-05-24 Loic J. Duros lduros@gnu.org
+
+	* Fixed a bug which would block an inline script detected as free
+	under certain circumstances.
+
+	* GNU LibreJS now detects 256 official versions of free libraries
+	using their SHA1 hash, and accepts them as free.
+
+	* Replaced the use of XHR (nsIXMLHttpRequest component) with a new
+	module that creates a channel and listens for the data
+	reception. This makes LibreJS compatible with Https-Everywhere,
+	which ships with IceCat.
+
+	* Now keeps in memory the list of JavaScript files that were
+	listed in a JS Web Labels table. This enables adding scripts that
+	are embedded dynamically to a JS Web Labels table.
+
+	* Escaped a stylesheet variable in complaint feature (per AMO's
+	request)

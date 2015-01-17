@@ -1,0 +1,33 @@
+tr.ui-sortable-helper > td {
+    background: #229ac1 !important;
+}
+
+#whitelist td {
+    max-width: 800px;
+    max-width:350px;
+    word-wrap: break-word;
+}
+
+table#whitelist th {
+    vertical-align: middle;
+}
+
+#rules button {
+    margin-top:0 !important;
+}
+
+.drag-handle {
+    cursor:pointer;
+}
+
+#loadingBox {
+    display:none;
+}
+
+.librejs-banners {
+    text-align: center;
+}
+
+.librejs-controls {
+    margin-bottom: 8px;
+}

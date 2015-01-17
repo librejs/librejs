@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+	  <meta charset="utf-8" />
+	  <title>LibreJS | Whitelist </title>
+
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	  
+	  
+	  <!-- Your styles -->
+	  <link rel="stylesheet" href="styles/styles.css" type="text/css" media="screen" />
+    <script type="text/javascript"> 
+      /**
+      *
+      *    @licstart  The following is the entire license notice for the 
+      *    JavaScript code in this page.
+      * 
+      * 
+      *       Copyright (C) 2011, 2014 Loic J. Duros
+      * 
+      *   The JavaScript code in this page is free software: you can
+      *   redistribute it and/or modify it under the terms of the GNU
+      *   General Public License (GNU GPL) as published by the Free Software
+      *   Foundation, either version 3 of the License, or (at your option)
+      *   any later version.  The code is distributed WITHOUT ANY WARRANTY;
+      *   without even the implied warranty of MERCHANTABILITY or FITNESS
+      *   FOR A PARTICULAR PURPOSE.  See the GNU GPL for more details.
+      * 
+      *   As additional permission under GNU GPL version 3 section 7, you
+      *   may distribute non-source (e.g., minimized or compacted) forms of
+      *   that code without the copy of the GNU GPL normally required by
+      *   section 4, provided you include this license notice and a URL
+      *   through which recipients can access the Corresponding Source.
+      * 
+      * 
+      * 
+      *   @licend  The above is the entire license notice
+      *   for the JavaScript code in this page.
+      *
+      *
+      *
+      */
+    </script>      
+    <link href="third-party/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link media="screen" rel="stylesheet" href="styles/form.css">
+
+    <script src="third-party/jquery/jquery.min.js"></script>
+    <!--<script src="js/form-types.js"></script>-->
+    <script src="js/form-row.js"></script>
+  </head>
+
+  <body>
+    <header id="site-header">
+      <div class="container">
+        <hgroup class="row">
+            <div>
+                <a id="logo" target="_blank"
+                   href="https://www.gnu.org/s/librejs/"
+                   title="LibreJS - Free JavaScript in your browser"
+                   >LibreJS - Free JavaScript in your browser</a>
+            </div>
+        </hgroup>
+      </div>
+    </header>
+
+    <div  id="main">
+      <div id="promotional">
+        <div class="container">
+          <div class="row">
+            <div class="span12">
+              <div class="page-header">
+                <h1>LibreJS | Whitelist</h1>
+              </div>
+              <div>
+                  <div class="btn-group librejs-controls">
+                      <button class="librejs-whitelist-reset btn btn-default">
+                          Reset whitelist to default
+                      </button>
+                  </div>
+                  <table id="whitelist"
+                         class="table table-bordered table-striped">
+                  <thead>
+                    <tr>
+                      <th class="info rule-type">Hash</th>
+                      <th class="info url">URL</th>
+                      <th class="info">Info</th>
+                      <th class="info delete-rule">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+        </div>
+        <div id="loadingBox"><img src="images/ajax-loader.gif"/></div>
+      </div>
+      <div class="librejs-banners">
+          <a href="http://www.gnu.org/philosophy/free-sw.html"
+             ><img src="images/libre.png"></a>
+      </div>
+    </div>
+    <footer>	
+	    <p class="copyrights">
+	      Copyright &copy; 2011, 2012, 2013, 2014 Loic J. Duros<br/>
+	    </p>
+    </footer>
+
+  </body>
+
+</html>

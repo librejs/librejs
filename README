@@ -1,0 +1,33 @@
+GNU LibreJS --an add-on for GNU IceCat and Mozilla Firefox-- detects and
+blocks nonfree nontrivial JavaScript while allowing its execution on
+pages containing code that is either trivial and/or free.
+
+
+Notes on working with the code
+-------------------------------
+== Running the addon ==
+Download Mozilla's Add-on SDK, then do something like this in the LibreJS
+directory:
+
+    cfx run -b `which icecat`
+
+== Testing ==
+Run all tests:
+    cfx test -v -b `which icecat`
+
+Run a single test file:
+    cfx test -v -b `which icecat` -f test-accepted_scripts
+
+== Debugging ==
+Uncomment lines 22 and 23 in lib/main.js to enable printing of
+console.debug() statements.
+
+== Releasing a new version ==
+* Update version number in:
+** configure.ac
+** package.json
+** doc/version.texi
+* Then run `make info` to build the docs with gendocs.sh
+* `bzr commit` and `bzr tag 6.0.4`
+* Export a tarball: bzr export ~/releases/librejs-6.0.4/librejs-6.0.4.tar.gz
+* Make xpi file: cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi

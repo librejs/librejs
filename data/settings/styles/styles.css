@@ -1,0 +1,130 @@
+body {
+    font-size:67.5%;
+    background:#CCC;
+}
+
+#site-header {
+    min-height:130px;
+    position:relative;
+    overflow:hidden;
+}
+
+#logo {
+    background:url('../images/logo-medium.png') top left no-repeat;
+    width:269px;
+    height:119px;
+    display:block;
+    text-indent:-1000em;
+    overflow:hidden;
+    margin:10px 0;
+}
+
+#ribbon {
+    position:absolute;
+    right:-50px;
+    top:-15px;
+    z-index:2;
+}
+
+header nav {
+    position:absolute;
+    bottom:0;
+    right:3em;
+    z-index:3;
+}
+
+header nav ul li {
+    display:inline;
+}
+header nav ul li a {
+    display:block;
+    float:left;
+    background:#916f6f;
+    width:auto;
+    height:10px;
+    padding:10px;
+    text-align:center;
+    margin:0 0.5em;
+    text-decoration:none;
+    color:#000;
+    font-family:Georgia Serif;
+    font-weight:bold;
+    font-size:1.1em;
+}
+header nav ul li a:visited {
+    color:#000;
+}
+
+#main {
+    padding-bottom: 1em;
+    background-color: #ccc;
+}
+div.screenshot img {
+    float:right;
+    display:block;
+}
+.description {
+    padding-top:5px;
+    font-family:Georgia, Serif;
+    font-size:1.2em;
+    line-height:2em;
+}
+article p, article ul {
+    padding-top:1em;
+}
+article li {
+    padding-top:0.7em;
+}
+
+a.download {
+    background:url('../images/button-download.png') top left no-repeat;
+    width:192px;
+    height:57px;
+    display:block;
+    margin:20px auto;
+    overflow:hidden;
+    text-indent:-10000em;
+}
+
+#main ul {
+    list-style-type:disc;
+}
+
+#main h1 {
+    color:#453B35;
+    font-family:arial, sans-serif;
+    font-size:3.5em;
+}
+#main h2 {
+    color:#453B35;
+    font-size:2em;
+    margin:1.5em 0 0;
+}
+#banners {
+    text-align:center;
+    padding:3em 0;
+}
+#banners a {
+    margin:0 5em;
+}
+
+footer p.copyrights {
+    text-align:center;
+    padding:2em 0;
+
+}
+
+figcaption {
+    font-style:italic;
+    font-size:1em;
+    padding:0 3em;
+}
+
+div.intro {
+    padding-top:2em;
+}
+.announcement {
+    color:#453B35;
+    font-size:1.2em;
+    margin:1em 0;
+}

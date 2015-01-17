@@ -1,0 +1,193 @@
+/**
+ * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+ * *
+ * Copyright (C) 2011, 2012, 2014 Loic J. Duros
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see  <http://www.gnu.org/licenses/>.
+ *
+ */
+html {
+    padding:10px;
+    color:#000 !important;
+    background:url('background-panel.png') !important;
+}
+document {
+    padding:10px;
+}
+body {
+    padding:10px;
+    font-size:67.5%;
+    overflow-x:hidden;
+    overflow-y:visible;
+    color:#000;
+}
+
+.libre {
+    width:230px;
+    height:104px;
+    display:block;
+    margin-bottom: 4px;
+}
+h1.libre {
+    font-size:1.5em;
+    font-weight:normal;
+    font-family:Arial;
+    margin:-20px 0 0 0;
+    padding:0;
+    font-weight:bold;
+    background:url('librejs-title.png') no-repeat top left;
+    text-indent:-1000px;
+    overflow:hidden;
+}
+h2 {
+    font-size:1.5em;
+    font-weight:bold;
+    font-family:arial;
+    border-bottom:4px solid #444;
+    padding-bottom:0;
+    margin:30px 0 0 0;
+    width:710px;
+    line-height:140%;
+}
+code {
+    font-size:1.2em;
+    margin:0;
+    padding:0;
+}
+ul {
+    margin:0;
+    padding:0;
+    list-style:none;
+}
+ul.blocked-js li, ul.accepted-js li, ul.dryrun-js li {
+    padding:5px;
+    border-bottom:2px solid #CCC;
+    margin:0;
+    width:700px;
+}
+
+ul ul {
+    margin:10px;
+    list-style:disc;
+}
+ul.blocked-js ul li, ul.accepted-js ul li, ul.dryrun-js ul li {
+    padding:5px;
+    border-bottom:0;
+    width:auto;
+}
+#info {
+    clear:both;
+}
+.button {
+    float:right;
+    padding:10px;
+    display:none;
+    clear:both;
+    margin:10px;
+}
+
+/* 
+   Pure JS button styles below taken from:
+   http://webdesignerwall.com/tutorials/css3-gradient-buttons
+   */
+.button {
+    display: inline-block;
+    outline: none;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    font: 14px/100% Arial, Helvetica, sans-serif;
+    padding: .5em 2em .55em;
+    text-shadow: 0 1px 1px rgba(0,0,0,.3);
+    -webkit-border-radius: .5em; 
+    -moz-border-radius: .5em;
+    border-radius: .5em;
+    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,.2);
+}
+.small.button {
+    font-size:11px;
+    padding:.5em .5em;
+    margin-top:10px;
+}
+.button:hover {
+    text-decoration: none;
+}
+.button:active {
+    position: relative;
+    top: 1px;
+}
+.orange {
+    color: #fef4e9;
+    border: solid 1px #da7c0c;
+    background: #f78d1d;
+    background: -webkit-gradient(linear, left top, left bottom, from(#faa51a), to(#f47a20));
+    background: -moz-linear-gradient(top,  #faa51a,  #f47a20);
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#faa51a', endColorstr='#f47a20');
+}
+.orange:hover {
+    background: #f47c20;
+    background: -webkit-gradient(linear, left top, left bottom, from(#f88e11), to(#f06015));
+    background: -moz-linear-gradient(top,  #f88e11,  #f06015);
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f88e11', endColorstr='#f06015');
+}
+.orange:active {
+    color: #fcd3a5;
+    background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
+    background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
+    filter:  progid:DXImageTransform.Microsoft.gradient(startColorstr='#f47a20', endColorstr='#faa51a');
+}
+.white {
+    background: -moz-linear-gradient(center top , #FFFFFF, #EDEDED) repeat scroll 0 0 transparent;
+    border: 1px solid #B7B7B7;
+    /*    color: #606060;*/
+    color:#9d0d0d;
+}
+.white:hover {
+    background: -moz-linear-gradient(center top , #FFFFFF, #DCDCDC) repeat scroll 0 0 transparent;
+}
+.white:active {
+    background: -moz-linear-gradient(center top , #EDEDED, #FFFFFF) repeat scroll 0 0 transparent;
+/*color: #999999;*/
+    
+}
+
+span.accepted, span.blocked {
+    color:#008e00;
+    font-size:145%;
+    font-variant:small-caps;
+    font-weight:bold;
+}
+ul.blocked-js li {
+    overflow:hidden;
+}
+span.blocked {
+    color:#8e0000;
+}
+
+.title-area {
+    width: 230px;
+    text-align: center;
+}
+
+.title-area #librejs-web-link {
+    font-size: 18px;
+}
+
+#librejs-web-labels-pages>ul {
+    margin-top: 8px;
+    font-size: 14px;
+    list-style-type: disc;
+}

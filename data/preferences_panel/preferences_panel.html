@@ -1,0 +1,71 @@
+<html>
+  <head>
+<!-- /**
+ * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+ * *
+ * Copyright (C) 2011, 2012, 2014 Loic J. Duros
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see  <http://www.gnu.org/licenses/>.
+ *
+ */
+-->
+    <title>
+      LibreJS preferences
+    </title>
+    <style>
+      body > div {
+        border: 1px black;
+      }
+      div.choice {
+      background: #555;
+      color:#c4c4c4;
+      margin:10px;
+
+      padding:10px;
+      font-size:13px;
+      clear:both;
+      overflow:hidden;
+      }
+      input {
+      float:left;
+      display:inline;
+      }
+      div.choice p {
+      display:block;
+      width:200px;
+      float:left;
+      margin-left:0;
+      }
+      span.notdone {
+      color:red;
+      }
+      #pref_whitelist {
+      width:240px;
+      }
+    </style>
+    
+  </head>
+ 
+  <body>
+    <h3>
+      LibreJS Preferences
+    </h3>
+    <div>
+      <div>
+	<div class="choice">
+        <input id="pref_nolazy" type="checkbox"/><p>Do not consider lazy license mentions as free (e.g.: dual-licensed under MIT and GPL, ...)</p>
+	</div>
+   </div>
+  </body>
+</html>

@@ -1,0 +1,109 @@
+# GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+# 
+# Copyright (C) 2011, 2012, 2014 Loic J. Duros
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see  <http://www.gnu.org/licenses/>.
+
+SHELL := /bin/bash
+
+DESTDIR =
+ADDON_SDK = /opt/addon-sdk
+srcdir = @srcdir@
+VPATH = @srcdir@
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+libdir = @libdir@
+bindir = @bindir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+infodir = @infodir@
+htmldir= = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+apphash = {ec8030f7-c20a-464f-9b0e-13a3a9e97384}
+extdir = ${libdir}/mozilla/extensions/${exthash}
+
+MAKEINFO = @MAKEINFO@
+TEXI2HTML = $(MAKEINFO) --no-split --html
+TEXI2ANY = @TEXI2ANY@
+TEXI2DVI = @TEXI2DVI@
+TEXI2PDF = @TEXI2PDF@
+INSTALL = @INSTALL@
+INSTALL_DATA = ${INSTALL} -m644 -D
+INSTALL_MSG = "\
+Depending on your version of the Mozilla-browser, if LibreJS is not \
+enabled already, you may, inside your Mozilla-browser, need to go in \
+the menu in Tools > Add-ons and click enable where you see LibreJS. \
+"
+
+CFX_ARGS =
+
+all: xpi
+
+install: xpi info
+	$(NORMAL_INSTALL)
+	$(INSTALL_DATA) librejs.xpi $(DESTDIR)$(extdir)/jid1-KtlZuoiikVfFew@jetpack.xpi
+	$(POST_INSTALL)
+	-if test -f doc/librejs.info; then d=.; \
+	else d=$(srcdir); fi; \
+	$(INSTALL_DATA) $$d/doc/librejs.info $(DESTDIR)$(infodir)/librejs.info; \
+        if $(SHELL) -c 'install-info --version' \
+           >/dev/null 2>&1; then \
+          install-info --dir-file=$(DESTDIR)$(infodir)/dir \
+                       $(DESTDIR)$(infodir)/librejs.info; \
+        else true; fi
+	@echo $(INSTALL_MSG)
+
+install-pdf: pdf
+	$(INSTALL_DATA) $(srcdir)/doc/librejs.pdf $(pdfdir)
+
+install-dvi: dvi
+	$(INSTALL_DATA) $(srcdir)/doc/librejs.dvi $(dvidir)
+
+install-html: html
+	$(INSTALL_DATA) $(srcdir)/doc/librejs.html $(htmldir)
+
+uninstall:
+	@rm $(DESTDIR)$(extdir)/jid1-KtlZuoiikVfFew@jetpack.xpi
+	@rm -rf $(DESTDIR)$(extdir)
+
+clean:
+	@rm -f librejs.xpi
+
+distclean: clean
+	@rm -rf autom4te.cache
+	@rm -f config.log
+	@rm -f config.status
+	@rm -f $(srcdir)/doc/librejs.info
+	@rm -f $(srcdir)/doc/manual/librejs.html
+	@rm -f $(srcdir)/doc/manual/librejs.html.gz
+	@rm -f $(srcdir)/doc/manual/librejs.pdf
+	@rm -f $(srcdir)/doc/manual/librejs.dvi
+	@rm -f $(srcdir)/doc/manual/librejs.dvi.gz
+	@rm -f $(srcdir)/doc/manual/librejs.txt
+	@rm -f $(srcdir)/doc/manual/librejs.txt.gz
+
+dist:
+
+info: doc/librejs.info
+	cd doc && gendocs.sh --email bug-librejs@gnu.org librejs "GNU LibreJS Manual"
+
+xpi: librejs.xpi
+
+librejs.xpi:
+	cd $(ADDON_SDK) && source bin/activate && cd - && cfx $(CFX_ARGS) xpi
+
+.PHONY: all install install-pdf install-dvi install-html uninstall clean \
+	distclean info pdf dvi html xpi txt

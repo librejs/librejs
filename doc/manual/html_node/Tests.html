@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- This manual is for GNU LibreJS (version 6.0.8.20150117, 17 January 2015),
+a GNU IceCat extension to detect and block nonfree nontrivial
+JavaScript on webpages.
+
+Copyright (C) 2011 2012 2014 Loic J. Duros
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+"GNU Free Documentation License". -->
+<!-- Created by GNU Texinfo 5.2, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>GNU LibreJS 6.0.8.20150117: Tests</title>
+
+<meta name="description" content="GNU LibreJS 6.0.8.20150117: Tests">
+<meta name="keywords" content="GNU LibreJS 6.0.8.20150117: Tests">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="index.html#Top" rel="start" title="Top">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="index.html#Top" rel="up" title="Top">
+<link href="GNU-Free-Documentation-License.html#GNU-Free-Documentation-License" rel="next" title="GNU Free Documentation License">
+<link href="LibreJS-Internals.html#LibreJS-Internals" rel="prev" title="LibreJS Internals">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Tests"></a>
+<div class="header">
+<p>
+Next: <a href="GNU-Free-Documentation-License.html#GNU-Free-Documentation-License" accesskey="n" rel="next">GNU Free Documentation License</a>, Previous: <a href="LibreJS-Internals.html#LibreJS-Internals" accesskey="p" rel="prev">LibreJS Internals</a>, Up: <a href="index.html#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<hr>
+<a name="Tests-1"></a>
+<h2 class="appendix">Appendix C Tests</h2>
+
+
+<p>In order to better understand how LibreJS works, you can try to visit
+these pages with LibreJS installed and enabled and see how they are
+being processed:
+</p>
+<ul>
+<li> <a href="http://lduros.net/assets/librejs/tests/trivial-inline-trivial-external/">http://lduros.net/assets/librejs/tests/trivial-inline-trivial-external/</a>
+This page contains trivial on-page JavaScript code, and an external
+script that contains trivial JavaScript code.  Therefore, all JavaScript
+is being executed.
+
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/trivial-inline-nontrivial-external/">http://lduros.net/assets/librejs/tests/trivial-inline-nontrivial-external/</a>
+The on-page script here is trivial and uses a built-in method, but the
+external script in this page is nontrivial (defines a function.)  The
+external script is blocked, the inline script is executed.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/nontrivial-inline-trivial-external/">http://lduros.net/assets/librejs/tests/nontrivial-inline-trivial-external/</a>
+This page contains nontrivial code on page, and trivial code in its
+external page.  All JavaScript is <em>removed</em> from the page, and the
+external script is never analyzed, since the nontrivial conditions are
+already met in the page.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/free-inline-free-external/">http://lduros.net/assets/librejs/tests/free-inline-free-external/</a>
+This page contains free on-page (GPL 3) JavaScript, and free external
+Javascript. Therefore all JavaScript is being executed.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/free-inline-nonfree-nontrivial-external/">http://lduros.net/assets/librejs/tests/free-inline-nonfree-nontrivial-external/</a>
+This page contains free on-page JavaScript. The external script contains
+nonfree nontrivial JavaScript (AJAX request). The free code that is
+inline is executed, but the external file is blocked.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/intrinsec-event/">http://lduros.net/assets/librejs/tests/intrinsec-event/</a> This page
+contains trivial on-page code, with an intrinsic event in an html
+attribute (onload).  All JavaScript is being executed.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/trivial-inline-free-external-defines-function/">http://lduros.net/assets/librejs/tests/trivial-inline-free-external-defines-function/</a>
+This page contains on-page trivial JavaScript (only makes a window alert
+and loads an external script using the html &lt;script&gt; tag with the src
+attribute. The external script is free (GPL v3), and since it is only
+nontrivial because it defines a function, the on-page trivial code is
+allowed to use it.  All JavaScript is being executed.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/trivial-inline-free-external-writes-script/">http://lduros.net/assets/librejs/tests/trivial-inline-free-external-writes-script/</a>
+This page contains trivial on-page JavaScript code, and loads an
+external script that is free. Since no function is defined, the external
+script is being analyzed. The external script is free. Trivial here is
+not allowed because the external script, although free, writes a
+script. The inline trivial script should also have a free license notice
+for it to be interpreted.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/shelltypist/demo/real-life-example-with-jquery-free.html">http://lduros.net/assets/librejs/tests/shelltypist/demo/real-life-example-with-jquery-free.html</a>
+This is a real-life example of a small jQuery plugin. The on-page
+JavaScript code has a free license. The jQuery external file has a free
+licensed. The shelltypist.js file has a free license as well. All
+licenses are defined between <code>@licstart</code> and <code>@licend</code>. All
+JavaScript is executed.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/shelltypist/demo/same-page-without-free-license.html">http://lduros.net/assets/librejs/tests/shelltypist/demo/same-page-without-free-license.html</a>
+This is the same page than the previous example, except it does not have
+a free license for the main HTML page on-page script. While the actual
+code there is trivial, since jQuery defines methods that make use of
+AJAX, trivial code is not allowed, and no JavaScript is executed.
+
+</li><li> <a href="http://lduros.net/assets/librejs/tests/test-labels/">http://lduros.net/assets/librejs/tests/test-labels/</a> This page
+contains JavaScript (jQuery minified) that does not have proper license
+information in the file, as it has no <code>@licstart</code> <code>@licend</code>
+comment. It would be considered nonfree, however, the page itself uses
+the JavaScript Web Labels method. On the page itself, you will find a
+link labeled &ldquo;JavaScript License Information&rdquo;, which leads to a page
+that contains a properly formatted table with the required data on the
+external JavaScript file. LibreJS visits this link and determines the
+version of jQuery linked from the original page is the one listed there,
+and flags it as free. All JavaScript is executed (and the title should
+turn green.)
+
+</li></ul>
+
+
+<hr>
+<div class="header">
+<p>
+Next: <a href="GNU-Free-Documentation-License.html#GNU-Free-Documentation-License" accesskey="n" rel="next">GNU Free Documentation License</a>, Previous: <a href="LibreJS-Internals.html#LibreJS-Internals" accesskey="p" rel="prev">LibreJS Internals</a>, Up: <a href="index.html#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+
+
+
+</body>
+</html>

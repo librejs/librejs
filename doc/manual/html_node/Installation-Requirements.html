@@ -1,0 +1,132 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<!-- This manual is for GNU LibreJS (version 6.0.8.20150117, 17 January 2015),
+a GNU IceCat extension to detect and block nonfree nontrivial
+JavaScript on webpages.
+
+Copyright (C) 2011 2012 2014 Loic J. Duros
+
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+"GNU Free Documentation License". -->
+<!-- Created by GNU Texinfo 5.2, http://www.gnu.org/software/texinfo/ -->
+<head>
+<title>GNU LibreJS 6.0.8.20150117: Installation Requirements</title>
+
+<meta name="description" content="GNU LibreJS 6.0.8.20150117: Installation Requirements">
+<meta name="keywords" content="GNU LibreJS 6.0.8.20150117: Installation Requirements">
+<meta name="resource-type" content="document">
+<meta name="distribution" content="global">
+<meta name="Generator" content="makeinfo">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href="index.html#Top" rel="start" title="Top">
+<link href="index.html#SEC_Contents" rel="contents" title="Table of Contents">
+<link href="index.html#Top" rel="up" title="Top">
+<link href="LibreJS-Internals.html#LibreJS-Internals" rel="next" title="LibreJS Internals">
+<link href="Setting-Your-JavaScript-Free.html#Setting-Your-JavaScript-Free" rel="prev" title="Setting Your JavaScript Free">
+<style type="text/css">
+<!--
+a.summary-letter {text-decoration: none}
+blockquote.smallquotation {font-size: smaller}
+div.display {margin-left: 3.2em}
+div.example {margin-left: 3.2em}
+div.indentedblock {margin-left: 3.2em}
+div.lisp {margin-left: 3.2em}
+div.smalldisplay {margin-left: 3.2em}
+div.smallexample {margin-left: 3.2em}
+div.smallindentedblock {margin-left: 3.2em; font-size: smaller}
+div.smalllisp {margin-left: 3.2em}
+kbd {font-style:oblique}
+pre.display {font-family: inherit}
+pre.format {font-family: inherit}
+pre.menu-comment {font-family: serif}
+pre.menu-preformatted {font-family: serif}
+pre.smalldisplay {font-family: inherit; font-size: smaller}
+pre.smallexample {font-size: smaller}
+pre.smallformat {font-family: inherit; font-size: smaller}
+pre.smalllisp {font-size: smaller}
+span.nocodebreak {white-space:nowrap}
+span.nolinebreak {white-space:nowrap}
+span.roman {font-family:serif; font-weight:normal}
+span.sansserif {font-family:sans-serif; font-weight:normal}
+ul.no-bullet {list-style: none}
+-->
+</style>
+
+
+</head>
+
+<body lang="en" bgcolor="#FFFFFF" text="#000000" link="#0000FF" vlink="#800080" alink="#FF0000">
+<a name="Installation-Requirements"></a>
+<div class="header">
+<p>
+Next: <a href="LibreJS-Internals.html#LibreJS-Internals" accesskey="n" rel="next">LibreJS Internals</a>, Previous: <a href="Setting-Your-JavaScript-Free.html#Setting-Your-JavaScript-Free" accesskey="p" rel="prev">Setting Your JavaScript Free</a>, Up: <a href="index.html#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<hr>
+<a name="Installation-Requirements-1"></a>
+<h2 class="appendix">Appendix A Installation Requirements</h2>
+
+
+<a name="Mozilla-Browser"></a>
+<h3 class="appendixsec">A.1 Mozilla Browser</h3>
+
+<p>You will need one of the many flavors of the Mozilla browser to use
+LibreJS. It can be installed on the following:
+</p>
+<p>GNU IceCat,  Mozilla Firefox, Trisquel Abrowser, Debian Iceweasel.
+</p>
+<p>LibreJS works on these browsers starting from version 29. We
+recommend that you use the latest version of your Mozilla browser.
+LibreJS has been tested extensively on multiple GNU/Linux distributions,
+but it is compatible any operating system as long as you&rsquo;re using a
+compatible Mozilla browser.
+</p>
+<a name="Mozilla_0027s-Add_002don-SDK"></a>
+<h3 class="appendixsec">A.2 Mozilla&rsquo;s Add-on SDK</h3>
+<p>LibreJS uses the Mozilla Add-on SDK (Software Development Kit), a
+set of APIs and tools to create add-ons for Mozilla browsers.
+</p>
+<p>You do not need the Add-on SDK to use LibreJS xpi file or to install it
+using the packaged version, but it is required in order to package the
+LibreJS source code into an xpi file using <code>make</code>. If you would like
+to run the tests for LibreJS or make changes to the source files, you
+will need the Add-on SDK as well. For the &ldquo;make&rdquo; command to work
+properly, you must have the <code>cfx</code> command available on your system
+from the command line.
+</p>
+<p>The latest tarball for the Add-on SDK is available at:
+</p>
+<p><a href="https://ftp.mozilla.org/pub/mozilla.org/labs/jetpack/jetpack-sdk-latest.tar.gz">https://ftp.mozilla.org/pub/mozilla.org/labs/jetpack/jetpack-sdk-latest.tar.gz</a>
+</p>
+<p>Instructions on how to get it working are available here:
+</p>
+<p><a href="https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/tutorials/installation.html">https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/tutorials/installation.html</a>
+</p>
+<p>In order to use <code>make</code> with LibreJS source, however, it is ideal to
+have <code>cfx</code> available at all times and for all users.
+</p>
+<p>An easy way to do this is to extract the contents of the tarball and to
+place the files inside <samp>/usr/lib/addon-sdk</samp> and then creating a
+symbolic link in <samp>/usr/bin</samp>, as follows:
+</p>
+<div class="example">
+<pre class="example">sudo ln -s /usr/lib/addon-sdk/bin/cfx /usr/bin/cfx
+</pre></div>
+
+<p>The <code>cfx</code> command will then be available to all users.
+</p>
+<p>The Add-on SDK is released under the Mozilla Public License 2.0.
+</p>
+<hr>
+<div class="header">
+<p>
+Next: <a href="LibreJS-Internals.html#LibreJS-Internals" accesskey="n" rel="next">LibreJS Internals</a>, Previous: <a href="Setting-Your-JavaScript-Free.html#Setting-Your-JavaScript-Free" accesskey="p" rel="prev">Setting Your JavaScript Free</a>, Up: <a href="index.html#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="index.html#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+
+
+
+</body>
+</html>

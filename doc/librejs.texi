@@ -1,0 +1,878 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename librejs.info
+@include version.texi
+@settitle GNU LibreJS @value{VERSION}
+
+@copying
+This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}),
+a GNU IceCat extension to detect and block nonfree nontrivial
+JavaScript on webpages.
+
+Copyright @copyright{} 2011 2012 2014 Loic J. Duros
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+``GNU Free Documentation License''.
+@end quotation
+@end copying
+
+@dircategory GNUzilla
+@direntry
+* LibreJS: (librejs).               Detect nonfree nontrivial in GNU Icecat
+@end direntry
+
+@titlepage
+@title GNU LibreJS
+@subtitle for version @value{VERSION}, @value{UPDATED}
+@author Loic J. Duros  (@email{librejs@@lduros.net})
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+
+@contents
+
+
+@node Top
+@top LibreJS
+This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}).
+
+@menu
+* Overview::                            General purpose and information.
+* Disclaimer::                          Emphasize what LibreJS does and does not.
+* Installation::                        Installing LibreJS from source. 
+* How to Use::                          How to use LibreJS in IceCat.
+* JavaScript Detection::                How LibreJS detects nontrivial Javascript.
+* Free Licenses Detection::             List of licenses detected by LibreJS.
+* Setting Your JavaScript Free::        Information for website owners/maintainers.
+* Installation Requirements::           Requirements to build and install LibreJS.
+* LibreJS Internals::                   How LibreJS works under the hood.
+* Tests::                               Test LibreJS and better understand it.
+* GNU Free Documentation License::      Copying and sharing this documentation.
+@end menu
+
+@node Overview
+@chapter Overview
+
+@cindex overview
+GNU LibreJS ---an add-on for GNU IceCat and Mozilla Firefox--- detects
+and blocks nonfree nontrivial JavaScript while allowing its execution on
+pages containing code that is either trivial and/or free.
+
+Many websites run nontrivial JavaScript on your computer. Some use it
+for complex tasks; many use it gratuitously for minor jobs that could be
+done easily with plain HTML.  Sometimes this JavaScript code is
+malicious.  Either way, the JavaScript code is often nonfree.  For
+explanation of the issue, see "The JavaScript
+Trap"(@url{http://www.gnu.org/philosophy/javascript-trap.html}).
+
+If you care about freedom in your computing, and don't wish to let all
+and sundry make you run nonfree programs, now you can prevent it by
+using LibreJS.
+
+
+@node Disclaimer
+@chapter Disclaimer
+
+@cindex disclaimer
+
+@itemize @bullet
+@item
+LibreJS is not a security tool. Its goal is to detect nonfree nontrivial
+JavaScript, and it currently does not detect whether free or trivial
+code is malicious or not. Other free Mozilla extensions and add-ons may
+be available for this purpose.
+
+@item
+LibreJS is always a work in progress. If you find a bug, please report
+it to @email{bug-librejs@@gnu.org}.
+
+@end itemize
+
+@node Installation
+@chapter Installation
+@cindex Installation
+
+You can install LibreJS directly using a generated @file{librejs.xpi}
+file, or by building it from source.
+
+
+@section Building the Package
+After enabling the Add-on SDK, you should be able to use the @code{make}
+command to build LibreJS from source.
+
+After running @code{make}, a new file, @file{librejs.xpi} should be
+generated. This is the file that can be installed in a Mozilla browser. 
+
+@section Installing LibreJS
+To install the add-on for all users, run:
+@example 
+sudo make install
+@end example
+
+or as root:
+@example
+make install
+@end example
+
+Next time you open a Mozilla-browser as a user of your system, you
+should be notified that a new add-on (in this case, LibreJS) as been
+installed and whether to allow it to run or not.
+
+@node How to Use
+@chapter How to Use
+
+@section LibreJS in action
+
+After installing the add-on, you will see the LibreJS widget in the
+add-on bar at the bottom of the browser window.  After loading a page,
+left-click on the widget to view the deactivated JavaScript code from
+the page (both on page and external) and, if applicable, the scripts
+that were accepted.
+
+@section Complaint Feature
+
+It is very important to complain when a site has nonfree JavaScript
+code, especially if it won't work without that code.  LibreJS makes it
+easy to complain by heuristically finding where to send the complaint.
+
+When nonfree/nontrivial code is detected in a page, LibreJS attempts to
+find a relevant contact link or email for the website you are
+visiting. In order to do so, it will attempt to visit a few links from
+the current page (for instance, a link labeled ``contact'' on the same
+domain as the current page, @dots{})
+
+LibreJS detects contact pages, email addresses that are likely to be
+owned by the maintainer of the site, Twitter and identi.ca links, and
+phone numbers.
+
+After LibreJS detects any of the above, a ``Complain'' tab will appear
+on the right of your web browser. When you click on this tab, a large
+panel will appear with contact information. Ideally, at the top you will
+find the email address of the maintainer, labeled as the ``Email you
+should use''.
+
+When you complain to the website for their nonfree nontrivial
+JavaScript, provide them with the link to the JavaScript Trap essay so
+that they can get more information on what the issue is and how they can
+solve it on their own site.
+
+LibreJS includes a default subject line and body for the complaint email,
+with a link to the JavaScript Trap essay. This can be configured in the
+LibreJS add-on preferences in your web browser.
+
+
+@section Options
+
+@table @dfn
+@item Whitelist
+LibreJS lets you whitelist domain names and subdomains to bypass the
+regular JavaScript check. This might be useful, for example, if you are
+running your own code in a local web server. In order to add a
+whitelisted domain or url, go to Tools >> Add-ons, or press @kbd{Control
++ Shift + A}. Inside the add-on window, click on @dfn{Extensions}, and in
+the list, where you see LibreJS, click on the @dfn{Preferences} button.
+You will see an input field labeled @dfn{Whitelist}. In the field,
+enter comma-separated domain names. Do not enter the protocol. For
+instance to whitelist all the pages of @url{http://www.gnu.org} and
+@url{https://gnu.org}, enter @samp{gnu.org}. To allow all subdomains from
+gnu.org, enter: @samp{*.gnu.org}. This will match such sites as
+@url{http://savannah.gnu.org} and @url{http://audio-video.gnu.org}.
+
+@item Complaint tab
+This specifies whether the complaint tab appears when a site is running
+nonfree JavaScript.
+
+@item Display notifications of JavaScript analysis
+This option enables an info bar of realtime JavaScript analysis.
+
+@item Complaint email subject
+Configure the default subject used in complaint emails.
+
+@item Complaint email body
+Configure the default body used in complaint emails.
+@end table
+
+@node JavaScript Detection
+@chapter JavaScript Detection
+@cindex javascript
+
+@itemize
+LibreJS considers JavaScript on a page nontrivial if any of the
+following are true:
+
+@item
+It makes an AJAX request or is loaded along with scripts that make
+an AJAX request,
+
+@item
+It loads external scripts dynamically or is loaded along with
+scripts that do,
+
+@item
+It defines functions or methods and either loads an external script
+(from HTML) or is loaded as one,
+
+@item
+It uses dynamic JavaScript constructs that are difficult to analyze
+without interpreting the program or is loaded along with scripts
+that use such constructs. These constructs are:
+@itemize
+@item
+Using the eval function
+@item
+Calling methods with the square bracket notation
+@item
+Using any other construct than a string literal with certain methods
+(@code{Obj.write}, @code{Obj.createElement}, @dots{}).
+@end itemize
+@end itemize
+
+In practice, the JavaScript code in your page may be found trivial by
+LibreJS if, as a whole:
+@itemize @bullet
+
+@item
+It does not define functions and it does not load external scripts
+(with the HTML src attribute in a @code{<script>} tag).
+
+@item
+It does not make AJAX calls.
+
+@item
+It does not load external scripts with dynamic constructs.
+
+@item
+It does not use constructs that may be used to do any of the above in
+a non-obvious way (use of the @code{eval()} method, use of square bracket
+method calls, use of concatenation with certain constructs or method
+calls, @dots{}).
+
+@end itemize
+
+However, in some instances, you may be required by LibreJS to add a
+stylized comment to JavaScript code that may be otherwise trivial.
+
+When an external file defines a function, it becomes available
+to all other external scripts. That is the case if another script
+defines a function that makes AJAX calls, when an external script
+loads other scripts dynamically (which in turn could also make AJAX
+calls, @dots{}), or when a script is written with constructs that may do
+any of these.
+
+For instance, if your page contains the following:
+@example
+<script src="jquery.js"></script>
+<script>
+$.doSomething();
+</script>
+@end example
+
+While @code{$.doSomething();} may seem trivial, you will nevertheless
+have to add a stylized license comment on your main HTML page because
+the external script (in this case jQuery) has been found to define
+methods that make AJAX calls. @code{$.doSomething()} might make an AJAX call,
+and LibreJS does not check for that.  The rule of thumb is that when you
+use a library or code that handles AJAX, JSON, JSONP, the loading of
+scripts dynamically, you should have license mentions for all your
+JavaScript files and for your main page regardless. In practice this is
+a case that happens very often with code that uses libraries.
+
+In practice also, the JavaScript code in an external file (an external
+@file{.js} file loaded on your page) may be found trivial if it does not
+define functions/methods.
+
+And in the same manner it will be considered nontrivial if AJAX calls,
+dynamic script loading, or non-obvious dynamic JavaScript constructs
+are used in another script.
+
+If your JavaScript code makes AJAX requests, it's important to get an
+accurate @dfn{Content-Type} in the response from the server. For
+example, if you're using JSON, set it to @code{application/json}.
+This is because LibreJS alters the content of @code{text/html}
+responses.
+
+@node Free Licenses Detection
+@chapter Free Licenses Detection
+@cindex freelicenses
+
+@section Detected Free Licenses
+
+In order for a file to be detected as free, the license notice should
+appear in a JavaScript file above all code, at the very top of the file.
+
+For inline JavaScript code inside @code{<script>} tags in HTML pages,
+the license notice should appear once per page as a comment inside a
+@code{<script>} tag, before all the code in that script. When the only
+inline JavaScript code is within element attributes (@code{onload},
+@code{onclick}), place the license notice in an otherwise empty
+@code{<script>} at the top of the page. This is sometimes needed when an
+external script performs AJAX calls or embeds scripts dynamically, and
+the only inline JavaScript is an event attribute making a method call,
+e.g.: @code{<body onload="methodCall('remote-data.xml');">}
+
+When people speak of the ``MIT license'' they mean either the X11 license
+or the Expat license.  Please see which license the code uses, and label
+it accordingly.
+
+Currently LibreJS checks for the following licenses:
+
+@itemize @bullet
+
+@item
+Creative Commons CC0 1.0 Universal
+@itemize @bullet
+@item
+Identifier: @samp{CC0-1.0}
+@item
+URL: @url{http://creativecommons.org/publicdomain/zero/1.0/legalcode}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:90dc5c0be029de84e523b9b3922520e79e0e6f08&dn=cc0.txt}
+@end itemize
+
+@item
+Public Domain
+@itemize @bullet
+@item
+Public domain is not a license (see
+@url{https://www.gnu.org/licenses/license-list.html#PublicDomain}). If
+you want to release your work to the public domain, the FSF recommends
+using CC0.
+@item
+Magnet Link: @indicateurl{magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt}
+@end itemize
+
+@item
+GNU General Public License (GPL) version 2
+@itemize @bullet
+@item
+Identifier: @samp{GNU-GPL-2.0}
+@item
+URL: @url{http://www.gnu.org/licenses/gpl-2.0.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt}
+@end itemize
+
+@item
+GNU General Public License (GPL) version 3
+@itemize @bullet
+@item
+Identifier: @samp{GNU-GPL-3.0}
+@item
+URL: @url{http://www.gnu.org/licenses/gpl-3.0.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt}
+@end itemize
+
+@item
+Apache License, Version 2.0
+@itemize @bullet
+@item
+Identifier: @samp{Apache-2.0}
+@item
+URL: @url{http://www.apache.org/licenses/LICENSE-2.0}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt}
+@end itemize
+
+@item
+GNU Lesser General Public License, version 2.1
+@itemize @bullet
+@item
+Identifier: @samp{GNU-LGPL-2.1}
+@item
+URL: @url{http://www.gnu.org/licenses/lgpl-2.1.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a89eac2&dn=lgpl-2.1.txt}
+@end itemize
+
+@item
+GNU Lesser General Public License, version 3
+@itemize @bullet
+@item
+Identifier: @samp{GNU-LGPL-3.0}
+@item
+URL: @url{http://www.gnu.org/licenses/lgpl-3.0.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317705f85&dn=lgpl-3.0.txt}
+@end itemize
+
+@item
+GNU Affero General Public License, version 3
+@itemize @bullet
+@item
+Identifier: @samp{GNU-AGPL-3.0}
+@item
+URL: @url{http://www.gnu.org/licenses/agpl-3.0.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt}
+@end itemize
+
+@item
+Boost Software License
+@itemize @bullet
+@item
+URL: @url{http://www.boost.org/LICENSE_1_0.txt}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt}
+@end itemize
+
+@item
+BSD 3-Clause License
+@itemize @bullet
+@item
+URL: @url{http://opensource.org/licenses/BSD-3-Clause}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt}
+@end itemize
+
+@item
+Eclipse Public License 1.0
+@itemize @bullet
+@item
+Identifier: @samp{EPL-1.0}
+@item
+URL: @url{http://www.eclipse.org/legal/epl-v10.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt}
+@end itemize
+
+@item
+Mozilla Public License 2.0
+@itemize @bullet
+@item
+Identifier: @samp{MPL-2.0}
+@item
+URL: @url{http://www.mozilla.org/MPL/2.0}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt}
+@end itemize
+
+@item
+Expat License (sometimes called the MIT license)
+@itemize @bullet
+@item
+Identifier: @samp{Expat}
+@item
+URL: @url{http://www.jclark.com/xml/copying.txt}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt}
+@end itemize
+
+@item
+X11 License
+@itemize @bullet
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt}
+@end itemize
+
+@item
+XFree86 License
+@itemize @bullet
+@item
+Identifier: @samp{Modified-BSD}
+@item
+URLs:
+@url{http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3}
+@url{http://www.xfree86.org/current/LICENSE4.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt}
+@end itemize
+
+@item
+FreeBSD License
+@itemize @bullet
+@item
+URL: @url{http://www.freebsd.org/copyright/freebsd-license.html}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt}
+@end itemize
+
+@item
+The ISC License
+@itemize @bullet
+@item
+URL: @url{https://www.isc.org/downloads/software-support-policy/isc-license/}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt}
+@end itemize
+
+@item
+Artistic License 2.0
+@itemize @bullet
+@item
+URL: @url{http://www.perlfoundation.org/artistic_license_2_0}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt}
+@end itemize
+
+@item
+CPAL 1.0
+@itemize @bullet
+@item
+Identifier: @samp{CPAL-1.0}
+@item
+URL: @url{http://opensource.org/licenses/cpal_1.0}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt}
+@end itemize
+
+@end itemize
+
+@section Undetected Free Licenses
+If you are using a free license that isn't detected by LibreJS and isn't
+listed in the previous section, please send a message to
+@email{bug-librejs@@gnu.org} regarding this license, where code released under
+this license can be found, and where to find the license text and
+information.
+
+Many free licenses are listed in this page:
+@url{http://www.gnu.org/licenses/license-list.html}
+
+
+@node Setting Your JavaScript Free
+@chapter Setting Your JavaScript Free
+
+The first step is releasing your JavaScript under a free license. If
+you are already using a free library, or you're not using any
+third-party libraries, it might only take a few minutes.
+
+All JavaScript code on a web page (inline, on-page, and external) shares
+a common scope. Thus, code is generally either rejected or accepted as a
+whole by LibreJS. If some JavaScript code is found to be nontrivial and
+nonfree, then most of the time, all the the rest is discarded as well.
+
+On your website, take a look at your HTML source. You can identify
+distinct pieces of JavaScript that might be free and some other that are
+nonfree.
+
+@emph{Tip}: By running LibreJS on your page, you will get a list of all the
+JavaScript that was blocked. This gives you an overview of the
+JavaScript in your page.
+
+Imagine a page that contains several pieces of JavaScript from various
+sources:
+@itemize @bullet
+@item
+On top, within the @code{<head>} tag, it includes jQuery
+
+@item
+Then, some JavaScript code that you have written
+
+@item
+At the bottom, a JavaScript-based Facebook widget
+
+@item
+Also, there's some analytics tracking code
+@end itemize
+
+
+@table @dfn
+@item JavaScript that is already free
+First, you must ensure that the library is free. If the file contains
+a copyright and a license notice, you won't need to look any further.
+But if there's no mention of the license, or if it's too brief, you'll
+have to look for a COPYING or LICENSE file within the original library's
+source package, or on the library's official website.
+
+@item Your own JavaScript
+The free license given to your code should be compatible with the rest
+of the JavaScript on a page. A good way to check is to read up on
+them: @url{http://www.gnu.org/licenses/license-list.html}
+
+@item Nonfree JavaScript
+This might be the case with an analytics tracker, social media
+widgets, and code that runs ads. Removing these pieces of code from your
+site is required to have the rest accepted as free. There are
+often alternatives to nonfree libraries or to third-party services:
+
+@itemize @bullet
+
+@item
+If you have used nonfree third-party code as the base to write your own
+code, try to find a free alternative.
+
+@item
+If you're using a third-party service such as an analytics service,
+replace it with a free alternative like Piwik.
+
+@item
+If you can't find free JavaScript that has already been developed,
+write it yourself! Who knows, your own solution might be the start of
+a brilliant project!
+@end itemize
+
+@end table
+
+@section JavaScript Web Labels
+One way to make your website work with LibreJS is by defining a
+JavaScript Web Labels table.
+
+A JavaScript Web Labels table is informative to both site visitors and
+the LibreJS program. You make a Web Labels table on a new HTML page
+that's linked to from your main page. The table lists each of your
+site's JavaScript files, that file's corresponding human-readable source
+file, and the canonical url of its free license.
+
+When using a JavaScript Web Labels table for your own files, it's
+important to put a copying permission statement at the top of each source
+file listed in right-most column of the Web Labels table. For info on how
+properly release your code as free software, see
+@url{https://www.gnu.org/licenses/gpl-howto.html}. Future versions of
+LibreJS will require a copying permission statement or other license
+notice for source files listed in a Web Labels table.
+
+More information on JavaScript Web Labels is detailed here:
+@url{https://www.gnu.org/software/librejs/free-your-javascript.html#step3}
+and here:
+@url{https://www.gnu.org/licenses/javascript-labels.html}.
+
+@subsection Specifying multiple licenses for a single JavaScript file
+
+If you compile or concatenate your JavaScript into a single file, the
+source files you're combining may be released under different licenses.
+You can specify multiple licenses for the file in a JavaScript Web Labels
+table, like this:
+
+@verbatim
+<table id="jslicense-labels1">
+    <tr>
+        <td><a href="all.min.js">all.min.js</a></td>
+        <td>
+            <a href="http://www.gnu.org/licenses/gpl-3.0.html"
+                >GNU-GPL-3.0-or-later</a>
+            <br />
+            <a href="http://www.apache.org/licenses/LICENSE-2.0"
+                >Apache-2.0</a>
+        </td>
+        <td>
+            <a href="gpl-script.js">gpl-script.js</a>
+            <br />
+            <a href="apache-script.js">apache-script.js</a>
+        </td>
+    </tr>
+</table>
+@end verbatim
+
+The @code{<br />} tags just make the table more understandable when
+looking at the rendered version of it on the license page. They aren't
+required by LibreJS.
+
+If all the licenses contained in the second column are recognized by
+LibreJS to be free licenses, then LibreJS will allow the file in the
+first column to be run.
+
+@section Adding a stylized comment in your JavaScript files and on your page
+See a ``Convention for releasing free JavaScript programs'' in the
+JavaScript Trap @url{http://www.gnu.org/philosophy/javascript-trap.html}
+
+Adding this notice will ensure LibreJS will find the JavaScript file to
+be free. The @code{@@licstart} and @code{@@licend} lines at the
+beginning and end of the stylized comment are necessary to make a clear
+statement that the _entire code_ in the file is free. This means that
+you must ensure that no nonfree code was carelessly appended at the end
+of the file.
+
+In the main HTML page, the license notice covers JavaScript contained
+in all @code{<script>} tags with on-page code and the inline
+JavaScript (in event attributes such as onload, onclick, etc, @dots{}).
+Since external files have their own stylized comment, they are
+not covered by the notice in the main HTML page. Make sure to identify
+all the licenses available. LibreJS will only ensure it matches a
+notice of an allowed license once, so the order does not matter, but
+the responsibility is on you to make sure all code is under the free
+licenses mentioned between @code{@@licstart} and @code{@@licend}.
+
+You should make @emph{only} one @code{@@licstart} @code{@@licend}
+comment in your page, since it pertains to the entire code on page
+across all @code{<script>} tags and inline html attributes.
+
+@unnumbered
+When you use the JavaScript Web Labels method, you should still include a
+license notice at the top of each of your source files. This ensures that
+if someone copies the file and uses it for something else, the license
+remains intact.
+    
+For more info on making your JavaScript LibreJS-compliant, see this web
+page: @url{https://www.gnu.org/software/librejs/free-your-javascript.html}
+
+@node Installation Requirements
+@appendix Installation Requirements
+
+
+@appendixsec Mozilla Browser
+
+You will need one of the many flavors of the Mozilla browser to use
+LibreJS. It can be installed on the following:
+
+GNU IceCat,  Mozilla Firefox, Trisquel Abrowser, Debian Iceweasel.
+
+LibreJS works on these browsers starting from version 29. We
+recommend that you use the latest version of your Mozilla browser.
+LibreJS has been tested extensively on multiple GNU/Linux distributions,
+but it is compatible any operating system as long as you're using a
+compatible Mozilla browser.
+
+@appendixsec Mozilla's Add-on SDK
+LibreJS uses the Mozilla Add-on SDK (Software Development Kit), a
+set of APIs and tools to create add-ons for Mozilla browsers.
+
+You do not need the Add-on SDK to use LibreJS xpi file or to install it
+using the packaged version, but it is required in order to package the
+LibreJS source code into an xpi file using @code{make}. If you would like
+to run the tests for LibreJS or make changes to the source files, you
+will need the Add-on SDK as well. For the ``make'' command to work
+properly, you must have the @code{cfx} command available on your system
+from the command line.
+
+The latest tarball for the Add-on SDK is available at:
+
+@url{https://ftp.mozilla.org/pub/mozilla.org/labs/jetpack/jetpack-sdk-latest.tar.gz}
+
+Instructions on how to get it working are available here:
+
+@url{https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/tutorials/installation.html}
+
+In order to use @code{make} with LibreJS source, however, it is ideal to
+have @code{cfx} available at all times and for all users.
+
+An easy way to do this is to extract the contents of the tarball and to
+place the files inside @file{/usr/lib/addon-sdk} and then creating a
+symbolic link in @file{/usr/bin}, as follows:
+
+@example 
+sudo ln -s /usr/lib/addon-sdk/bin/cfx /usr/bin/cfx
+@end example
+
+The @code{cfx} command will then be available to all users.
+
+The Add-on SDK is released under the Mozilla Public License 2.0.
+
+@node LibreJS Internals
+@appendix LibreJS Internals
+
+LibreJS intercepts HTTP responses and rewrites their contents after
+analyzing JavaScript within them. It does not remove script nodes and
+attributes from the page, but instead ``deactivates'' them by modifying
+the @code{type} and @code{src} attributes on script elements and by
+moving the contents of inline JavaScript attributes such as onClick
+into harmless attributes.
+
+LibreJS detects the most common cases using the HTTP response method
+described above, but in extremely rare cases, or when running code
+locally, LibreJS cannot detect JavaScript during the response stage.
+
+To remedy this issue, and as a final safeguard, LibreJS takes a look
+at the scripts that are about to be executed while the browser engine is
+parsing the page. If the script is not found in a list of accepted
+scripts populated earlier, the execution will be prevented. This is to
+ensure content types that are not regular HTML (binhex with HTML in it,
+@dots{}) and JavaScript do not fall through the cracks and get executed.
+
+@node Tests
+@appendix Tests
+
+
+In order to better understand how LibreJS works, you can try to visit
+these pages with LibreJS installed and enabled and see how they are
+being processed:
+
+@itemize @bullet
+
+@item
+@url{http://lduros.net/assets/librejs/tests/trivial-inline-trivial-external/}
+This page contains trivial on-page JavaScript code, and an external
+script that contains trivial JavaScript code.  Therefore, all JavaScript
+is being executed.
+
+
+@item
+@url{http://lduros.net/assets/librejs/tests/trivial-inline-nontrivial-external/}
+The on-page script here is trivial and uses a built-in method, but the
+external script in this page is nontrivial (defines a function.)  The
+external script is blocked, the inline script is executed.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/nontrivial-inline-trivial-external/}
+This page contains nontrivial code on page, and trivial code in its
+external page.  All JavaScript is @emph{removed} from the page, and the
+external script is never analyzed, since the nontrivial conditions are
+already met in the page.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/free-inline-free-external/}
+This page contains free on-page (GPL 3) JavaScript, and free external
+Javascript. Therefore all JavaScript is being executed.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/free-inline-nonfree-nontrivial-external/}
+This page contains free on-page JavaScript. The external script contains
+nonfree nontrivial JavaScript (AJAX request). The free code that is
+inline is executed, but the external file is blocked.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/intrinsec-event/} This page
+contains trivial on-page code, with an intrinsic event in an html
+attribute (onload).  All JavaScript is being executed.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/trivial-inline-free-external-defines-function/}
+This page contains on-page trivial JavaScript (only makes a window alert
+and loads an external script using the html <script> tag with the src
+attribute. The external script is free (GPL v3), and since it is only
+nontrivial because it defines a function, the on-page trivial code is
+allowed to use it.  All JavaScript is being executed.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/trivial-inline-free-external-writes-script/}
+This page contains trivial on-page JavaScript code, and loads an
+external script that is free. Since no function is defined, the external
+script is being analyzed. The external script is free. Trivial here is
+not allowed because the external script, although free, writes a
+script. The inline trivial script should also have a free license notice
+for it to be interpreted.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/shelltypist/demo/real-life-example-with-jquery-free.html}
+This is a real-life example of a small jQuery plugin. The on-page
+JavaScript code has a free license. The jQuery external file has a free
+licensed. The shelltypist.js file has a free license as well. All
+licenses are defined between @code{@@licstart} and @code{@@licend}. All
+JavaScript is executed.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/shelltypist/demo/same-page-without-free-license.html}
+This is the same page than the previous example, except it does not have
+a free license for the main HTML page on-page script. While the actual
+code there is trivial, since jQuery defines methods that make use of
+AJAX, trivial code is not allowed, and no JavaScript is executed.
+
+@item
+@url{http://lduros.net/assets/librejs/tests/test-labels/} This page
+contains JavaScript (jQuery minified) that does not have proper license
+information in the file, as it has no @code{@@licstart} @code{@@licend}
+comment. It would be considered nonfree, however, the page itself uses
+the JavaScript Web Labels method. On the page itself, you will find a
+link labeled ``JavaScript License Information'', which leads to a page
+that contains a properly formatted table with the required data on the
+external JavaScript file. LibreJS visits this link and determines the
+version of jQuery linked from the original page is the one listed there,
+and flags it as free. All JavaScript is executed (and the title should
+turn green.)
+
+@end itemize
+
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+
+@include fdl.texi
+
+
+@bye

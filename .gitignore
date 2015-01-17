@@ -1,0 +1,17 @@
+*.cache
+*.log
+configure
+config.status
+gendocs_template
+librejs.aux
+librejs.cp
+librejs.cps
+librejs.fn
+librejs.ky
+librejs.log
+librejs.pg
+librejs.toc
+librejs.tp
+librejs.vr
+*.xpi
+Makefile
