@@ -2,6 +2,10 @@
 	* Include the Eclipse Public License in license definitions.
 	Thanks to Daniel Ziltener for the patch.
 
+	* Fixed a bug that caused the main panel to disappear after
+	clicking the red "Whitelist" button on a script that wasn't
+	accepted by LibreJS.
+
 2014-12-06 Nik Nyby <nikolas@gnu.org>
 	* You can now specify multiple licenses for a JavaScript file
 	that's been compiled or concatenated from more than one source

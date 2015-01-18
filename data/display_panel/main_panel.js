@@ -2,20 +2,22 @@
  * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
  * *
  * Copyright (C) 2011, 2012, 2014 Loic J. Duros
+ * Copyright (C) 2014, 2015 Nik Nyby
  *
- * This program is free software: you can redistribute it and/or modify
+ * This file is part of GNU LibreJS.
+ *
+ * GNU LibreJS is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * GNU LibreJS is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see  <http://www.gnu.org/licenses/>.
- *
+ * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 var displayPanel = {
     complainButton: null,
@@ -342,19 +344,21 @@ var displayPanel = {
             // whitelist a script
             $('.whitelist').click(function (e) {
                 e.preventDefault();
+                var $this = $(this);
+
                 // get the url of the page from main button.
                 var url = that.button1.attr('href');
-                var hash = $(this).data('librejs-hash');
+                var hash = $this.data('librejs-hash');
 
-                var reason = $(this).parent('li').children('.reason').text();
+                var reason = $this.parent('li').children('.reason').text();
 
                 if (!reason) {
-                    reason = $(this).parent('li').children('pre')
+                    reason = $this.parent('li').children('pre')
                         .find('.reason').text();
                 }
 
                 // URL of the JS file
-                var jsUrl = $(this).data('librejs-url');
+                var jsUrl = $this.data('librejs-url');
                 var filename = '';
                 if (jsUrl) {
                     filename = jsUrl.split('/').pop();
@@ -362,17 +366,27 @@ var displayPanel = {
 
                 self.port.emit('whitelistByHash',
                                hash, url, filename, reason);
-                $(this).parent().append(
+                $this.parent().append(
                     $('<span style="font-weight:bold"/>')
-                        .text("Reload page to load script"));
-                $(this).remove();
+                        .text("Reload page to take effect"));
+                $this.remove();
+
+                // Don't propagate event and call hideMainPanel.
+                return false;
             });
 
             $('.rm-whitelist').click(function (e) {
                 e.preventDefault();
-                var hash = $(this).data('librejs-hash');
+                var $this = $(this);
+                var hash = $this.data('librejs-hash');
                 self.port.emit('removeFromWhitelistByHash', hash);
-                $(this).text("Reload page to take effect");
+                $this.parent().append(
+                    $('<span style="font-weight:bold"/>')
+                        .text("Reload page to take effect"));
+                $this.remove();
+
+                // Don't propagate event and call hideMainPanel.
+                return false;
             });
         }
     }

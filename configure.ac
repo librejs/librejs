@@ -1,4 +1,4 @@
-AC_INIT(librejs, 6.0.8.20150117, [bug-librejs@gnu.org])
+AC_INIT(librejs, 6.0.8, [bug-librejs@gnu.org])
 
 AC_PROG_INSTALL
 AC_PATH_PROG([MAKEINFO], makeinfo)

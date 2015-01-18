@@ -283,6 +283,22 @@
         "filename": "http://code.jquery.com/jquery-1.11.1.min.js",
         "result": "[freelib]"
     },
+    "8130544c215fe5d1ec081d83461bf4a711e74882": {
+        "filename": "http://code.jquery.com/jquery-1.11.2.min.js",
+        "result": "[freelib]"
+    },
+    "5b57851b09022c5e5f3a5fd08152b2dc12671974": {
+        "filename": "http://code.jquery.com/jquery-1.11.2.js",
+        "result": "[freelib]"
+    },
+    "41b4bfbaa96be6d1440db6e78004ade1c134e276": {
+        "filename": "http://code.jquery.com/jquery-2.1.3.min.js",
+        "result": "[freelib]"
+    },
+    "1852661bd11a09ca9b9cb63d1aa6ff390fffaf4e": {
+        "filename": "http://code.jquery.com/jquery-2.1.3.js",
+        "result": "[freelib]"
+    },
     "0be05c714a7e6cf28fe692629ece5b3769901dca": {
         "filename": "http://code.jquery.com/jquery-2.0.0.min.js",
         "result": "[freelib]"

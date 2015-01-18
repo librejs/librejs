@@ -9,7 +9,7 @@ This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}),
 a GNU IceCat extension to detect and block nonfree nontrivial
 JavaScript on webpages.
 
-Copyright @copyright{} 2011 2012 2014 Loic J. Duros
+Copyright @copyright{} 2011 2012 2014 2015 Loic J. Duros
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document

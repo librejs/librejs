@@ -17,7 +17,7 @@ s=$(iconv -f LATIN1 -t UTF8 $t | sha1sum | awk '{print $1}')
 cat <<EOF
     "$s": {
         "filename": "$url",
-        "result": "[freelib"]
+        "result": "[freelib]"
     }
 EOF
 

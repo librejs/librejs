@@ -5,24 +5,17 @@ pages containing code that is either trivial and/or free.
 
 Notes on working with the code
 -------------------------------
-== Running the addon ==
+## Running the addon ##
 Download Mozilla's Add-on SDK, then do something like this in the LibreJS
 directory:
 
     cfx run -b `which icecat`
 
-== Testing ==
-Run all tests:
-    cfx test -v -b `which icecat`
-
-Run a single test file:
-    cfx test -v -b `which icecat` -f test-accepted_scripts
-
-== Debugging ==
+## Debugging ##
 Uncomment lines 22 and 23 in lib/main.js to enable printing of
 console.debug() statements.
 
-== Releasing a new version ==
+## Releasing a new version ##
 * Update version number in:
 ** configure.ac
 ** package.json

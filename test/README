@@ -1,0 +1,7 @@
+## Testing ##
+
+To run all tests:
+    cfx test -v -b `which icecat`
+
+To run a single test file:
+    cfx test -v -b `which icecat` -f test-accepted_scripts
