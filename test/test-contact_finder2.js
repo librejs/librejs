@@ -24,7 +24,8 @@ var pageMod = require("sdk/page-mod");
 var tabs = require("sdk/tabs");
 var data = require("sdk/self").data;
 
-exports.testCertainLinkComplaintSearch = function (test) {
+// FIXME
+/*exports.testCertainLinkComplaintSearch = function (test) {
     test.waitUntilDone();
 
     var mod = pageMod.PageMod({
@@ -50,9 +51,11 @@ exports.testCertainLinkComplaintSearch = function (test) {
 
     tabs.open("data:text/html;charset=utf-8,<!doctype html>%0D%0A<html>%0D%0A<head><script type='librejs/blocked'>var num %3D 5%3B<%2Fscript><%2Fhead>%0D%0A%0D%0A<body><h1 id='test'>Test<%2Fh1><a href=\"somelink.html\">some link</a><a href=\"http://example.org/contact.html\">Feedback</a><%2Fbody><%2Fhtml>");
 
-};
+};*/
 
-exports.testComplaintSearch = function (test) {
+
+// FIXME
+/*exports.testComplaintSearch = function (test) {
 
     // async
     test.waitUntilDone();
@@ -87,4 +90,4 @@ exports.testComplaintSearch = function (test) {
 
     tabs.open("data:text/html;charset=utf-8,<!doctype html>%0D%0A<html>%0D%0A<head><script type='librejs/blocked'>var num %3D 5%3B<%2Fscript><%2Fhead>%0D%0A%0D%0A<body><h1 id='test'>Test<%2Fh1><a href=\"somelink.html\">some link</a><a href=\"http://example.org/contact.html\">Feedback</a><%2Fbody><%2Fhtml>");
 
-};
+};*/

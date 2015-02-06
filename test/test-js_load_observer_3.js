@@ -33,6 +33,8 @@ var reset = function(url) {
     acceptedScripts.clearScripts(url);
 };
 
+// FIXME
+/*
 exports.testJsLoadObserverHttpObserverBypassed = function(assert, done) {
     var url = 'http://lduros.net/assets/librejs/tests/load_observer/load_test.html';
     var mod;
@@ -53,8 +55,10 @@ exports.testJsLoadObserverHttpObserverBypassed = function(assert, done) {
     });
     
     tabs.open(url);
-};
+};*/
 
+// FIXME
+/*
 exports.testJsLoadObserverHttpObserverBypassed2 = function(assert, done) {
     var url = 'lduros.net/assets/librejs/tests/load_observer/wrong_mimetype/';
     var mod;
@@ -75,8 +79,10 @@ exports.testJsLoadObserverHttpObserverBypassed2 = function(assert, done) {
     });
     
     tabs.open(url);    
-};
+};*/
 
+// FIXME
+/*
 exports.testJsLoadObserverAccepted = function(assert, done) {
     var url = 'http://lduros.net/assets/librejs/tests/load_observer/load_test.html';
     var mod;
@@ -107,8 +113,10 @@ exports.testJsLoadObserverAccepted = function(assert, done) {
     });
     
     tabs.open(url);
-};
+};*/
 
+// FIXME
+/*
 exports.testJsLoadObserverAcceptedExternalWrongMimeType = function(
     assert, done
 ) {
@@ -143,6 +151,6 @@ exports.testJsLoadObserverAcceptedExternalWrongMimeType = function(
     });
     
     tabs.open(url);    
-};
+};*/
 
 require('sdk/test').run(exports);
