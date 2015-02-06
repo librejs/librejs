@@ -1,3 +1,12 @@
 #!/bin/bash
 
-cfx test -p ~/.mozilla/firefox/profiles/httpsEverywhere | grep -v '^console'
+if [ ! -f "addon-sdk/bin/activate" ]; then
+    die "Addon SDK not available. Run git submodule update."
+fi
+
+pushd addon-sdk
+source bin/activate
+popd
+
+echo "Running tests"
+cfx test --verbose
