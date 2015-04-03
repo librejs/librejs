@@ -1,5 +1,7 @@
 2015-04-02 Nik Nyby <nikolas@gnu.org>
 	* Remove the draggable complain banner functionality.
+	* Add JsChecker.isFreeLicensed method from Ruben Rodriguez. We're
+	hoping this will lead to improved speed and memory usage in LibreJS.
 
 2015-01-17 Nik Nyby <nikolas@gnu.org>
 	* Include the Eclipse Public License in license definitions.

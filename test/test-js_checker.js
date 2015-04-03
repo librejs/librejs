@@ -106,7 +106,8 @@ exports.testLambdaError = function(assert, done) {
 };
 
 exports.testContinueKeyword = function(assert, done) {
-    var jsString = "for (var i = 0; i < len; i++) {\n if (test) { continue; } }";
+    var jsString = 'for (var i = 0; i < len; i++) {' +
+        'if (test) { continue; } }';
     var checker = init();
 
     checker.searchJs(jsString, 
@@ -116,6 +117,15 @@ exports.testContinueKeyword = function(assert, done) {
                 checker.parseTree.freeTrivialCheck.type);
             done();
         });
+};
+
+exports.testIsNotFreeLicensed = function(assert, done) {
+    var jsString = 'for (var i = 0; i < len; i++) {' +
+        'if (test) { continue; } }';
+    var checker = init();
+
+    assert.ok(checker.isFreeLicensed(jsString) === false)
+    done();
 };
 
 require('sdk/test').run(exports);
