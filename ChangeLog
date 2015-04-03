@@ -1,3 +1,6 @@
+2015-04-02 Nik Nyby <nikolas@gnu.org>
+	* Remove the draggable complain banner functionality.
+
 2015-01-17 Nik Nyby <nikolas@gnu.org>
 	* Include the Eclipse Public License in license definitions.
 	Thanks to Daniel Ziltener for the patch.

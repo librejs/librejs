@@ -64,7 +64,7 @@ div {
 }
 
 #librejs-tab-button {
-    cursor: move;
+    cursor: pointer;
     opacity: 0.6;
     display: block;
     width: 18px;

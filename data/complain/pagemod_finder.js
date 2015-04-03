@@ -36,7 +36,6 @@ var PageModFinder = function() {
     this.$infoBox = null;
 
     this.isMinimized = true;
-    this.isDragging = false;
 };
 
 PageModFinder.prototype.init = function() {
@@ -270,43 +269,8 @@ PageModFinder.prototype.addComplaintOverlay = function() {
     var that = this;
 
     this.$button.click(function() {
-        if (!that.isDragging) {
-            that.showBox();
-        }
+        that.showBox();
         return false;
-    });
-
-    this.$button.on('mousedown', function(e) {
-        var startPageY = e.pageY;
-        var baseY = that.$button.offset().top - startPageY;
-        var windowHeight = $(window).height();
-        var buttonHeight = that.$button.height();
-
-        $(document).on('mousemove.librejs', function(e2) {
-            if (that.isDragging || e2.pageY !== startPageY) {
-                var top = baseY + e2.clientY;
-                if (top < 0) {
-                    top = 0;
-                } else if (
-                    top + buttonHeight + that.buttonTop - 6 > windowHeight
-                ) {
-                    top = windowHeight - buttonHeight - that.buttonTop + 6;
-                }
-                that.$button.css({top: top});
-                that.isDragging = true;
-            }
-        });
-        return false;
-    });
-
-    $(document).on('mouseup', function() {
-        $(document).off('mousemove.librejs');
-        if (that.isDragging) {
-            setTimeout(function() {
-                that.isDragging = false;
-            }, 10);
-            return false;
-        }
     });
 
     $(document).keyup(function(e) {
