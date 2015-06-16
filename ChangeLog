@@ -1,3 +1,10 @@
+2015-06-16 Nik Nyby <nikolas@gnu.org>
+	* Fixed a mangled Unicode character problem in
+	process_response.js. Thanks to Jookia for the patch.
+
+	* onDetermineCharset now only checks for valid charsets.
+	Thanks to Ruben Rodriguez for the patch.
+
 2015-04-02 Nik Nyby <nikolas@gnu.org>
 	* Remove the draggable complain banner functionality.
 	* Add JsChecker.isFreeLicensed method from Ruben Rodriguez. We're
