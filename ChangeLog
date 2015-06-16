@@ -1,4 +1,6 @@
 2015-06-16 Nik Nyby <nikolas@gnu.org>
+	* Add LibreJS version number in the main addon panel.
+
 	* Fixed a mangled Unicode character problem in
 	process_response.js. Thanks to Jookia for the patch.
 
