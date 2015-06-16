@@ -26,7 +26,7 @@ Appendix D GNU Free Documentation License
 LibreJS
 *******
 
-This manual is for GNU LibreJS (version 6.0.9.20150402, 2 April 2015).
+This manual is for GNU LibreJS (version 6.0.9.20150616, 16 June 2015).
 
 1 Overview
 **********
