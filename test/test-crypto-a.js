@@ -20,17 +20,16 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 var crypto = require("script_entries/crypto");
-var longString = require("./mock/long_string.js").longString;
-var Request = require("sdk/request").Request;
-var cRequest = require("html_script_finder/dom_handler/request");
 
 exports.testSha1EncryptTest = function(assert) {
     var str = "This is my test string";
-    assert.equal(crypto.sha1Encrypt(str), 'e925bfd93e14174c2b2c83f68b3d3243df3005ef');
+    assert.equal(
+        crypto.sha1Encrypt(str),
+        'e925bfd93e14174c2b2c83f68b3d3243df3005ef');
 };
 
 exports.testSha1EncryptjQueryTest = function(assert, done) {
-    var request = Request({
+    var request = require('sdk/request').Request({
         'url': 'https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'
     });
     request.on('complete', function(response) {
