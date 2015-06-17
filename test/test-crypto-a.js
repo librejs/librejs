@@ -28,7 +28,8 @@ exports.testSha1EncryptTest = function(assert) {
         'e925bfd93e14174c2b2c83f68b3d3243df3005ef');
 };
 
-exports.testSha1EncryptjQueryTest = function(assert, done) {
+// TODO: Enable this test after switching to JPM.
+/*exports.testSha1EncryptjQueryTest = function(assert, done) {
     var request = require('sdk/request').Request({
         'url': 'https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js'
     });
@@ -39,6 +40,6 @@ exports.testSha1EncryptjQueryTest = function(assert, done) {
         done();
     });
     request.get();
-};
+};*/
 
 require('sdk/test').run(exports);
