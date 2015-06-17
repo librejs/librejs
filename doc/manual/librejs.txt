@@ -261,6 +261,33 @@ and label it accordingly.
 
    Currently LibreJS checks for the following licenses:
 
+   * Apache License, Version 2.0
+        * Identifier: 'Apache-2.0'
+        * URL: <http://www.apache.org/licenses/LICENSE-2.0>
+        * Magnet link:
+          'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
+
+   * Artistic License 2.0
+        * URL: <http://www.perlfoundation.org/artistic_license_2_0>
+        * Magnet link:
+          'magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt'
+
+   * Boost Software License
+        * URL: <http://www.boost.org/LICENSE_1_0.txt>
+        * Magnet link:
+          'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
+
+   * BSD 3-Clause License
+        * URL: <http://opensource.org/licenses/BSD-3-Clause>
+        * Magnet link:
+          'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt'
+
+   * CPAL 1.0
+        * Identifier: 'CPAL-1.0'
+        * URL: <http://opensource.org/licenses/cpal_1.0>
+        * Magnet link:
+          'magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt'
+
    * Creative Commons CC0 1.0 Universal
         * Identifier: 'CC0-1.0'
         * URL:
@@ -268,13 +295,22 @@ and label it accordingly.
         * Magnet link:
           'magnet:?xt=urn:btih:90dc5c0be029de84e523b9b3922520e79e0e6f08&dn=cc0.txt'
 
-   * Public Domain
-        * Public domain is not a license (see
-          <https://www.gnu.org/licenses/license-list.html#PublicDomain>).
-          If you want to release your work to the public domain, the FSF
-          recommends using CC0.
-        * Magnet Link:
-          'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
+   * Eclipse Public License 1.0
+        * Identifier: 'EPL-1.0'
+        * URL: <http://www.eclipse.org/legal/epl-v10.html>
+        * Magnet link:
+          'magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt'
+
+   * Expat License (sometimes called the MIT license)
+        * Identifier: 'Expat'
+        * URL: <http://www.jclark.com/xml/copying.txt>
+        * Magnet link:
+          'magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt'
+
+   * FreeBSD License
+        * URL: <http://www.freebsd.org/copyright/freebsd-license.html>
+        * Magnet link:
+          'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
 
    * GNU General Public License (GPL) version 2
         * Identifier: 'GNU-GPL-2.0'
@@ -287,12 +323,6 @@ and label it accordingly.
         * URL: <http://www.gnu.org/licenses/gpl-3.0.html>
         * Magnet link:
           'magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt'
-
-   * Apache License, Version 2.0
-        * Identifier: 'Apache-2.0'
-        * URL: <http://www.apache.org/licenses/LICENSE-2.0>
-        * Magnet link:
-          'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
 
    * GNU Lesser General Public License, version 2.1
         * Identifier: 'GNU-LGPL-2.1'
@@ -312,21 +342,11 @@ and label it accordingly.
         * Magnet link:
           'magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt'
 
-   * Boost Software License
-        * URL: <http://www.boost.org/LICENSE_1_0.txt>
+   * The ISC License
+        * URL:
+          <https://www.isc.org/downloads/software-support-policy/isc-license/>
         * Magnet link:
-          'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
-
-   * BSD 3-Clause License
-        * URL: <http://opensource.org/licenses/BSD-3-Clause>
-        * Magnet link:
-          'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt'
-
-   * Eclipse Public License 1.0
-        * Identifier: 'EPL-1.0'
-        * URL: <http://www.eclipse.org/legal/epl-v10.html>
-        * Magnet link:
-          'magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt'
+          'magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt'
 
    * Mozilla Public License 2.0
         * Identifier: 'MPL-2.0'
@@ -334,13 +354,22 @@ and label it accordingly.
         * Magnet link:
           'magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt'
 
-   * Expat License (sometimes called the MIT license)
-        * Identifier: 'Expat'
-        * URL: <http://www.jclark.com/xml/copying.txt>
+   * Public Domain
+        * Public domain is not a license (see
+          <https://www.gnu.org/licenses/license-list.html#PublicDomain>).
+          If you want to release your work to the public domain, the FSF
+          recommends using CC0.
+        * Magnet Link:
+          'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
+
+   * WTFPL
+        * Identifier: 'WTFPL'
+        * URL: <http://www.wtfpl.net/txt/copying/>
         * Magnet link:
-          'magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt'
+          'magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt'
 
    * X11 License
+        * URL: <http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3>
         * Magnet link:
           'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'
 
@@ -350,28 +379,6 @@ and label it accordingly.
           <http://www.xfree86.org/current/LICENSE4.html>
         * Magnet link:
           'magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt'
-
-   * FreeBSD License
-        * URL: <http://www.freebsd.org/copyright/freebsd-license.html>
-        * Magnet link:
-          'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
-
-   * The ISC License
-        * URL:
-          <https://www.isc.org/downloads/software-support-policy/isc-license/>
-        * Magnet link:
-          'magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt'
-
-   * Artistic License 2.0
-        * URL: <http://www.perlfoundation.org/artistic_license_2_0>
-        * Magnet link:
-          'magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt'
-
-   * CPAL 1.0
-        * Identifier: 'CPAL-1.0'
-        * URL: <http://opensource.org/licenses/cpal_1.0>
-        * Magnet link:
-          'magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt'
 
 6.2 Undetected Free Licenses
 ============================

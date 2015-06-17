@@ -1,4 +1,7 @@
 2015-06-16 Nik Nyby <nikolas@gnu.org>
+	* Add the WTFPL license to the list of accepted licenses.
+	Thanks to CY for pointing out that it was missing.
+
 	* Add LibreJS version number in the main addon panel.
 
 	* Fixed a mangled Unicode character problem in
