@@ -22,6 +22,8 @@ console.debug() statements.
 ** doc/version.texi
 ** data/display_panel/content/display-panel.html
 * Then run `make info` to build the docs with gendocs.sh
-* `bzr commit` and `bzr tag 6.0.4`
-* Export a tarball: bzr export ~/releases/librejs-6.0.4/librejs-6.0.4.tar.gz
+* `git commit` and `git tag 6.0.4`
+* Export a tarball:
+    git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 >librejs-6.0.4.tar.gz
+    mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/
 * Make xpi file: cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi
