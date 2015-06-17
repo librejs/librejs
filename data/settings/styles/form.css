@@ -2,9 +2,16 @@ tr.ui-sortable-helper > td {
     background: #229ac1 !important;
 }
 
+.table-striped > tbody > tr:nth-of-type(2n+1) {
+    background-color: #f9f9f9;
+}
+
+table#whitelist {
+    margin-bottom: 20px;
+}
+
 #whitelist td {
     max-width: 800px;
-    max-width:350px;
     word-wrap: break-word;
 }
 
@@ -13,7 +20,7 @@ table#whitelist th {
 }
 
 #rules button {
-    margin-top:0 !important;
+    margin-top: 0 !important;
 }
 
 .drag-handle {
