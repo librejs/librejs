@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var scriptObject = require("html_script_finder/dom_handler/script_object");
+var scriptObject = require("../lib/html_script_finder/dom_handler/script_object");
 
 exports.testCreateNewScript = function(assert) {
     var script1, script2;

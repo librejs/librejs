@@ -20,7 +20,8 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var removedScripts = require('script_entries/removed_scripts').removedScripts;
+var removedScripts = require('../lib/script_entries/removed_scripts')
+    .removedScripts;
 
 exports.truncateDataTest = function(test) {
     var str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ultricies molestie tellus, eu ullamcorper dui luctus sit amet. Morbi sed urna eu justo malesuada bibendum nec non est. Sed sagittis sodales ullamcorper. Mauris dolor arcu, dignissim ac sollicitudin ac, tempus at orci. Curabitur pretium risus id urna congue cursus. Nulla ullamcorper faucibus nibh, eget ultrices ante vestibulum id. Vestibulum elementum ullamcorper mi, id ultrices lacus faucibus et. Nullam lectus augue, suscipit a elementum at, malesuada eget nulla. Aenean tempus ultrices elit ut vulputate. Ut congue magna ultricies felis rutrum eget ultricies nibh vehicula. In id pellentesque risus. Pellentesque aliquam quam eros, quis placerat eros. Cras molestie, turpis et consectetur sollicitudin, magna enim mattis lectus, et adipiscing erat urna in risus. Vestibulum sed arcu vitae mauris ornare ultricies a sit amet leo. Praesent pharetra, urna in varius fermentum, neque nibh tempor justo, id ullamcorper magna amet.…";

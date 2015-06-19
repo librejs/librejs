@@ -20,7 +20,8 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var relationChecker = require('js_checker/relation_checker').relationChecker('b');
+var relationChecker = require('../lib/js_checker/relation_checker')
+    .relationChecker('b');
 const mn = require("./mock/mock_nodes");
 
 // the fake node.
@@ -62,7 +63,8 @@ exports.testCheckMethodNotAdded = function (test) {
 
 
 exports.testStoreNodeGlobalDeclarations = function (test) {
-    var check = require('js_checker/relation_checker').relationChecker('b');
+    var check = require('../lib/js_checker/relation_checker')
+        .relationChecker('b');
     check.storeNodeGlobalDeclarations(nVar);
     test.assertEqual('def' in check.variableDeclarations, true);
     check.storeNodeGlobalDeclarations(nFunc);

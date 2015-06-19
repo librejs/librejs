@@ -20,12 +20,12 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const nonTrivialCheckModule = require("js_checker/nontrivial_checker");
+const nonTrivialCheckModule = require("../lib/js_checker/nontrivial_checker");
 const check = nonTrivialCheckModule.nonTrivialChecker(false, false);
 const mn = require("./mock/mock_nodes");
 var testRunner;
 
-const constants = require("js_checker/constant_types");
+const constants = require("../lib/js_checker/constant_types");
 var checkTypes = constants.checkTypes;
 
 var testCheckNontrivial = function (assert, n) {

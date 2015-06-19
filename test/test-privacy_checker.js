@@ -20,7 +20,8 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const privacyCheck = require("js_checker/privacy_checker").privacyCheck;
+const privacyCheck = require("../lib/js_checker/privacy_checker")
+      .privacyCheck;
 
 exports.testPrivacyCheckerGoogleAnalyticsRegex = function(assert) {
     // original analytics code this was designed for

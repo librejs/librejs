@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const licenses = require('js_checker/license_definitions');
+const licenses = require('../lib/js_checker/license_definitions');
 
 
 exports.testGetLicenseName = function (test) {

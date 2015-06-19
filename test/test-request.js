@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var xhr2 = require("html_script_finder/dom_handler/request");
+var xhr2 = require("../lib/html_script_finder/dom_handler/request");
 var Request = require("sdk/request").Request;
 
 exports.testHttpsEverywhere = function (test) {

@@ -24,7 +24,7 @@
 // using following command to run after placing nightly is /usr/local/: 
 // cfx --binary=/usr/local/bin/firefox-nightly test -f domHandler
 
-var domHandler = require("html_script_finder/dom_handler");
+var domHandler = require("../lib/html_script_finder/dom_handler");
 var mockDom = require("./mock/mock_dom");
 
 //var loader = test.makeSandboxedLoader();

@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var streamLoader = require("http_observer/stream_loader.js");
+var streamLoader = require("../lib/http_observer/stream_loader.js");
 var {Cc, Ci, Cu, Cm, Cr} = require("chrome");
 
 exports.testListener = function (assert) { 

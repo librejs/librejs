@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var uiInfo = require("ui/ui_info").testModule;
+var uiInfo = require("../lib/ui/ui_info").testModule;
 
  
 exports.testFoundInContactList = function (test) {

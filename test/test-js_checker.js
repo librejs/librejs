@@ -20,8 +20,8 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const jsChecker = require("js_checker/js_checker");
-const constants = require("js_checker/constant_types");
+const jsChecker = require("../lib/js_checker/js_checker");
+const constants = require("../lib/js_checker/constant_types");
 var checkTypes = constants.checkTypes;
 
 var init = function() {

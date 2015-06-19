@@ -7,7 +7,7 @@
     "title": "GNU LibreJS",
     "id": "jid1-KtlZuoiikVfFew@jetpack",
     "description": "GNU LibreJS is an add-on for Mozilla-based browsers (IceCat, Firefox, Abrowser, Iceweasel)\n that prevents the execution of nonfree nontrivial JavaScript as described in \"The Javascript Trap\": http://www.gnu.org/philosophy/javascript-trap.html",
-    "main": "lib/main",
+    "main": "lib/main.js",
     "icon": "data/widget/images/librejs-32.png",
     "icon64": "data/widget/images/librejs-64.png",
     "dependencies": [

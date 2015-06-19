@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var relationChecker = require('js_checker/relation_checker');
+var relationChecker = require('../lib/js_checker/relation_checker');
 const mn = require("./mock/mock_nodes");
 
 exports.testCheckIdentifierIsWindowProperty = function (assert) {

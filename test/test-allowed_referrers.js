@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const allowedRef = require('http_observer/allowed_referrers').allowedReferrers;
+const allowedRef = require('../lib/http_observer/allowed_referrers').allowedReferrers;
 
 var addUrls = function () {
     allowedRef.addPage('http://www.example.org');
