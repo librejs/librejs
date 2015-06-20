@@ -420,7 +420,7 @@ Magnet link: @indicateurl{magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165e
 GNU General Public License (GPL) version 2
 @itemize @bullet
 @item
-Identifier: @samp{GNU-GPL-2.0}
+Identifier: @samp{GPL-2.0}
 @item
 URL: @url{http://www.gnu.org/licenses/gpl-2.0.html}
 @item
@@ -431,7 +431,7 @@ Magnet link: @indicateurl{magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e
 GNU General Public License (GPL) version 3
 @itemize @bullet
 @item
-Identifier: @samp{GNU-GPL-3.0}
+Identifier: @samp{GPL-3.0}
 @item
 URL: @url{http://www.gnu.org/licenses/gpl-3.0.html}
 @item
@@ -442,7 +442,7 @@ Magnet link: @indicateurl{magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664
 GNU Lesser General Public License, version 2.1
 @itemize @bullet
 @item
-Identifier: @samp{GNU-LGPL-2.1}
+Identifier: @samp{LGPL-2.1}
 @item
 URL: @url{http://www.gnu.org/licenses/lgpl-2.1.html}
 @item
@@ -453,7 +453,7 @@ Magnet link: @indicateurl{magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a
 GNU Lesser General Public License, version 3
 @itemize @bullet
 @item
-Identifier: @samp{GNU-LGPL-3.0}
+Identifier: @samp{LGPL-3.0}
 @item
 URL: @url{http://www.gnu.org/licenses/lgpl-3.0.html}
 @item
@@ -464,7 +464,7 @@ Magnet link: @indicateurl{magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317
 GNU Affero General Public License, version 3
 @itemize @bullet
 @item
-Identifier: @samp{GNU-AGPL-3.0}
+Identifier: @samp{AGPL-3.0}
 @item
 URL: @url{http://www.gnu.org/licenses/agpl-3.0.html}
 @item
@@ -659,7 +659,7 @@ table, like this:
         <td><a href="all.min.js">all.min.js</a></td>
         <td>
             <a href="http://www.gnu.org/licenses/gpl-3.0.html"
-                >GNU-GPL-3.0-or-later</a>
+                >GPL-3.0+</a>
             <br />
             <a href="http://www.apache.org/licenses/LICENSE-2.0"
                 >Apache-2.0</a>
