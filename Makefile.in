@@ -21,7 +21,6 @@
 SHELL := /bin/bash
 
 DESTDIR =
-ADDON_SDK = /opt/addon-sdk
 srcdir = @srcdir@
 VPATH = @srcdir@
 prefix = @prefix@
@@ -51,7 +50,7 @@ enabled already, you may, inside your Mozilla-browser, need to go in \
 the menu in Tools > Add-ons and click enable where you see LibreJS. \
 "
 
-CFX_ARGS =
+JPM_ARGS =
 
 all: xpi
 
@@ -103,10 +102,14 @@ dist:
 info: doc/librejs.info
 	cd doc && gendocs.sh --email bug-librejs@gnu.org librejs "GNU LibreJS Manual"
 
+jpm:
+	npm i jpm
+
 xpi: librejs.xpi
 
-librejs.xpi:
-	cd $(ADDON_SDK) && source bin/activate && cd - && cfx $(CFX_ARGS) xpi
+librejs.xpi: jpm
+	npm i
+	jpm xpi
 
 .PHONY: all install install-pdf install-dvi install-html uninstall clean \
 	distclean info pdf dvi html xpi txt
