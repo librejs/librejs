@@ -2,7 +2,8 @@
   "name": "librejs",
   "license": "GPL-3.0+",
   "author": "Loic J. Duros",
-  "homepage": "gnu.org/software/librejs/",
+  "homepage": "https://gnu.org/software/librejs/",
+  "repository": "http://git.savannah.gnu.org/cgit/librejs.git/",
   "version": "6.0.10.20151023",
   "title": "GNU LibreJS",
   "id": "jid1-KtlZuoiikVfFew@jetpack",
@@ -11,9 +12,8 @@
   "icon": "data/widget/images/librejs-32.png",
   "icon64": "data/widget/images/librejs-64.png",
   "dependencies": {
-    "0": "notification-box",
-    "3": "vold-utils",
-    "menuitem": "0.0.4"
+    "menuitem": "0.0.4",
+    "notification-box": "0.1.1"
   },
   "permissions": {
     "private-browsing": true,
