@@ -1,0 +1,11 @@
+.*
+*
+!/data/**
+!/lib/**
+!/locale/**
+!/package.json
+!/icon.png
+!/icon64.png
+!/COPYING
+!/bootstrap.js
+!/install.rdf
