@@ -10,7 +10,7 @@
           <em:description>GNU LibreJS is an add-on for Mozilla-based browsers (IceCat, Firefox, Abrowser, Iceweasel)
  that prevents the execution of nonfree nontrivial JavaScript as described in &quot;The Javascript Trap&quot;: http://www.gnu.org/philosophy/javascript-trap.html</em:description>
           <em:creator>Loic J. Duros</em:creator>
-          <em:iconURL>data/widget/images/librejs-32.png</em:iconURL>
+          <em:iconURL>data/widget/images/librejs-64.png</em:iconURL>
           <em:homepageURL>https://gnu.org/software/librejs/</em:homepageURL>
           <em:optionsURL>data:text/xml,&lt;placeholder/&gt;</em:optionsURL>
           <em:optionsType>2</em:optionsType>
