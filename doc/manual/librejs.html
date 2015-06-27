@@ -108,7 +108,7 @@ ul.no-bullet {list-style: none}
   <li><a name="toc-Installation-Requirements-1" href="#Installation-Requirements">Appendix A Installation Requirements</a>
   <ul class="no-bullet">
     <li><a name="toc-Mozilla-Browser" href="#Mozilla-Browser">A.1 Mozilla Browser</a></li>
-    <li><a name="toc-Mozilla_0027s-Add_002don-SDK" href="#Mozilla_0027s-Add_002don-SDK">A.2 Mozilla&rsquo;s Add-on SDK</a></li>
+    <li><a name="toc-Mozilla_0027s-Jetpack-Manager-for-Node_002ejs" href="#Mozilla_0027s-Jetpack-Manager-for-Node_002ejs">A.2 Mozilla&rsquo;s Jetpack Manager for Node.js</a></li>
   </ul></li>
   <li><a name="toc-LibreJS-Internals-1" href="#LibreJS-Internals">Appendix B LibreJS Internals</a></li>
   <li><a name="toc-Tests-1" href="#Tests">Appendix C Tests</a></li>
@@ -219,7 +219,7 @@ file, or by building it from source.
 
 <a name="Building-the-Package"></a>
 <h3 class="section">3.1 Building the Package</h3>
-<p>After enabling the Add-on SDK, you should be able to use the <code>make</code>
+<p>After installing <code>jpm</code>, you should be able to use the <code>make</code>
 command to build LibreJS from source.
 </p>
 <p>After running <code>make</code>, a new file, <samp>librejs.xpi</samp> should be
@@ -848,41 +848,26 @@ LibreJS has been tested extensively on multiple GNU/Linux distributions,
 but it is compatible any operating system as long as you&rsquo;re using a
 compatible Mozilla browser.
 </p>
-<a name="Mozilla_0027s-Add_002don-SDK"></a>
-<h3 class="appendixsec">A.2 Mozilla&rsquo;s Add-on SDK</h3>
-<p>LibreJS uses the Mozilla Add-on SDK (Software Development Kit), a
-set of APIs and tools to create add-ons for Mozilla browsers.
+<a name="Mozilla_0027s-Jetpack-Manager-for-Node_002ejs"></a>
+<h3 class="appendixsec">A.2 Mozilla&rsquo;s Jetpack Manager for Node.js</h3>
+<p>LibreJS uses the Mozilla <code>jpm</code> tool, a set of utilities for
+creating, testing, running and packaging Mozilla Jetpack Addons.
 </p>
-<p>You do not need the Add-on SDK to use LibreJS xpi file or to install it
+<p>You do not need <code>jpm</code> to use the LibreJS xpi file or to install it
 using the packaged version, but it is required in order to package the
-LibreJS source code into an xpi file using <code>make</code>. If you would like
-to run the tests for LibreJS or make changes to the source files, you
-will need the Add-on SDK as well. For the &ldquo;make&rdquo; command to work
-properly, you must have the <code>cfx</code> command available on your system
+LibreJS source code into an xpi file. If you would like to run the
+tests for LibreJS or make changes to the source files, you
+will need <code>jpm</code> as well. For the &ldquo;make&rdquo; command to work
+properly, you must have the <code>jpm</code> command available on your system
 from the command line.
 </p>
-<p>The latest tarball for the Add-on SDK is available at:
+<p>You can find information on getting <code>jpm</code> at these links:
 </p>
-<p><a href="https://ftp.mozilla.org/pub/mozilla.org/labs/jetpack/jetpack-sdk-latest.tar.gz">https://ftp.mozilla.org/pub/mozilla.org/labs/jetpack/jetpack-sdk-latest.tar.gz</a>
+<p><a href="https://www.npmjs.com/package/jpm">https://www.npmjs.com/package/jpm</a>
 </p>
-<p>Instructions on how to get it working are available here:
+<p><a href="https://developer.mozilla.org/en-US/Add-ons/SDK/Tutorials/Getting_Started_%28jpm%29">https://developer.mozilla.org/en-US/Add-ons/SDK/Tutorials/Getting_Started_%28jpm%29</a>
 </p>
-<p><a href="https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/tutorials/installation.html">https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/tutorials/installation.html</a>
-</p>
-<p>In order to use <code>make</code> with LibreJS source, however, it is ideal to
-have <code>cfx</code> available at all times and for all users.
-</p>
-<p>An easy way to do this is to extract the contents of the tarball and to
-place the files inside <samp>/usr/lib/addon-sdk</samp> and then creating a
-symbolic link in <samp>/usr/bin</samp>, as follows:
-</p>
-<div class="example">
-<pre class="example">sudo ln -s /usr/lib/addon-sdk/bin/cfx /usr/bin/cfx
-</pre></div>
-
-<p>The <code>cfx</code> command will then be available to all users.
-</p>
-<p>The Add-on SDK is released under the Mozilla Public License 2.0.
+<p>JPM is released under the Mozilla Public License 2.0.
 </p>
 <hr>
 <a name="LibreJS-Internals"></a>
