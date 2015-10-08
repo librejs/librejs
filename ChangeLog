@@ -1,3 +1,7 @@
+2015-10-15 Nik Nyby <nikolas@gnu.org>
+	* Revert some commits that were causing problems. Thanks
+	to Ruben for pointing these out.
+
 2015-06-16 Nik Nyby <nikolas@gnu.org>
 	* Add the WTFPL license to the list of accepted licenses.
 	Thanks to CY for pointing out that it was missing.
