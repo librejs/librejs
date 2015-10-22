@@ -1,7 +1,7 @@
 This is librejs.info, produced by makeinfo version 5.2 from
 librejs.texi.
 
-This manual is for GNU LibreJS (version 6.0.10.20151022, 22 October
+This manual is for GNU LibreJS (version 6.0.10.20151023, 23 October
 2015), a GNU IceCat extension to detect and block nonfree nontrivial
 JavaScript on webpages.
 
@@ -24,7 +24,7 @@ File: librejs.info,  Node: Top,  Next: Overview,  Up: (dir)
 LibreJS
 *******
 
-This manual is for GNU LibreJS (version 6.0.10.20151022, 22 October
+This manual is for GNU LibreJS (version 6.0.10.20151023, 23 October
 2015).
 
 * Menu:
