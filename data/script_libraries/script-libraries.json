@@ -364,6 +364,30 @@
         "result": "[freelib]"
     },
 
+    "3efaf11e60ea8c541b6dc26f0ef09f195732587a": {
+        "filename": "https://code.jquery.com/ui/1.11.4/jquery-ui.js",
+        "result": "[freelib]"
+    },
+    "7f650ee30c6a4d3eea04032039b20ff72997559b": {
+        "filename": "https://code.jquery.com/ui/1.11.4/jquery-ui.min.js",
+        "result": "[freelib]"
+    },
+    "0bf0ff43044448711b33453388c3a24d99e6cc9c": {
+        "filename": "https://code.jquery.com/ui/1.11.3/jquery-ui.js",
+        "result": "[freelib]"
+    },
+    "0c72ced078c45968712838ac683f09d0980dd0e8": {
+        "filename": "https://code.jquery.com/ui/1.11.3/jquery-ui.min.js",
+        "result": "[freelib]"
+    },
+    "4e6a74f1dd52f0b7aa4d9777426adecf8d9377fd": {
+        "filename": "https://code.jquery.com/ui/1.11.2/jquery-ui.js",
+        "result": "[freelib]"
+    },
+    "a83caf65714ff3a56aded6088acb525e9d305881": {
+        "filename": "https://code.jquery.com/ui/1.11.2/jquery-ui.min.js",
+        "result": "[freelib]"
+    },
     "0b327b43256da9f57b78e3134aaecc2a4a5a3bad": {
         "filename": "https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.1/jquery-ui.js",
         "result": "[freelib]"
