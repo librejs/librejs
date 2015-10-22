@@ -1,9 +1,9 @@
 This is librejs.info, produced by makeinfo version 5.2 from
 librejs.texi.
 
-This manual is for GNU LibreJS (version 6.0.9, 16 June 2015), a GNU
-IceCat extension to detect and block nonfree nontrivial JavaScript on
-webpages.
+This manual is for GNU LibreJS (version 6.0.10.20151022, 22 October
+2015), a GNU IceCat extension to detect and block nonfree nontrivial
+JavaScript on webpages.
 
    Copyright (C) 2011 2012 2014 2015 Loic J. Duros
 
@@ -24,7 +24,8 @@ File: librejs.info,  Node: Top,  Next: Overview,  Up: (dir)
 LibreJS
 *******
 
-This manual is for GNU LibreJS (version 6.0.9, 16 June 2015).
+This manual is for GNU LibreJS (version 6.0.10.20151022, 22 October
+2015).
 
 * Menu:
 
@@ -343,31 +344,31 @@ and label it accordingly.
           'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
 
    * GNU General Public License (GPL) version 2
-        * Identifier: 'GNU-GPL-2.0'
+        * Identifier: 'GPL-2.0'
         * URL: <http://www.gnu.org/licenses/gpl-2.0.html>
         * Magnet link:
           'magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt'
 
    * GNU General Public License (GPL) version 3
-        * Identifier: 'GNU-GPL-3.0'
+        * Identifier: 'GPL-3.0'
         * URL: <http://www.gnu.org/licenses/gpl-3.0.html>
         * Magnet link:
           'magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt'
 
    * GNU Lesser General Public License, version 2.1
-        * Identifier: 'GNU-LGPL-2.1'
+        * Identifier: 'LGPL-2.1'
         * URL: <http://www.gnu.org/licenses/lgpl-2.1.html>
         * Magnet link:
           'magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a89eac2&dn=lgpl-2.1.txt'
 
    * GNU Lesser General Public License, version 3
-        * Identifier: 'GNU-LGPL-3.0'
+        * Identifier: 'LGPL-3.0'
         * URL: <http://www.gnu.org/licenses/lgpl-3.0.html>
         * Magnet link:
           'magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317705f85&dn=lgpl-3.0.txt'
 
    * GNU Affero General Public License, version 3
-        * Identifier: 'GNU-AGPL-3.0'
+        * Identifier: 'AGPL-3.0'
         * URL: <http://www.gnu.org/licenses/agpl-3.0.html>
         * Magnet link:
           'magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt'
@@ -523,7 +524,7 @@ Labels table, like this:
         <td><a href="all.min.js">all.min.js</a></td>
         <td>
             <a href="http://www.gnu.org/licenses/gpl-3.0.html"
-                >GNU-GPL-3.0-or-later</a>
+                >GPL-3.0+</a>
             <br />
             <a href="http://www.apache.org/licenses/LICENSE-2.0"
                 >Apache-2.0</a>
@@ -1233,17 +1234,17 @@ their use in free software.
 
 
 Tag Table:
-Node: Top828
-Node: Overview1839
-Node: Disclaimer2686
-Node: Installation3182
-Node: How to Use4035
-Node: JavaScript Detection7277
-Node: Free Licenses Detection10685
-Node: Setting Your JavaScript Free17123
-Node: Installation Requirements23969
-Node: LibreJS Internals26126
-Node: Tests27289
-Node: GNU Free Documentation License31796
+Node: Top841
+Node: Overview1865
+Node: Disclaimer2712
+Node: Installation3208
+Node: How to Use4061
+Node: JavaScript Detection7303
+Node: Free Licenses Detection10711
+Node: Setting Your JavaScript Free17129
+Node: Installation Requirements23963
+Node: LibreJS Internals26120
+Node: Tests27283
+Node: GNU Free Documentation License31790
 
 End Tag Table
