@@ -36,6 +36,8 @@ This manual is for GNU LibreJS (version 6.0.10.20151023, 23 October
 * JavaScript Detection::                How LibreJS detects nontrivial Javascript.
 * Free Licenses Detection::             List of licenses detected by LibreJS.
 * Setting Your JavaScript Free::        Information for website owners/maintainers.
+* LibreJS Development Notes::           Documentation about the development of
+                                        LibreJS itself.
 * Installation Requirements::           Requirements to build and install LibreJS.
 * LibreJS Internals::                   How LibreJS works under the hood.
 * Tests::                               Test LibreJS and better understand it.
@@ -424,7 +426,7 @@ information.
 <http://www.gnu.org/licenses/license-list.html>
 
 
-File: librejs.info,  Node: Setting Your JavaScript Free,  Next: Installation Requirements,  Prev: Free Licenses Detection,  Up: Top
+File: librejs.info,  Node: Setting Your JavaScript Free,  Next: LibreJS Development Notes,  Prev: Free Licenses Detection,  Up: Top
 
 7 Setting Your JavaScript Free
 ******************************
@@ -581,7 +583,52 @@ web page:
 <https://www.gnu.org/software/librejs/free-your-javascript.html>
 
 
-File: librejs.info,  Node: Installation Requirements,  Next: LibreJS Internals,  Prev: Setting Your JavaScript Free,  Up: Top
+File: librejs.info,  Node: LibreJS Development Notes,  Next: Installation Requirements,  Prev: Setting Your JavaScript Free,  Up: Top
+
+8 LibreJS Development Notes
+***************************
+
+8.1 Running LibreJS from the source directory
+=============================================
+
+Download Mozilla's Add-on SDK, then do something like this in the
+LibreJS directory:
+
+     cfx run -b `which icecat`
+
+8.2 Debugging
+=============
+
+Uncomment lines 22 and 23 in 'lib/main.js' to enable printing of
+'console.debug()' statements.
+
+8.3 Adding new whitelisted libraries
+====================================
+
+Run the 'data/script_libraries/gethash.sh' script, using the URL to a
+JavaScript file as the argument, then add the output of that command to
+'data/script_libraries/script-libraries.json'.
+
+8.4 Releasing a new version
+===========================
+
+Update the version number in:
+   * 'configure.ac'
+   * 'package.json'
+   * 'doc/version.texi'
+   * 'data/display_panel/content/display-panel.html'
+   * 
+   Then run 'make info' to build the docs with 'gendocs.sh'.
+   * 'git commit' and 'git tag 6.0.4'
+   * Export a tarball:
+        * 'git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4
+          >librejs-6.0.4.tar.gz'
+        * 'mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/'
+   * Make xpi file: 'cfx xpi --strip-sdk; mv librejs.xpi
+     librejs-6.0.4.xpi'
+
+
+File: librejs.info,  Node: Installation Requirements,  Next: LibreJS Internals,  Prev: LibreJS Development Notes,  Up: Top
 
 Appendix A Installation Requirements
 ************************************
@@ -1235,16 +1282,17 @@ their use in free software.
 
 Tag Table:
 Node: Top841
-Node: Overview1865
-Node: Disclaimer2712
-Node: Installation3208
-Node: How to Use4061
-Node: JavaScript Detection7303
-Node: Free Licenses Detection10711
-Node: Setting Your JavaScript Free17129
-Node: Installation Requirements23963
-Node: LibreJS Internals26120
-Node: Tests27283
-Node: GNU Free Documentation License31790
+Node: Overview2000
+Node: Disclaimer2847
+Node: Installation3343
+Node: How to Use4196
+Node: JavaScript Detection7438
+Node: Free Licenses Detection10846
+Node: Setting Your JavaScript Free17264
+Node: LibreJS Development Notes24098
+Node: Installation Requirements25470
+Node: LibreJS Internals27624
+Node: Tests28787
+Node: GNU Free Documentation License33294
 
 End Tag Table

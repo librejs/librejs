@@ -98,6 +98,13 @@ ul.no-bullet {list-style: none}
     <li><a name="toc-Adding-a-stylized-comment-in-your-JavaScript-files-and-on-your-page" href="#Adding-a-stylized-comment-in-your-JavaScript-files-and-on-your-page">7.2 Adding a stylized comment in your JavaScript files and on your page</a></li>
   </ul></li>
 </li>
+  <li><a name="toc-LibreJS-Development-Notes-1" href="#LibreJS-Development-Notes">8 LibreJS Development Notes</a>
+  <ul class="no-bullet">
+    <li><a name="toc-Running-LibreJS-from-the-source-directory" href="#Running-LibreJS-from-the-source-directory">8.1 Running LibreJS from the source directory</a></li>
+    <li><a name="toc-Debugging" href="#Debugging">8.2 Debugging</a></li>
+    <li><a name="toc-Adding-new-whitelisted-libraries" href="#Adding-new-whitelisted-libraries">8.3 Adding new whitelisted libraries</a></li>
+    <li><a name="toc-Releasing-a-new-version" href="#Releasing-a-new-version">8.4 Releasing a new version</a></li>
+  </ul></li>
   <li><a name="toc-Installation-Requirements-1" href="#Installation-Requirements">Appendix A Installation Requirements</a>
   <ul class="no-bullet">
     <li><a name="toc-Mozilla-Browser" href="#Mozilla-Browser">A.1 Mozilla Browser</a></li>
@@ -135,9 +142,12 @@ Next: <a href="#Overview" accesskey="n" rel="next">Overview</a>, Up: <a href="di
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Setting-Your-JavaScript-Free" accesskey="7">Setting Your JavaScript Free</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Information for website owners/maintainers.
 </td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#Installation-Requirements" accesskey="8">Installation Requirements</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Requirements to build and install LibreJS.
+<tr><td align="left" valign="top">&bull; <a href="#LibreJS-Development-Notes" accesskey="8">LibreJS Development Notes</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Documentation about the development of
+                                        LibreJS itself.
 </td></tr>
-<tr><td align="left" valign="top">&bull; <a href="#LibreJS-Internals" accesskey="9">LibreJS Internals</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">How LibreJS works under the hood.
+<tr><td align="left" valign="top">&bull; <a href="#Installation-Requirements" accesskey="9">Installation Requirements</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Requirements to build and install LibreJS.
+</td></tr>
+<tr><td align="left" valign="top">&bull; <a href="#LibreJS-Internals">LibreJS Internals</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">How LibreJS works under the hood.
 </td></tr>
 <tr><td align="left" valign="top">&bull; <a href="#Tests">Tests</a>:</td><td>&nbsp;&nbsp;</td><td align="left" valign="top">Test LibreJS and better understand it.
 </td></tr>
@@ -601,7 +611,7 @@ information.
 <a name="Setting-Your-JavaScript-Free"></a>
 <div class="header">
 <p>
-Next: <a href="#Installation-Requirements" accesskey="n" rel="next">Installation Requirements</a>, Previous: <a href="#Free-Licenses-Detection" accesskey="p" rel="prev">Free Licenses Detection</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+Next: <a href="#LibreJS-Development-Notes" accesskey="n" rel="next">LibreJS Development Notes</a>, Previous: <a href="#Free-Licenses-Detection" accesskey="p" rel="prev">Free Licenses Detection</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
 </div>
 <a name="Setting-Your-JavaScript-Free-1"></a>
 <h2 class="chapter">7 Setting Your JavaScript Free</h2>
@@ -765,10 +775,60 @@ remains intact.
 page: <a href="https://www.gnu.org/software/librejs/free-your-javascript.html">https://www.gnu.org/software/librejs/free-your-javascript.html</a>
 </p>
 <hr>
+<a name="LibreJS-Development-Notes"></a>
+<div class="header">
+<p>
+Next: <a href="#Installation-Requirements" accesskey="n" rel="next">Installation Requirements</a>, Previous: <a href="#Setting-Your-JavaScript-Free" accesskey="p" rel="prev">Setting Your JavaScript Free</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+</div>
+<a name="LibreJS-Development-Notes-1"></a>
+<h2 class="chapter">8 LibreJS Development Notes</h2>
+
+<a name="Running-LibreJS-from-the-source-directory"></a>
+<h3 class="section">8.1 Running LibreJS from the source directory</h3>
+<p>Download Mozilla&rsquo;s Add-on SDK, then do something like this in the LibreJS
+directory:
+</p>
+<div class="example">
+<pre class="example">cfx run -b `which icecat`
+</pre></div>
+
+<a name="Debugging"></a>
+<h3 class="section">8.2 Debugging</h3>
+<p>Uncomment lines 22 and 23 in <samp>lib/main.js</samp> to enable printing of
+<code>console.debug()</code> statements.
+</p>
+<a name="Adding-new-whitelisted-libraries"></a>
+<h3 class="section">8.3 Adding new whitelisted libraries</h3>
+<p>Run the <samp>data/script_libraries/gethash.sh</samp> script, using the URL
+to a JavaScript file as the argument, then add the output of that
+command to <samp>data/script_libraries/script-libraries.json</samp>.
+</p>
+<a name="Releasing-a-new-version"></a>
+<h3 class="section">8.4 Releasing a new version</h3>
+<p>Update the version number in:
+</p><ul>
+<li> <samp>configure.ac</samp>
+</li><li> <samp>package.json</samp>
+</li><li> <samp>doc/version.texi</samp>
+</li><li> <samp>data/display_panel/content/display-panel.html</samp>
+</li></ul>
+
+<p>Then run &lsquo;<samp>make info</samp>&rsquo; to build the docs with <samp>gendocs.sh</samp>.
+</p><ul>
+<li> &lsquo;<samp>git commit</samp>&rsquo; and &lsquo;<samp>git tag 6.0.4</samp>&rsquo;
+</li><li> Export a tarball:
+<ul>
+<li> &lsquo;<samp>git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 &gt;librejs-6.0.4.tar.gz</samp>&rsquo;
+</li><li> &lsquo;<samp>mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/</samp>&rsquo;
+</li></ul>
+</li><li> Make xpi file: &lsquo;<samp>cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi</samp>&rsquo;
+</li></ul>
+
+<hr>
 <a name="Installation-Requirements"></a>
 <div class="header">
 <p>
-Next: <a href="#LibreJS-Internals" accesskey="n" rel="next">LibreJS Internals</a>, Previous: <a href="#Setting-Your-JavaScript-Free" accesskey="p" rel="prev">Setting Your JavaScript Free</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
+Next: <a href="#LibreJS-Internals" accesskey="n" rel="next">LibreJS Internals</a>, Previous: <a href="#LibreJS-Development-Notes" accesskey="p" rel="prev">LibreJS Development Notes</a>, Up: <a href="#Top" accesskey="u" rel="up">Top</a> &nbsp; [<a href="#SEC_Contents" title="Table of contents" rel="contents">Contents</a>]</p>
 </div>
 <a name="Installation-Requirements-1"></a>
 <h2 class="appendix">Appendix A Installation Requirements</h2>

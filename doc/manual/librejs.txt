@@ -17,6 +17,11 @@ LibreJS
     7.1.1 Specifying multiple licenses for a single JavaScript file
   7.2 Adding a stylized comment in your JavaScript files and on your page
 
+8 LibreJS Development Notes
+  8.1 Running LibreJS from the source directory
+  8.2 Debugging
+  8.3 Adding new whitelisted libraries
+  8.4 Releasing a new version
 Appendix A Installation Requirements
   A.1 Mozilla Browser
   A.2 Mozilla's Add-on SDK
@@ -546,6 +551,48 @@ license remains intact.
    For more info on making your JavaScript LibreJS-compliant, see this
 web page:
 <https://www.gnu.org/software/librejs/free-your-javascript.html>
+
+8 LibreJS Development Notes
+***************************
+
+8.1 Running LibreJS from the source directory
+=============================================
+
+Download Mozilla's Add-on SDK, then do something like this in the
+LibreJS directory:
+
+     cfx run -b `which icecat`
+
+8.2 Debugging
+=============
+
+Uncomment lines 22 and 23 in 'lib/main.js' to enable printing of
+'console.debug()' statements.
+
+8.3 Adding new whitelisted libraries
+====================================
+
+Run the 'data/script_libraries/gethash.sh' script, using the URL to a
+JavaScript file as the argument, then add the output of that command to
+'data/script_libraries/script-libraries.json'.
+
+8.4 Releasing a new version
+===========================
+
+Update the version number in:
+   * 'configure.ac'
+   * 'package.json'
+   * 'doc/version.texi'
+   * 'data/display_panel/content/display-panel.html'
+   * 
+   Then run 'make info' to build the docs with 'gendocs.sh'.
+   * 'git commit' and 'git tag 6.0.4'
+   * Export a tarball:
+        * 'git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4
+          >librejs-6.0.4.tar.gz'
+        * 'mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/'
+   * Make xpi file: 'cfx xpi --strip-sdk; mv librejs.xpi
+     librejs-6.0.4.xpi'
 
 Appendix A Installation Requirements
 ************************************

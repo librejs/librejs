@@ -51,6 +51,8 @@ This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}).
 * JavaScript Detection::                How LibreJS detects nontrivial Javascript.
 * Free Licenses Detection::             List of licenses detected by LibreJS.
 * Setting Your JavaScript Free::        Information for website owners/maintainers.
+* LibreJS Development Notes::           Documentation about the development of
+                                        LibreJS itself.
 * Installation Requirements::           Requirements to build and install LibreJS.
 * LibreJS Internals::                   How LibreJS works under the hood.
 * Tests::                               Test LibreJS and better understand it.
@@ -714,6 +716,56 @@ remains intact.
     
 For more info on making your JavaScript LibreJS-compliant, see this web
 page: @url{https://www.gnu.org/software/librejs/free-your-javascript.html}
+
+@node LibreJS Development Notes
+@chapter LibreJS Development Notes
+
+@section Running LibreJS from the source directory
+Download Mozilla's Add-on SDK, then do something like this in the LibreJS
+directory:
+
+@example
+cfx run -b `which icecat`
+@end example
+
+@section Debugging
+Uncomment lines 22 and 23 in @file{lib/main.js} to enable printing of
+@code{console.debug()} statements.
+
+@section Adding new whitelisted libraries
+Run the @file{data/script_libraries/gethash.sh} script, using the URL
+to a JavaScript file as the argument, then add the output of that
+command to @file{data/script_libraries/script-libraries.json}.
+
+@section Releasing a new version
+Update the version number in:
+@itemize @bullet
+@item
+@file{configure.ac}
+@item
+@file{package.json}
+@item
+@file{doc/version.texi}
+@item
+@file{data/display_panel/content/display-panel.html}
+@item
+@end itemize
+
+Then run @samp{make info} to build the docs with @file{gendocs.sh}.
+@itemize @bullet
+@item
+@samp{git commit} and @samp{git tag 6.0.4}
+@item
+Export a tarball:
+@itemize @bullet
+@item
+@samp{git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 >librejs-6.0.4.tar.gz}
+@item
+@samp{mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/}
+@end itemize
+@item
+Make xpi file: @samp{cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi}
+@end itemize
 
 @node Installation Requirements
 @appendix Installation Requirements
