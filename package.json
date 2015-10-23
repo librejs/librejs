@@ -53,8 +53,8 @@
     }
   ],
   "scripts": {
-    "pretest": "jshint ./lib/ ./data/",
-    "test": "cfx test -v"
+    "pretest": "jshint lib data",
+    "test": "jpm test -v"
   },
   "jscsConfig": {
     "preset": "google",

@@ -1,0 +1,3 @@
+data/settings/third-party/
+data/chrome_worker/parser/
+lib/url_handler/node_*
