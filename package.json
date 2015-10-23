@@ -11,7 +11,7 @@
   "main": "lib/main.js",
   "icon": "data/widget/images/librejs-64.png",
   "dependencies": {
-    "menuitem": "0.0.4",
+    "menuitem": "0.0.5",
     "notification-box": "0.1.1"
   },
   "permissions": {
@@ -53,7 +53,7 @@
     }
   ],
   "scripts": {
-    "pretest": "jshint ./lib/ ./data/ --exclude ./data/settings/third-party/",
+    "pretest": "jshint ./lib/ ./data/",
     "test": "cfx test -v"
   },
   "jscsConfig": {
