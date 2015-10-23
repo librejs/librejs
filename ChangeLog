@@ -1,3 +1,7 @@
+2015-10-22 Nik Nyby <nikolas@gnu.org>
+	* Add some notes on working with the LibreJS codebase
+	to the manual.
+
 2015-10-15 Nik Nyby <nikolas@gnu.org>
 	* Revert some commits that were causing problems. Thanks
 	to Ruben for pointing these out.
