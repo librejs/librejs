@@ -24,7 +24,7 @@ const {Cc,Ci} = require('chrome');
 var parser = Cc["@mozilla.org/xmlextras/domparser;1"]
     .createInstance(Ci.nsIDOMParser);
 
-var WebLabelFinder = require('html_script_finder/web_labels/js_web_labels')
+var WebLabelFinder = require('../lib/html_script_finder/web_labels/js_web_labels')
     .WebLabelFinder;
 
 exports.testSearchForJsLinkEmpty = function (assert) {

@@ -323,7 +323,8 @@ var list = [
 ];
 
 list = ["http://code.jquery.com/jquery-1.8.2.min.js"];
-const scriptsCached = require("script_entries/scripts_cache").scriptsCached;
+const scriptsCached = require("../lib/script_entries/scripts_cache")
+      .scriptsCached;
 
 
 var counter = 0;
@@ -333,16 +334,13 @@ var popAndEncryptRemoteScript = function (test) {
     try {
         var currentUrl = list.pop();
         var script = {url: currentUrl};
-        require('html_script_finder/dom_handler/request').request(script, 
-                function (script, data) {
-                    //console.log('"',scriptsCached.getHash(data), '":
-                    //{"filename": "', currentUrl, '", "result": 6}');
-                    counter++;
-                    popAndEncryptRemoteScript(test);
-
-                    
-                }).request();
-        
+        require('../lib/html_script_finder/dom_handler/request').request(
+            script, function (script, data) {
+                //console.log('"',scriptsCached.getHash(data), '":
+                //{"filename": "', currentUrl, '", "result": 6}');
+                counter++;
+                popAndEncryptRemoteScript(test);
+            }).request();
     } catch (e) {
         test.assertEqual(counter, totalScripts);
         test.done();

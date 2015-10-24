@@ -29,7 +29,7 @@ var mockLicenseList = [{
     'free': true
 }];
 
-var dom_handler = require('html_script_finder/dom_handler');
+var dom_handler = require('../lib/html_script_finder/dom_handler');
 
 exports.testScriptHasJsWebLabel = function (assert) {
     var dm = new dom_handler.DomHandler();

@@ -1,9 +1,12 @@
-language: python
-python:
-  - "2.7"
+language: node_js
+node_js:
+  - "4.1.2"
 addons:
-  firefox: "41.0.1"
+  firefox: "41.0.2"
 before_script:
   - "export DISPLAY=:99.0"
   - "sh -e /etc/init.d/xvfb start"
-script: ./test.sh
+script:
+  - npm i jpm
+  - npm i
+  - jpm test

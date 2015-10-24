@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var acceptedScripts = require('script_entries/accepted_scripts')
+var acceptedScripts = require('../lib/script_entries/accepted_scripts')
     .acceptedScripts;
 
 exports.testAddAScript = function (assert) {

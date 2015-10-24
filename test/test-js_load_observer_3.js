@@ -24,10 +24,12 @@ var tabs = require("sdk/tabs");
 var pageMod = require("sdk/page-mod");
 
 // use the two buckets.
-var removedScripts = require("script_entries/removed_scripts").removedScripts;
-var acceptedScripts = require("script_entries/accepted_scripts").acceptedScripts;
+var removedScripts = require("../lib/script_entries/removed_scripts")
+    .removedScripts;
+var acceptedScripts = require("../lib/script_entries/accepted_scripts")
+    .acceptedScripts;
 
-var jsLoadObserver = require("js_load_observer/js_load_observer");
+var jsLoadObserver = require("../lib/js_load_observer/js_load_observer");
 
 var reset = function(url) {
     acceptedScripts.clearScripts(url);

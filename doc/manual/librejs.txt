@@ -24,7 +24,7 @@ LibreJS
   8.4 Releasing a new version
 Appendix A Installation Requirements
   A.1 Mozilla Browser
-  A.2 Mozilla's Add-on SDK
+  A.2 Mozilla's Jetpack Manager for Node.js
 Appendix B LibreJS Internals
 Appendix C Tests
 Appendix D GNU Free Documentation License
@@ -72,8 +72,8 @@ or by building it from source.
 3.1 Building the Package
 ========================
 
-After enabling the Add-on SDK, you should be able to use the 'make'
-command to build LibreJS from source.
+After installing 'jpm', you should be able to use the 'make' command to
+build LibreJS from source.
 
    After running 'make', a new file, 'librejs.xpi' should be generated.
 This is the file that can be installed in a Mozilla browser.
@@ -611,40 +611,26 @@ LibreJS has been tested extensively on multiple GNU/Linux distributions,
 but it is compatible any operating system as long as you're using a
 compatible Mozilla browser.
 
-A.2 Mozilla's Add-on SDK
-========================
+A.2 Mozilla's Jetpack Manager for Node.js
+=========================================
 
-LibreJS uses the Mozilla Add-on SDK (Software Development Kit), a set of
-APIs and tools to create add-ons for Mozilla browsers.
+LibreJS uses the Mozilla 'jpm' tool, a set of utilities for creating,
+testing, running and packaging Mozilla Jetpack Addons.
 
-   You do not need the Add-on SDK to use LibreJS xpi file or to install
-it using the packaged version, but it is required in order to package
-the LibreJS source code into an xpi file using 'make'.  If you would
-like to run the tests for LibreJS or make changes to the source files,
-you will need the Add-on SDK as well.  For the "make" command to work
-properly, you must have the 'cfx' command available on your system from
-the command line.
+   You do not need 'jpm' to use the LibreJS xpi file or to install it
+using the packaged version, but it is required in order to package the
+LibreJS source code into an xpi file.  If you would like to run the
+tests for LibreJS or make changes to the source files, you will need
+'jpm' as well.  For the "make" command to work properly, you must have
+the 'jpm' command available on your system from the command line.
 
-   The latest tarball for the Add-on SDK is available at:
+   You can find information on getting 'jpm' at these links:
 
-   <https://ftp.mozilla.org/pub/mozilla.org/labs/jetpack/jetpack-sdk-latest.tar.gz>
+   <https://www.npmjs.com/package/jpm>
 
-   Instructions on how to get it working are available here:
+   <https://developer.mozilla.org/en-US/Add-ons/SDK/Tutorials/Getting_Started_%28jpm%29>
 
-   <https://addons.mozilla.org/en-US/developers/docs/sdk/latest/dev-guide/tutorials/installation.html>
-
-   In order to use 'make' with LibreJS source, however, it is ideal to
-have 'cfx' available at all times and for all users.
-
-   An easy way to do this is to extract the contents of the tarball and
-to place the files inside '/usr/lib/addon-sdk' and then creating a
-symbolic link in '/usr/bin', as follows:
-
-     sudo ln -s /usr/lib/addon-sdk/bin/cfx /usr/bin/cfx
-
-   The 'cfx' command will then be available to all users.
-
-   The Add-on SDK is released under the Mozilla Public License 2.0.
+   JPM is released under the Mozilla Public License 2.0.
 
 Appendix B LibreJS Internals
 ****************************

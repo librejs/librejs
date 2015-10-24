@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
-var crypto = require("script_entries/crypto");
+var crypto = require("../lib/script_entries/crypto");
 
 exports.testSha1EncryptTest = function(assert) {
     var str = "This is my test string";

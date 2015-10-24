@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var htmlParser = require("html_script_finder/html_parser");
+var htmlParser = require("../lib/html_script_finder/html_parser");
 
 var {Cc, Ci, Cu, Cm, Cr} = require("chrome");
 

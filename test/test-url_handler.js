@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
-const urlHandler = require('url_handler/url_handler');
+const urlHandler = require('../lib/url_handler/url_handler');
 
 exports.testRemoveFragment1 = function (test) {
     var url = 'http://example.org/blah.html#section';

@@ -20,7 +20,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-var main = require('main');
+var main = require('../lib/main');
 var tabs = require('sdk/tabs');
 
 /*exports.testBug = function (assert, done) {

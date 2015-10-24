@@ -23,7 +23,7 @@
 
 forget this test for now.
 
-var main = require("main");
+var main = require("../lib/main");
 
 var pageMod = require("sdk/page-mod");
 var tabs = require("sdk/tabs");

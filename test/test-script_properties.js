@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
-var scriptProperties = require("html_script_finder/dom_handler/script_properties");
+var scriptProperties = require("../lib/html_script_finder/dom_handler/script_properties");
 const scriptTypes = scriptProperties.scriptTypes;
 const statusTypes = scriptProperties.statusTypes;
 

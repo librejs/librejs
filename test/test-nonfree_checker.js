@@ -20,8 +20,8 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const check = require("js_checker/free_checker");
-const licenses = require("js_checker/license_definitions");
+const check = require("../lib/js_checker/free_checker");
+const licenses = require("../lib/js_checker/license_definitions");
 const mockNodes = require("./mock/mock_nodes_with_comments");
 
 var mockLicense = function ()  {
@@ -95,7 +95,7 @@ exports.testCheckNodeFreeLicenseNotFree = function (test) {
 /*
 exports.testLicenseToRegexp = function (test) {
     var loader = test.makeSandboxedLoader();
-    var module = loader.require('js_checker/free_checker');
+    var module = loader.require('../lib/js_checker/free_checker');
     var privateScope = loader.findSandboxForModule('js_checker/free_checker'.toString()).globalScope;
     // ensure the regex values are truthy.
     test.assert(privateScope.licenses.licenses.gplv2.licenseFragments[0].regex);

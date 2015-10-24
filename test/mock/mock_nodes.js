@@ -19,7 +19,7 @@
  * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-const types = require("js_checker/constant_types").token;
+const types = require("../../lib/js_checker/constant_types").token;
 
 
 exports.mockNodes = { 
