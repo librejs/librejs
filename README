@@ -6,10 +6,10 @@ pages containing code that is either trivial and/or free.
 Notes on working with the code
 -------------------------------
 ## Running the addon ##
-Download Mozilla's Add-on SDK, then do something like this in the LibreJS
+Download jpm, then do something like this in the LibreJS
 directory:
 
-    cfx run -b `which icecat`
+    jpm run -b `which abrowser`
 
 ## Debugging ##
 Uncomment lines 22 and 23 in lib/main.js to enable printing of
@@ -29,4 +29,4 @@ console.debug() statements.
 * Export a tarball:
     git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 >librejs-6.0.4.tar.gz
     mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/
-* Make xpi file: cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi
+* Make xpi file: jpm xpi; mv librejs.xpi librejs-6.0.4.xpi

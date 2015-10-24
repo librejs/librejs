@@ -71,11 +71,11 @@ Next: <a href="Installation-Requirements.html#Installation-Requirements" accessk
 
 <a name="Running-LibreJS-from-the-source-directory"></a>
 <h3 class="section">8.1 Running LibreJS from the source directory</h3>
-<p>Download Mozilla&rsquo;s Add-on SDK, then do something like this in the LibreJS
+<p>Download <code>jpm</code>, then do something like this in the LibreJS
 directory:
 </p>
 <div class="example">
-<pre class="example">cfx run -b `which icecat`
+<pre class="example">jpm run -b `which abrowser`
 </pre></div>
 
 <a name="Debugging"></a>
@@ -107,7 +107,7 @@ command to <samp>data/script_libraries/script-libraries.json</samp>.
 <li> &lsquo;<samp>git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 &gt;librejs-6.0.4.tar.gz</samp>&rsquo;
 </li><li> &lsquo;<samp>mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/</samp>&rsquo;
 </li></ul>
-</li><li> Make xpi file: &lsquo;<samp>cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi</samp>&rsquo;
+</li><li> Make xpi file: &lsquo;<samp>jpm xpi; mv librejs.xpi librejs-6.0.4.xpi</samp>&rsquo;
 </li></ul>
 
 

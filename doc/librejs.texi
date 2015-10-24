@@ -721,11 +721,11 @@ page: @url{https://www.gnu.org/software/librejs/free-your-javascript.html}
 @chapter LibreJS Development Notes
 
 @section Running LibreJS from the source directory
-Download Mozilla's Add-on SDK, then do something like this in the LibreJS
+Download @command{jpm}, then do something like this in the LibreJS
 directory:
 
 @example
-cfx run -b `which icecat`
+jpm run -b `which abrowser`
 @end example
 
 @section Debugging
@@ -764,7 +764,7 @@ Export a tarball:
 @samp{mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/}
 @end itemize
 @item
-Make xpi file: @samp{cfx xpi --strip-sdk; mv librejs.xpi librejs-6.0.4.xpi}
+Make xpi file: @samp{jpm xpi; mv librejs.xpi librejs-6.0.4.xpi}
 @end itemize
 
 @node Installation Requirements

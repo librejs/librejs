@@ -558,10 +558,9 @@ web page:
 8.1 Running LibreJS from the source directory
 =============================================
 
-Download Mozilla's Add-on SDK, then do something like this in the
-LibreJS directory:
+Download 'jpm', then do something like this in the LibreJS directory:
 
-     cfx run -b `which icecat`
+     jpm run -b `which abrowser`
 
 8.2 Debugging
 =============
@@ -591,8 +590,7 @@ Update the version number in:
         * 'git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4
           >librejs-6.0.4.tar.gz'
         * 'mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/'
-   * Make xpi file: 'cfx xpi --strip-sdk; mv librejs.xpi
-     librejs-6.0.4.xpi'
+   * Make xpi file: 'jpm xpi; mv librejs.xpi librejs-6.0.4.xpi'
 
 Appendix A Installation Requirements
 ************************************
