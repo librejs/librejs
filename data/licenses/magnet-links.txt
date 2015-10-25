@@ -23,6 +23,7 @@ magnet:?xt=urn:btih:2f25cfbac271643d1e41a754034e8daedeb8a281&dn=magnet-links.txt
 magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt
 magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt
 magnet:?xt=urn:btih:5866afca5f37889c0c1fdd108f4922d4fcdb5e3d&dn=unlicense.txt
-magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt
+magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt
+magnet:?xt=urn:btih:48429d8ae6b908f46e0e6aeabf2130688ef2f93a&dn=wtfpl.txt
 magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt
 magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt

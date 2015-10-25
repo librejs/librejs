@@ -1,9 +1,9 @@
 This is librejs.info, produced by makeinfo version 5.2 from
 librejs.texi.
 
-This manual is for GNU LibreJS (version 6.0.10.20151023, 23 October
-2015), a GNU IceCat extension to detect and block nonfree nontrivial
-JavaScript on webpages.
+This manual is for GNU LibreJS (version 6.0.10, 25 October 2015), a GNU
+IceCat extension to detect and block nonfree nontrivial JavaScript on
+webpages.
 
    Copyright (C) 2011 2012 2014 2015 Loic J. Duros
 
@@ -24,8 +24,7 @@ File: librejs.info,  Node: Top,  Next: Overview,  Up: (dir)
 LibreJS
 *******
 
-This manual is for GNU LibreJS (version 6.0.10.20151023, 23 October
-2015).
+This manual is for GNU LibreJS (version 6.0.10, 25 October 2015).
 
 * Menu:
 
@@ -395,6 +394,12 @@ and label it accordingly.
         * Magnet Link:
           'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
 
+   * Universal Permissive License
+        * Identifier: 'UPL-1.0'
+        * URL: <https://oss.oracle.com/licenses/upl/>
+        * Magnet link:
+          'magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt'
+
    * WTFPL
         * Identifier: 'WTFPL'
         * URL: <http://www.wtfpl.net/txt/copying/>
@@ -620,7 +625,7 @@ Update the version number in:
    Then run 'make info' to build the docs with 'gendocs.sh'.
    * 'git commit' and 'git tag 6.0.4'
    * Export a tarball:
-        * 'git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4
+        * 'git archive --format=tar.gz --prefix=librejs-6.0.4/ 6.0.4
           >librejs-6.0.4.tar.gz'
         * 'mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/'
    * Make xpi file: 'jpm xpi; mv librejs.xpi librejs-6.0.4.xpi'
@@ -1265,18 +1270,18 @@ their use in free software.
 
 
 Tag Table:
-Node: Top841
-Node: Overview2000
-Node: Disclaimer2847
-Node: Installation3343
-Node: How to Use4189
-Node: JavaScript Detection7431
-Node: Free Licenses Detection10839
-Node: Setting Your JavaScript Free17257
-Node: LibreJS Development Notes24091
-Node: Installation Requirements25433
-Node: LibreJS Internals27040
-Node: Tests28203
-Node: GNU Free Documentation License32710
+Node: Top832
+Node: Overview1982
+Node: Disclaimer2829
+Node: Installation3325
+Node: How to Use4171
+Node: JavaScript Detection7413
+Node: Free Licenses Detection10821
+Node: Setting Your JavaScript Free17471
+Node: LibreJS Development Notes24305
+Node: Installation Requirements25648
+Node: LibreJS Internals27255
+Node: Tests28418
+Node: GNU Free Documentation License32925
 
 End Tag Table

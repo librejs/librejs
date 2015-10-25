@@ -2,6 +2,9 @@
 	* Fixed a bug where @license-end was getting ignored
 	in some cases. Thanks to Micah Cowan for debugging this.
 
+	* Add the Universal Permissive License to list of recognized
+	licenses. Thanks to Benjamin Przybocki for suggesting it.
+
 2015-10-23 Nik Nyby <nikolas@gnu.org>
 	* Converted LibreJS to use jpm instead of the old add-on
 	system: cfx. Thanks to Adrian Aichner for helping out

@@ -506,6 +506,17 @@ Magnet Link: @indicateurl{magnet:?xt=urn:btih:e95b018ef3580986a04669f1b587959221
 @end itemize
 
 @item
+Universal Permissive License
+@itemize @bullet
+@item
+Identifier: @samp{UPL-1.0}
+@item
+URL: @url{https://oss.oracle.com/licenses/upl/}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt}
+@end itemize
+
+@item
 WTFPL
 @itemize @bullet
 @item
@@ -759,7 +770,7 @@ Then run @samp{make info} to build the docs with @file{gendocs.sh}.
 Export a tarball:
 @itemize @bullet
 @item
-@samp{git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 >librejs-6.0.4.tar.gz}
+@samp{git archive --format=tar.gz --prefix=librejs-6.0.4/ 6.0.4 >librejs-6.0.4.tar.gz}
 @item
 @samp{mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/}
 @end itemize

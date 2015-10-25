@@ -27,6 +27,6 @@ console.debug() statements.
 * Then run `make info` to build the docs with gendocs.sh
 * `git commit` and `git tag 6.0.4`
 * Export a tarball:
-    git archive --format=tar.gz --prefix=librejs-6.0.4 6.0.4 >librejs-6.0.4.tar.gz
+    git archive --format=tar.gz --prefix=librejs-6.0.4/ 6.0.4 >librejs-6.0.4.tar.gz
     mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/
 * Make xpi file: jpm xpi; mv librejs.xpi librejs-6.0.4.xpi
