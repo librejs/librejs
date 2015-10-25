@@ -1,5 +1,6 @@
 *.cache
 *.log
+doc/manual/
 configure
 config.status
 gendocs_template
