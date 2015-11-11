@@ -133,10 +133,10 @@ installed and whether to allow it to run or not.
 @section LibreJS in action
 
 After installing the add-on, you will see the LibreJS widget in the
-add-on bar at the bottom of the browser window.  After loading a page,
-left-click on the widget to view the deactivated JavaScript code from
-the page (both on page and external) and, if applicable, the scripts
-that were accepted.
+add-on bar at the top right of the browser window.  After loading a
+page, left-click on the widget to view the deactivated JavaScript code
+from the page (both on page and external) and, if applicable, the
+scripts that were accepted.
 
 @section Complaint Feature
 
