@@ -30,3 +30,6 @@ console.debug() statements.
     git archive --format=tar.gz --prefix=librejs-6.0.4/ 6.0.4 >librejs-6.0.4.tar.gz
     mv librejs-6.0.4.tar.gz ~/releases/librejs-6.0.4/
 * Make xpi file: jpm xpi; mv librejs.xpi librejs-6.0.4.xpi
+* Upload to gnu servers, update gnu.org/s/librejs links
+* Make announcement on info-gnu and savannah.gnu.org
+* Update #librejs topic
