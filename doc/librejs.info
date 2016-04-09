@@ -1,4 +1,4 @@
-This is librejs.info, produced by makeinfo version 5.2 from
+This is librejs.info, produced by makeinfo version 6.0 from
 librejs.texi.
 
 This manual is for GNU LibreJS (version 6.0.10, 25 October 2015), a GNU
@@ -405,6 +405,12 @@ and label it accordingly.
         * URL: <http://www.wtfpl.net/txt/copying/>
         * Magnet link:
           'magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt'
+
+   * Unlicense
+        * Identifier: 'Unlicense'
+        * URL: <http://unlicense.org/UNLICENSE>
+        * Magnet link:
+          'magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt'
 
    * X11 License
         * URL: <http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3>
@@ -1277,11 +1283,11 @@ Node: Installation3325
 Node: How to Use4171
 Node: JavaScript Detection7413
 Node: Free Licenses Detection10821
-Node: Setting Your JavaScript Free17471
-Node: LibreJS Development Notes24305
-Node: Installation Requirements25648
-Node: LibreJS Internals27255
-Node: Tests28418
-Node: GNU Free Documentation License32925
+Node: Setting Your JavaScript Free17682
+Node: LibreJS Development Notes24516
+Node: Installation Requirements25859
+Node: LibreJS Internals27466
+Node: Tests28629
+Node: GNU Free Documentation License33136
 
 End Tag Table

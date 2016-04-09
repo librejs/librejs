@@ -528,6 +528,17 @@ Magnet link: @indicateurl{magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6
 @end itemize
 
 @item
+Unlicense
+@itemize @bullet
+@item
+Identifier: @samp{Unlicense}
+@item
+URL: @url{http://unlicense.org/UNLICENSE}
+@item
+Magnet link: @indicateurl{magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt}
+@end itemize
+
+@item
 X11 License
 @itemize @bullet
 @item
