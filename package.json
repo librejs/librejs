@@ -4,7 +4,7 @@
   "author": "Loic J. Duros",
   "homepage": "https://gnu.org/software/librejs/",
   "repository": "http://git.savannah.gnu.org/cgit/librejs.git/",
-  "version": "6.0.12",
+  "version": "6.0.13",
   "title": "GNU LibreJS",
   "id": "jid1-KtlZuoiikVfFew@jetpack",
   "description": "GNU LibreJS is an add-on for Mozilla-based browsers (IceCat, Firefox, Abrowser, Iceweasel)\n that prevents the execution of nonfree nontrivial JavaScript as described in \"The Javascript Trap\": http://www.gnu.org/philosophy/javascript-trap.html",
