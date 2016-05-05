@@ -1,7 +1,7 @@
-This is librejs.info, produced by makeinfo version 6.0 from
+This is librejs.info, produced by makeinfo version 5.2 from
 librejs.texi.
 
-This manual is for GNU LibreJS (version 6.0.10, 25 October 2015), a GNU
+This manual is for GNU LibreJS (version 6.0.11, 04 May 2016), a GNU
 IceCat extension to detect and block nonfree nontrivial JavaScript on
 webpages.
 
@@ -24,7 +24,7 @@ File: librejs.info,  Node: Top,  Next: Overview,  Up: (dir)
 LibreJS
 *******
 
-This manual is for GNU LibreJS (version 6.0.10, 25 October 2015).
+This manual is for GNU LibreJS (version 6.0.11, 04 May 2016).
 
 * Menu:
 
@@ -118,10 +118,10 @@ File: librejs.info,  Node: How to Use,  Next: JavaScript Detection,  Prev: Insta
 =====================
 
 After installing the add-on, you will see the LibreJS widget in the
-add-on bar at the bottom of the browser window.  After loading a page,
-left-click on the widget to view the deactivated JavaScript code from
-the page (both on page and external) and, if applicable, the scripts
-that were accepted.
+add-on bar at the top right of the browser window.  After loading a
+page, left-click on the widget to view the deactivated JavaScript code
+from the page (both on page and external) and, if applicable, the
+scripts that were accepted.
 
 4.2 Complaint Feature
 =====================
@@ -1276,18 +1276,18 @@ their use in free software.
 
 
 Tag Table:
-Node: Top832
-Node: Overview1982
-Node: Disclaimer2829
-Node: Installation3325
-Node: How to Use4171
-Node: JavaScript Detection7413
-Node: Free Licenses Detection10821
-Node: Setting Your JavaScript Free17682
-Node: LibreJS Development Notes24516
-Node: Installation Requirements25859
-Node: LibreJS Internals27466
-Node: Tests28629
-Node: GNU Free Documentation License33136
+Node: Top828
+Node: Overview1974
+Node: Disclaimer2821
+Node: Installation3317
+Node: How to Use4163
+Node: JavaScript Detection7408
+Node: Free Licenses Detection10816
+Node: Setting Your JavaScript Free17677
+Node: LibreJS Development Notes24511
+Node: Installation Requirements25854
+Node: LibreJS Internals27461
+Node: Tests28624
+Node: GNU Free Documentation License33131
 
 End Tag Table
