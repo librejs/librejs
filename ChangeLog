@@ -1,3 +1,16 @@
+2016-05-04 Nik Nyby <nikolas@gnu.org>
+	* Added Unlicense to the list of recognized licenses. Thanks
+	to Adam Plaice for the patch.
+
+	* Added some library whitelist updates from James Kruth.
+
+	* William Cummings pointed out a piece of code that was using
+	non-standard syntax that might not be supported in the future.
+	I've re-written this to use more standard syntax.
+
+	* Fixed a problem where the LibreJS icon wasn't displaying in
+	the add-ons view.
+
 2015-10-25 Nik Nyby <nikolas@gnu.org>
 	* Fixed a bug where @license-end was getting ignored
 	in some cases. Thanks to Micah Cowan for debugging this.
