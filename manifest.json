@@ -1,0 +1,44 @@
+{
+  "manifest_version": 2,
+  "name": "GNU LibreJS [webExtensions]",
+  "short_name": "LibreJS [experimental]",
+  "version": "1.0",
+  "author": "See file 'authors'",
+  "description": "Only allows free and/or trivial Javascript to run.",
+  "applications": {
+    "gecko": {
+	  "id": "bug-librejs@gnu.org",
+	  "strict_min_version": "42.0"
+    }
+  },
+  "icons":{
+    "64": "icons/librejs.png"
+  },
+  "permissions": [
+	"contextMenus",
+	"webRequest",
+	"webRequestBlocking",
+	"activeTab",
+	"notifications",
+	"storage",
+	"tabs"
+  ],
+  "browser_action": {
+    "browser_style": true,
+	"default_icon": {
+    "64": "icons/librejs.png"
+		},
+		"default_title": "LibreJS",
+		"default_popup": "html/display_panel/content/display-panel.html"
+ 	},
+  "options_ui": {
+    "page": "html/preferences_panel/preferences_panel.html"
+  },
+  "web_accessible_resources": [
+    "html/report_page/report.html"
+  ],
+  "background": {
+    "scripts": ["main_background.js"]
+  }
+  
+}

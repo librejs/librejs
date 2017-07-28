@@ -1,0 +1,63 @@
+<html>
+  <head>
+<!-- /**
+ * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+ * *
+ * Copyright (C) 2011, 2012, 2014 Loic J. Duros
+ * Copyright (C) 2014, 2015 Nik Nyby
+ *
+ * This file is part of GNU LibreJS.
+ *
+ * GNU LibreJS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * GNU LibreJS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+-->
+  <title>
+    LibreJS preferences
+  </title>
+  </head>
+ 
+  <body>
+    <h3>
+      LibreJS Preferences
+    </h3>
+
+	<table>
+		<tr>
+		    <td><p>Whitelist domains, seperated by comma (wildcard is *)</p></td>
+			<td><input id="pref_whitelist" type="text"></input></td>
+		</tr>
+		<tr>
+		    <td><p>Display complaint tab on sites where nonfree nontrivial Javascript detected</p></td>
+			<td><input id="pref_complaint_tab" type="checkbox"></input></td>
+		</tr>
+		<tr>
+		    <td><p>Display notifications of the JavaScript code being analyzed by LibreJS</p></td>
+			<td><input id="pref_notify_analyze" type="checkbox"></input></td>
+		</tr>
+		<tr>
+		    <td><p>Default complaint email subject</p></td>
+			<td><input id="pref_subject" type="text"></input></td>
+		</tr>
+		<tr>
+		    <td><p>Default complaint email body</p></td>
+			<td><input id="pref_body" type="text"></input></td>
+		</tr>
+		<tr>
+			<td><input type="button" value="Save changes" id="save_changes"></input></td>
+			<td></td>
+		</tr>
+	</table>		
+	<script type="text/javascript" src="pref.js"></script>
+  </body>
+</html>

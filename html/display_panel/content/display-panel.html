@@ -1,0 +1,73 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"/>
+<title>Display JS Monitoring Panel</title>
+<link rel="stylesheet" type="text/css" href="./panel-styles.css"/>
+
+<!-- /**
+ * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+ * *
+ * Copyright (C) 2011, 2012, 2014 Loic J. Duros
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see  <http://www.gnu.org/licenses/>.
+ *
+ */
+-->
+</head>
+
+<body>
+	<script src="main_panel.js"></script>
+    <div class="title-area">
+        <div>
+            <a class="libre"
+               id="ljs-settings"
+               href="javascript:void"
+               title="LibreJS Whitelist Settings">
+                <h1 class="libre">LibreJS</h1>
+            </a>
+        </div>
+        <div>
+            <a target="_blank" href="https://www.gnu.org/software/librejs/"
+           id="librejs-web-link"
+               >gnu.org/software/librejs</a>
+        </div>
+        <div>
+            <strong>LibreJS 6.0.13</strong>
+        </div>
+    </div>
+
+    <div id="info">
+        <div id="dryrun">
+            <h2 class="dryrun-js"></h2>
+            <ul class="dryrun-js"></ul>
+        </div>
+
+        <div id="accepted">
+            <h2 class="accepted-js"></h2>
+            <ul class="accepted-js"></ul>
+        </div>
+
+        <div id="blocked">
+            <h2 class="blocked-js"></h2>
+            <ul class="blocked-js">
+        </div>
+
+        <div id="librejs-web-labels-pages">
+            <h2></h2>
+            <ul></ul>
+        </div>
+    </div>
+</body>
+</html>
