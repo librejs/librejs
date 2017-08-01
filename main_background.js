@@ -21,22 +21,53 @@ function set_webex(){
 
 /*
 *
-* Called when something changes the persistent data of the add-on.
+*	Called when something changes the persistent data of the add-on.
 *
-* The only things that should need to change this data are:
-* a) The "Whitelist this page" button
-* b) The options screen
+*	The only things that should need to change this data are:
+*	a) The "Whitelist this page" button
+*	b) The options screen
 *
-* When the actual blocking is implemented, this will need to comminicate
-* with its code to update accordingly
+*	When the actual blocking is implemented, this will need to comminicate
+*	with its code to update accordingly
 * 
+*	The object stored in storage will look like this:
+*
+*
+*	{
+*		pref_body : "",
+*		pref_complaint_tab : "",
+*		pref_notify_analyze : "",
+*		pref_subject : "",
+*		// The domains that are "blanket" whitelisted
+*		pref_whitelist : {
+*			"a.com" : true,
+*			"b.com" : true
+*		},
+*		// Individual scripts that have been whitelisted
+*		whitelist : {
+*			"example.com":{
+*				"a.js" : true
+*			},
+*			"domain.com": {
+*				"a.js" : true,
+*				"b.js" : false
+*			}
+*		}
+*	}
+*	
+*
+*
+*
+*
+*
+*
 */
 function options_listener(changes, area){
 	console.log("Items updated in area" + area +": ");
 
 	var changedItems = Object.keys(changes);
 	var changed_items = "";
-	for (var i = 0; i < changedItems.length; i++;) {
+	for (var i = 0; i < changedItems.length; i++){
 		var item = changedItems[i];		
 		changed_items += item + ",";
 	}
@@ -61,7 +92,6 @@ function open_popup_tab(){
 *	This is what you call when a page gets changed to update the info box.
 *
 *	Sends a message to the content script that updates the popup for a page.
-*
 *
 *	var example_blocked_info = {
 *		"accepted": [["REASON 1","SOURCE 1"],["REASON 2","SOURCE 2"]],
@@ -95,14 +125,43 @@ function connected(p) {
 	console.log("Message:");	
 	console.log(p);
 	p.onMessage.addListener(function(m) {
-		
 
-		if(m["whitelist_script"] !== undefined){
-			console.log("whitelisting script " + m["whitelist_script"][0]);
+		/**
+		* Updates the entry of the current URL in whitelist with
+		*
+		*/
+		function set_script(script,tof){
+			console.log("setting script '" + script + "' whitelisted status to "+tof);
+			// Remember that we do not trust the names of whitelisted scripts.
+			var current_url = "";
+			function geturl(tabs) {
+				// Got the URL of the current open tab
+				current_url = tabs[0]["url"];
+				function storage_got(items){
+					console.log("got storage:");
+					console.log(items);
+					var new_items = items;
+					if(new_items["whitelist"] === undefined){
+						new_items["whitelist"] = {};
+					}
+					if(new_items["whitelist"][current_url] === undefined){
+						new_items["whitelist"][current_url] = {};
+					}
+					console.log(script);
+					new_items["whitelist"][current_url][script] = tof;
+					webex.storage.local.set(new_items);			
+				}
+				webex.storage.local.get(storage_got);
+			}
+			var querying = webex.tabs.query({active: true,currentWindow: true},geturl);			
 			return;
-		}		
-
-
+		}
+		if(m["whitelist_script"] !== undefined){
+			set_script(m["whitelist_script"][0],true);
+		}
+		if(m["unwhitelist_script"] !== undefined){
+			set_script(m["whitelist_script"][0],false);
+		}
 		function logTabs(tabs) {
 			for(var i = 0; i < tabs.length; i++) {
 				var tab = tabs[i]
@@ -156,17 +215,30 @@ function init_addon(){
 
 init_addon();
 
-// some misc. debugging:
+/**************** some misc. debugging: ***************************/
+
+
+function debug_print_local(){
+	function storage_got(items){
+		console.log("Local Storage:");
+		console.log(items);
+	}
+	webex.storage.local.get(storage_got);
+}
+
+function clr_local(){
+	webex.storage.local.set({});				
+}
+
+// Valid input for update_popup
 var example_input = {
 	"accepted": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
 	"blocked": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
 	"url":"example.com"
-}
-example_input["accepted"] = [];
-example_input["blocked"] = [];
+};
+update_popup(2,example_input);
+// To test the default text
+//example_input["accepted"] = [];
+//example_input["blocked"] = [];
 
-//open_popup_tab();
-
-
-
-
+debug_print_local();

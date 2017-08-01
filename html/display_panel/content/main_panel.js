@@ -35,6 +35,7 @@ var current_blocked_data;
 *
 */
 function generate_HTML(blocked_data){
+	
 	current_blocked_data = blocked_data;
 	var a = blocked_data;
 	var button_complain = '<a id="complain-contact" class="button white" href="#"><span>Complain to site owner</span></a>';
@@ -80,7 +81,7 @@ function generate_HTML(blocked_data){
 			document.getElementById("wl_"+i).addEventListener("click",function(a){
 				console.log(a.path[0].id + " clicked");
 				var temp = current_blocked_data["blocked"][parseInt(a.path[0].id.substr(3))];
-				console.log(temp);				
+				console.log(temp);
 				myPort.postMessage({"whitelist_script": temp});
 			});	
 		}
