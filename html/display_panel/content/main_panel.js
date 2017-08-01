@@ -18,6 +18,10 @@ function set_webex(){
 }
 set_webex();
 
+
+var myPort = webex.runtime.connect({name:"port-from-cs"});
+var current_blocked_data;
+
 /**
 * update the HTML of the pop-up window.
 * If return_HTML is true, it returns the HTML of the popup window without updating it.
@@ -31,6 +35,7 @@ set_webex();
 *
 */
 function generate_HTML(blocked_data){
+	current_blocked_data = blocked_data;
 	var a = blocked_data;
 	var button_complain = '<a id="complain-contact" class="button white" href="#"><span>Complain to site owner</span></a>';
     var button_allow_all = '<a id="allow-button" class="button white" href="#"><span>Allow all scripts in this page</span></a>';
@@ -70,16 +75,20 @@ function generate_HTML(blocked_data){
 	}
 	if(a["blocked"].length != 0){
 		blocked.innerHTML += "</ul>";
+		// add click listeners to the buttons		
+		for(var i = 0; i < a["blocked"].length; i++){
+			document.getElementById("wl_"+i).addEventListener("click",function(a){
+				console.log(a.path[0].id + " clicked");
+				var temp = current_blocked_data["blocked"][parseInt(a.path[0].id.substr(3))];
+				console.log(temp);				
+				myPort.postMessage({"whitelist_script": temp});
+			});	
+		}
 	}
 	// At this point, it has the HTML that the popup needs and the only problem is
 	// getting it into the popup. (browserAction() needs a (local) URL to work).
 
 }
-
-
-// content-script.js
-
-var myPort = webex.runtime.connect({name:"port-from-cs"});
 
 myPort.onMessage.addListener(function(m) {
 	if(m["show_info"] !== undefined){

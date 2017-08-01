@@ -36,7 +36,8 @@ function options_listener(changes, area){
 
 	var changedItems = Object.keys(changes);
 	var changed_items = "";
-	for (var item of changedItems) {
+	for (var i = 0; i < changedItems.length; i++;) {
+		var item = changedItems[i];		
 		changed_items += item + ",";
 	}
 	console.log(changed_items);
@@ -91,10 +92,20 @@ function update_popup(tab_id,blocked_info){
 */
 var portFromCS;
 function connected(p) {
+	console.log("Message:");	
 	console.log(p);
 	p.onMessage.addListener(function(m) {
+		
+
+		if(m["whitelist_script"] !== undefined){
+			console.log("whitelisting script " + m["whitelist_script"][0]);
+			return;
+		}		
+
+
 		function logTabs(tabs) {
-			for(let tab of tabs) {
+			for(var i = 0; i < tabs.length; i++) {
+				var tab = tabs[i]
 				var tab_id = tab["id"]
 				console.log(tab_id)
 				if(unused_data[tab_id] !== undefined){
