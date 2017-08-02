@@ -34,6 +34,7 @@ function set_webex(){
 *
 *
 *	{
+		// pref_* items are from the options page
 *		pref_body : "",
 *		pref_complaint_tab : "",
 *		pref_notify_analyze : "",
@@ -52,11 +53,20 @@ function set_webex(){
 *				"a.js" : true,
 *				"b.js" : false
 *			}
+*		},
+*		blacklist : {
+*			"website.com":{
+*				"a.js" : true
+*			},
+*			"test.com": {
+*				"a.js" : true,
+*				"b.js" : false
+*			}
 *		}
 *	}
 *	
-*
-*
+*	If something is set to false under whitelist/blacklist, it is the same as if it were undefined.
+*	If something is undefined in whitelist/blacklist, then it should be judged by its content as LibreJS does by default. 
 *
 *
 *
@@ -87,6 +97,26 @@ function open_popup_tab(){
 	var gettingPopup = webex.browserAction.getPopup({},gotPopup);
 }
 
+
+/**
+*
+*	Prints local storage (the persistent data)
+*
+*/
+function debug_print_local(){
+	function storage_got(items){
+		console.log("\n\nLocal Storage:"); 
+		console.log("\npref_complaint_tab:"+items["pref_complaint_tab"]);
+		console.log("pref_notify_analyze:"+items["pref_notify_analyze"]);
+		console.log("pref_subject:"+items["pref_subject"]);
+		console.log("pref_body:"+items["pref_body"]);
+		console.log("\nWHITELIST:");
+		console.log(items["whitelist"]);
+		console.log("\nBLACKLIST:");
+		console.log(items["blacklist"]);
+	}
+	webex.storage.local.get(storage_got);
+}
 /**
 *
 *	This is what you call when a page gets changed to update the info box.
@@ -100,7 +130,8 @@ function open_popup_tab(){
 *	}
 *
 */
-
+// This might be wasting memory
+// I now realize it doesn't need to store the connections, this is left over from when I thought it did
 var active_connections = {};
 var unused_data = {};
 function update_popup(tab_id,blocked_info){
@@ -122,17 +153,16 @@ function update_popup(tab_id,blocked_info){
 */
 var portFromCS;
 function connected(p) {
-	console.log("Message:");	
-	console.log(p);
 	p.onMessage.addListener(function(m) {
-
+		console.log("Message:");	
+		console.log(p);
 		/**
-		* Updates the entry of the current URL in whitelist with
-		*
+		*	Updates the entry of the current URL in whitelist/blacklist (possible values of arg "key") with either true or false.
+		*	(Perhaps it should actually delete it to not leak memory? Not sure how that is done.)
 		*/
-		function set_script(script,tof){
-			console.log("setting script '" + script + "' whitelisted status to "+tof);
-			// Remember that we do not trust the names of whitelisted scripts.
+		function set_script(script,key,tof){
+			console.log("setting script '" + script + "'s entry to "+ tof + " with key '" + key + "'");
+			// Remember that we do not trust the names of scripts.
 			var current_url = "";
 			function geturl(tabs) {
 				// Got the URL of the current open tab
@@ -141,14 +171,15 @@ function connected(p) {
 					console.log("got storage:");
 					console.log(items);
 					var new_items = items;
-					if(new_items["whitelist"] === undefined){
-						new_items["whitelist"] = {};
+					if(new_items[key] === undefined){
+						new_items[key] = {};
 					}
-					if(new_items["whitelist"][current_url] === undefined){
-						new_items["whitelist"][current_url] = {};
+					if(new_items[key][current_url] === undefined){
+						new_items[key][current_url] = {};
 					}
 					console.log(script);
-					new_items["whitelist"][current_url][script] = tof;
+					
+					new_items[key][current_url][script] = tof;
 					webex.storage.local.set(new_items);			
 				}
 				webex.storage.local.get(storage_got);
@@ -156,17 +187,26 @@ function connected(p) {
 			var querying = webex.tabs.query({active: true,currentWindow: true},geturl);			
 			return;
 		}
-		if(m["whitelist_script"] !== undefined){
-			set_script(m["whitelist_script"][0],true);
+		if(m["whitelist"] !== undefined){
+			set_script(m["whitelist"][0],"whitelist",true);
+			set_script(m["whitelist"][0],"blacklist",false);
 		}
-		if(m["unwhitelist_script"] !== undefined){
-			set_script(m["whitelist_script"][0],false);
+		if(m["blacklist"] !== undefined){
+			set_script(m["blacklist"][0],"blacklist",true);
+			set_script(m["blacklist"][0],"whitelist",false);
+		}
+		if(m["forget"] !== undefined){
+			set_script(m["unwhitelist"][0],"whitelist",false);
+			set_script(m["unwhitelist"][0],"blacklist",false);
+		}
+		// a debug feature
+		if(m["printlocalstorage"] !== undefined){
+			debug_print_local();
 		}
 		function logTabs(tabs) {
 			for(var i = 0; i < tabs.length; i++) {
 				var tab = tabs[i]
 				var tab_id = tab["id"]
-				console.log(tab_id)
 				if(unused_data[tab_id] !== undefined){
 					// If we have some data stored here for this tabID, send it and then delete our copy 	
 					console.log("[TABID:"+tab_id+"]"+"Sending stored data associated with browser action");								
@@ -217,15 +257,6 @@ init_addon();
 
 /**************** some misc. debugging: ***************************/
 
-
-function debug_print_local(){
-	function storage_got(items){
-		console.log("Local Storage:");
-		console.log(items);
-	}
-	webex.storage.local.get(storage_got);
-}
-
 function clr_local(){
 	webex.storage.local.set({});				
 }
@@ -234,11 +265,14 @@ function clr_local(){
 var example_input = {
 	"accepted": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
 	"blocked": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
+	"whitelisted": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
+	"blacklisted": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
 	"url":"example.com"
 };
-update_popup(2,example_input);
 // To test the default text
-//example_input["accepted"] = [];
-//example_input["blocked"] = [];
+example_input["accepted"] = [];
+example_input["blocked"] = [];
 
-debug_print_local();
+
+update_popup(2,example_input);
+
