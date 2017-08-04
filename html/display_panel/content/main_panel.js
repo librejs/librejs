@@ -62,7 +62,7 @@ function write_elements(data,name,color){
 	var button_html_3 = '<div style="float:right"><input id="temp3" type="button" value="forget preference"></input></div>';
 	var heading = document.getElementById(name).getElementsByTagName("h2")[0];
 	var list = document.getElementById(name).getElementsByTagName("ul")[0];
-	if(data[name].length == 0){
+	if(data[name] === undefined || data[name].length == 0){
 		// default message
 		list.innerHTML = "<li>No "+ name +" scripts on this page.</li>"
 	} else{
@@ -136,13 +136,10 @@ function generate_HTML(blocked_data){
 	for(var i = 0; i < to_clr.length; i++){
 		to_clr[i].innerHTML = "";
 	}
-
-
 	write_elements(blocked_data,"accepted","green");
 	write_elements(blocked_data,"whitelisted","green");
 	write_elements(blocked_data,"blocked","red");
 	write_elements(blocked_data,"blacklisted","red");
-
 }
 
 myPort.onMessage.addListener(function(m) {
@@ -157,12 +154,12 @@ function onGot(tabInfo) {
 var gettingCurrent = webex.tabs.getCurrent(onGot);
 
 
-
-
-
-
 function print_local_storage(){
 	myPort.postMessage({"printlocalstorage": true});
 }
+function delete_local_storage(){
+	myPort.postMessage({"deletelocalstorage":true});
+}
 
 new_debug_button("Print local storage",print_local_storage);
+new_debug_button("Clear local storage",delete_local_storage);
