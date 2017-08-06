@@ -96,6 +96,7 @@ function write_elements(data,name,color){
 				var temp = current_blocked_data[name][parseInt(info.path[0].id.match(/\d/g)[1])];
 				console.log("Forget preferences for script " + temp[0]);
 				var script_name = this.parentElement.parentElement.parentElement.parentElement.id;
+				this.parentElement.parentElement.getElementsByTagName("b")[0].insertAdjacentHTML("beforebegin","<h3>Refresh the page to revaluate this script.</h3>");
 				myPort.postMessage({"forget": temp});
 			});	
 		}

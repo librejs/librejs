@@ -95,8 +95,6 @@ function debug_print_local(){
 *	}
 *
 */
-// This might be wasting memory
-// I now realize it doesn't need to store the connections, this is left over from when I thought it did
 var active_connections = {};
 var unused_data = {};
 function update_popup(tab_id,blocked_info_arg,update=false){
@@ -314,11 +312,81 @@ function init_addon(){
 	update_popup(4,example_input);
 	console.log("Set the browser action contents");
 	/*****************************************************************/
+}
 
+/**
+*	Test if a page is whitelisted/blacklisted.
+*
+*	The input here is tested against the comma seperated string found in the options.
+*
+*	It does NOT test against the individual entries created by hitting the "whitelist"
+*	button for a script in the browser action.
+* 
+* 
+*
+*/
+function test_url_whitelisted(url,callback){
+	function storage_got(items){
+		var wl = items["pref_whitelist"].split(",");
+		var regex;
 
-
+		for(i in wl){
+			var s = wl[i].replace(/\*/g,"\\S*");
+			s = s.replace(/\./g,"\\.");
+			regex = new RegExp(s, "g");
+			if(url.match(regex)){
+				//callback("%c" + wl[i] + " matched " + url,"color: purple;");
+				callback(true);
+			} else{
+				//console.log("%c" + wl[i] + " didn't match " + url,"color: #dd0000;");
+			}
+		}
+		callback(false);
+	}
+	webex.storage.local.get(storage_got);
 }
 
 
+function inject_contact_finder(tab_id){
+	function executed(result) {
+	  console.log("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
+	}
+	var executing = webex.tabs.executeScript(tab_id, {file: "/contact_finder.js"}, executed);
+}
+
 init_addon();
+
+/***************** test the comma seperated whitelist *****************/
+/*
+var test_urls = [
+	"example.subdomain.test.com/",
+	"http://example.subdomain.test.com",
+	"http://0xbeef.coffee",
+	"https://webchat.freenode.net/",
+	"https://www.chromium.org/Home/chromium-security/client-identification-mechanisms",
+	"http://stackoverflow.com/questions/874709",
+	"https://postcalc.usps.com",
+	"http://regexr.com/",
+	"https://pgw.ceca.es/tpvweb/tpv/compra.action",
+	"This is total garbage input",
+	"http://home.com/test",
+	"https://home.com/test"
+]
+
+function callback(a){console.log(a);}
+
+for(i in test_urls){
+	test_url_whitelisted(test_urls[i],callback);
+}
+*/
+/*******************************************************************/
+
+
+
+
+
+
+
+
+
 
