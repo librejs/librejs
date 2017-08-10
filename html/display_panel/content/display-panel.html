@@ -29,8 +29,8 @@
 
 <body>
 	<script src="main_panel.js"></script>
-    <div class="title-area">
-        <div>
+    <div style="float:left; display:inline;" class="title-area">
+ 		<div>
             <a class="libre"
                id="ljs-settings"
                href="javascript:void"
@@ -44,10 +44,13 @@
                >gnu.org/software/librejs</a>
         </div>
         <div>
-            <strong>LibreJS 7.0</strong>
+            <strong>LibreJS 7.0	<br><br></strong>
         </div>
-    </div>
-
+   </div>
+    <div id="buttons" style="float:right; display:inline;" class="title-area">
+		<div id="buttons-l" style="float:center;"></div>
+		<div id="buttons-r" style="float:right; clear: right;"></div>
+	</div>
     <div id="info">
         <div id="whitelisted">
             <h2 class="blocked-js"></h2>

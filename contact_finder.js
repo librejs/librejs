@@ -215,18 +215,6 @@ function find_contacts(){
 	}
 	console.log("final result:");
 	console.log(res);
-	/*
-	console.log("********************************************************");
-	console.log("%c RESULTS: ","color: #dd0000;");
-	console.log("%c " + phone_num.length + "%c phone numbers","color: red;","color: purple;");
-	console.log("%c " + twitlinks.length + "%c twitter links","color: red;","color: purple;");
-	console.log("%c " + identi.length + "%c identi.ca links","color: red;","color: purple;");
-	console.log("%c " + contact_pages.length + "%c possible contact pages","color: red;","color: purple;");
-	console.log("********************************************************");
-	*/
-
-
-
 }
 // need to have this so the handler doesn't take too long
 function handler(){

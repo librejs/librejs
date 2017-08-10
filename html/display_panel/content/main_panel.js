@@ -62,12 +62,15 @@ function write_elements(data,name,color){
 	var button_html_3 = '<div style="float:right"><input id="temp3" type="button" value="forget preference"></input></div>';
 	var heading = document.getElementById(name).getElementsByTagName("h2")[0];
 	var list = document.getElementById(name).getElementsByTagName("ul")[0];
-	if(data[name] === undefined || data[name].length == 0){
+	if(typeof(data[name]) == "undefined" || data[name].length == 0){
 		// default message
 		list.innerHTML = "<li>No "+ name +" scripts on this page.</li>"
+		data[name] = [];	
 	} else{
 		heading.innerHTML = "<h2 class='blocked-js'>List of <div style='display:inline; color:"+color+";'>" + name.toUpperCase() + "</div> javascript in " + data["url"]+":</h2>";
 	}
+	console.log(data);
+	console.log(data[name]);
 	// Iterate over data[name] and generate bulleted list
 	for(var i = 0; i < data[name].length; i++){
 		list.innerHTML += "<li><b>"+data[name][i][0]+ ":</b><br>" + data[name][i][1]+"\n"+button_html+"<br><br>\n"+button_html_2+"<br><br>\n"+button_html_3+"</li>";
@@ -96,16 +99,26 @@ function write_elements(data,name,color){
 				var temp = current_blocked_data[name][parseInt(info.path[0].id.match(/\d/g)[1])];
 				console.log("Forget preferences for script " + temp[0]);
 				var script_name = this.parentElement.parentElement.parentElement.parentElement.id;
-				this.parentElement.parentElement.getElementsByTagName("b")[0].insertAdjacentHTML("beforebegin","<h3>Refresh the page to revaluate this script.</h3>");
-				myPort.postMessage({"forget": temp});
+				if(this.parentElement.parentElement.innerHTML.indexOf("Refresh the page") == -1){
+					this.parentElement.parentElement.getElementsByTagName("b")[0].insertAdjacentHTML("beforebegin","<h3>Refresh the page to revaluate this script.</h3>");
+					myPort.postMessage({"forget": temp});
+				}
 			});	
 		}
 	}
 
 }
 
-
-
+/**
+*	displays the button specified by HTML string "button"
+*/
+var num_buttons = 0;
+function write_button(button,lr,callback){
+	
+	document.getElementById("buttons-"+lr).insertAdjacentHTML("beforeend","<div id='buttonno_"+num_buttons+"'>" + button + "</div>");
+	document.getElementById("buttonno_"+num_buttons).addEventListener("click",callback);
+	num_buttons = num_buttons + 1;
+}
 /**
 * update the HTML of the pop-up window.
 * If return_HTML is true, it returns the HTML of the popup window without updating it.
@@ -124,13 +137,13 @@ function generate_HTML(blocked_data){
 	current_blocked_data = blocked_data;//unused?
 
 	// This should send a message to invoke the content finder
-	var button_complain = '<a id="complain-contact" class="button white" href="#"><span>Complain to site owner</span></a>';
+	var button_complain = '<a id="complain-contact" class="button white" href="#">Complain to site owner</a>';
 	// This should update the persistent options
-    var button_allow_all = '<a id="allow-button" class="button white" href="#"><span>Allow all scripts in this page</span></a>';
+    var button_allow_all = '<a id="allow-button" class="button white" href="#">Allow all scripts in this page</a>';
 	// This will call "Forget preferences" on every script.
-    var button_block_nonfree = '<a id="disallow-button" class="button white" href="#"><span>Block all nonfree/nontrivial scripts from this page</span></a>';
+    var button_block_nonfree = '<a id="disallow-button" class="button white" href="#">Block all nonfree/nontrivial scripts from this page</a>';
 	// This should send a message that calls "open_popup_tab()" in the background script
-    var button_new_tab = '<a id="open-in-tab" class="button white" href="#"><span>Open this report in a new tab</span></a>';
+    var button_new_tab = '<a id="open-in-tab" class="button white" href="#">Open this report in a new tab</a>';
 
 	var to_clr = document.getElementsByClassName("blocked-js");
 
@@ -141,6 +154,21 @@ function generate_HTML(blocked_data){
 	write_elements(blocked_data,"whitelisted","green");
 	write_elements(blocked_data,"blocked","red");
 	write_elements(blocked_data,"blacklisted","red");
+	
+	if( blocked_data["blacklisted"].length != 0 || blocked_data["blocked"].length != 0 ||
+	blocked_data["whitelisted"].length != 0 || blocked_data["accepted"].length != 0){
+		write_button(button_allow_all,"l",function(){console.log("button_allow_all");});
+		write_button(button_block_nonfree,"r",function(){console.log("button_block_nonfree");});
+		write_button(button_complain,"l",function(){console.log("button_complain");});
+		write_button(button_new_tab,"r",function(){
+			myPort.postMessage({"open_popup_tab": blocked_data});
+		});
+	} else{
+		write_button(button_new_tab,"l",function(){
+			// NOTE: does not 
+			myPort.postMessage({"open_popup_tab": blocked_data});
+		});
+	}
 }
 
 myPort.onMessage.addListener(function(m) {

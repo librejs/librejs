@@ -93,7 +93,6 @@ ul.blocked-js ul li, ul.accepted-js ul li, ul.dryrun-js ul li {
     float:right;
     padding:10px;
     display:none;
-    clear:both;
     margin:10px;
 }
 
@@ -109,13 +108,7 @@ ul.blocked-js ul li, ul.accepted-js ul li, ul.dryrun-js ul li {
     text-decoration: none;
     font: 14px/100% Arial, Helvetica, sans-serif;
     padding: .5em 2em .55em;
-    text-shadow: 0 1px 1px rgba(0,0,0,.3);
-    -webkit-border-radius: .5em; 
-    -moz-border-radius: .5em;
     border-radius: .5em;
-    -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    -moz-box-shadow: 0 1px 2px rgba(0,0,0,.2);
-    box-shadow: 0 1px 2px rgba(0,0,0,.2);
 }
 .small.button {
     font-size:11px;

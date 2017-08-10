@@ -48,9 +48,15 @@ function options_listener(changes, area){
 *	by opening a new tab with whatever HTML is in the popup
 *	at the moment.
 */
-function open_popup_tab(){
+var active_connections = {};
+var unused_data = {};
+function open_popup_tab(data){
+	console.log(data);
 	function gotPopup(popupURL){
-		var creating = webex.tabs.create({"url":popupURL});
+		var creating = webex.tabs.create({"url":popupURL},function(a){
+			console.log("[TABID:"+a["id"]+"] creating unused data entry from parent window's content");
+			unused_data[a["id"]] = data;
+		});
 	}
 
 	var gettingPopup = webex.browserAction.getPopup({},gotPopup);
@@ -95,8 +101,6 @@ function debug_print_local(){
 *	}
 *
 */
-var active_connections = {};
-var unused_data = {};
 function update_popup(tab_id,blocked_info_arg,update=false){
 	var new_blocked_data;
 
@@ -238,6 +242,10 @@ function connected(p) {
 			set_script(m["forget"][0],"forget");
 			update = true;		
 		}
+		// 
+		if(m["open_popup_tab"] !== undefined){
+			open_popup_tab(m["open_popup_tab"]);
+		}
 		// a debug feature
 		if(m["printlocalstorage"] !== undefined){
 			debug_print_local();
@@ -249,10 +257,16 @@ function connected(p) {
 
 		function logTabs(tabs) {
 			if(update){
-				console.log("%c updating tab "+tabs[0]["id"],"color: red;");
-				update_popup(tabs[0]["id"],unused_data[tabs[0]["id"]],true);
-				active_connections[tabs[0]["id"]] = p;
-				return;
+				
+				// TODO: check the Firefox equivalent reserved URL pattern
+				if(typeof(tabs[0]["url"].match(/chrome\-extension:\/\/.*display-panel\.html/g)) == "object"){ 
+					console.log("%c Not updating popup because this is a reserved page","color: red;");
+					return;
+				} else{
+					console.log("%c updating tab "+tabs[0]["id"],"color: red;");
+					update_popup(tabs[0]["id"],unused_data[tabs[0]["id"]],true);
+					active_connections[tabs[0]["id"]] = p;
+				}				
 			}
 			for(var i = 0; i < tabs.length; i++) {
 				var tab = tabs[i];
