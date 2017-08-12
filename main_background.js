@@ -230,6 +230,7 @@ function connected(p) {
 			return;
 		}
 		var update = false;
+		var contact_finder = false;
 		if(m["whitelist"] !== undefined){
 			set_script(m["whitelist"][0],"whitelist");
 			update = true;
@@ -250,14 +251,22 @@ function connected(p) {
 		if(m["printlocalstorage"] !== undefined){
 			debug_print_local();
 		}
+		// invoke_contact_finder
+		if(m["invoke_contact_finder"] !== undefined){
+			contact_finder = true;
+			inject_contact_finder();
+		}
 		// a debug feature (maybe give the user an option to do this?)
 		if(m["deletelocalstorage"] !== undefined){
 			debug_delete_local();
 		}
 
 		function logTabs(tabs) {
+			if(contact_finder){
+				console.log("[TABID:"+tab_id+"] Injecting contact finder");
+				inject_contact_finder(tabs[0]["id"]);
+			}
 			if(update){
-				
 				// TODO: check the Firefox equivalent reserved URL pattern
 				if(typeof(tabs[0]["url"].match(/chrome\-extension:\/\/.*display-panel\.html/g)) == "object"){ 
 					console.log("%c Not updating popup because this is a reserved page","color: red;");

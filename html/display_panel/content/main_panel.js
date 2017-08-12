@@ -69,8 +69,6 @@ function write_elements(data,name,color){
 	} else{
 		heading.innerHTML = "<h2 class='blocked-js'>List of <div style='display:inline; color:"+color+";'>" + name.toUpperCase() + "</div> javascript in " + data["url"]+":</h2>";
 	}
-	console.log(data);
-	console.log(data[name]);
 	// Iterate over data[name] and generate bulleted list
 	for(var i = 0; i < data[name].length; i++){
 		list.innerHTML += "<li><b>"+data[name][i][0]+ ":</b><br>" + data[name][i][1]+"\n"+button_html+"<br><br>\n"+button_html_2+"<br><br>\n"+button_html_3+"</li>";
@@ -112,12 +110,25 @@ function write_elements(data,name,color){
 /**
 *	displays the button specified by HTML string "button"
 */
-var num_buttons = 0;
-function write_button(button,lr,callback){
-	
-	document.getElementById("buttons-"+lr).insertAdjacentHTML("beforeend","<div id='buttonno_"+num_buttons+"'>" + button + "</div>");
-	document.getElementById("buttonno_"+num_buttons).addEventListener("click",callback);
-	num_buttons = num_buttons + 1;
+var template = '<tr><td id="c1"></td><td id="c2"></td></tr>';
+var lr_flag = true;
+var button_num = 0;
+function write_button(button,callback){
+	var id = "buttonno_"+button_num;
+	if(lr_flag){
+		document.getElementById("buttons_table").insertAdjacentHTML("beforeend",template);
+		document.getElementById("c1").insertAdjacentHTML("beforeend","<div id='"+id+"'>" + button + "</div>");
+		document.getElementById("c1").id = "cell_"+button_num;
+	}else{
+		var temp = document.getElementById("c2");
+		temp.id = "cell_"+button_num;
+		temp.insertAdjacentHTML("beforeend","<div id='"+id+"'>" + button + "</div>");
+	}
+
+	button_num = button_num+1;
+	lr_flag = !lr_flag;
+
+	document.getElementById(id).addEventListener("click",callback);
 }
 /**
 * update the HTML of the pop-up window.
@@ -157,10 +168,16 @@ function generate_HTML(blocked_data){
 	
 	if( blocked_data["blacklisted"].length != 0 || blocked_data["blocked"].length != 0 ||
 	blocked_data["whitelisted"].length != 0 || blocked_data["accepted"].length != 0){
-		write_button(button_allow_all,"l",function(){console.log("button_allow_all");});
-		write_button(button_block_nonfree,"r",function(){console.log("button_block_nonfree");});
-		write_button(button_complain,"l",function(){console.log("button_complain");});
-		write_button(button_new_tab,"r",function(){
+		write_button(button_allow_all,function(){
+			console.log("button_allow_all");
+		});
+		write_button(button_block_nonfree,function(){
+			console.log("button_block_nonfree");
+		});
+		write_button(button_complain,function(){			
+			myPort.postMessage({"invoke_contact_finder": blocked_data});
+		});
+		write_button(button_new_tab,function(){
 			myPort.postMessage({"open_popup_tab": blocked_data});
 		});
 	} else{
