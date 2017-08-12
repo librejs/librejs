@@ -2,10 +2,31 @@
 *	This file is the "skeleton" of the final system to determine
 *	if a script is accepted or blocked.
 *
-*	
+*	Some assets taken from script_detector.js
 *
 */
 
+// the list of all available event attributes
+var intrinsicEvents = [
+    "onload",
+    "onunload",
+    "onclick",
+    "ondblclick",
+    "onmousedown",
+    "onmouseup",
+    "onmouseover",
+    "onmousemove",
+    "onmouseout",
+    "onfocus",
+    "onblur",
+    "onkeypress",
+    "onkeydown",
+    "onkeyup",
+    "onsubmit",
+    "onreset",
+    "onselect",
+    "onchange"
+];
 /*
 	NONTRIVIAL THINGS:
 	- Fetch
@@ -23,16 +44,7 @@
 	- In the first script tag, declare the license with @licstart/@licend
 
 */
-var license_regexes = {
-	// Looks like 
-	//	"// @license [magnet link] [identifier]"
-	//	"// @license-end"	
-	"license" :{
-		"start": /\/\/\s*@license\s+magnet:?.*\s\w+/g,
-		"end":	/\/\/\s*@license\-end/g
-	}
 
-}
 var licenses = {
 	'Apache-2.0':{
 		'URL': 'http://www.apache.org/licenses/LICENSE-2.0',
@@ -121,7 +133,7 @@ var licenses = {
 	},
 	// No identifier was present
 	'X11':{
-		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3'
+		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
 		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'	
 	},
 	// Picked one of the two links that were there
@@ -131,43 +143,95 @@ var licenses = {
 	}
 }
 
-
+var license_regexes = {
+	// Comments on a single line only
+	"JScomment": /(\/\/.*\n)|(\/\*.*\*\/)/g,
+	"JSallcomment": /(\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/)|(\/\/.*)/g,
+	// "@license [magnet link] [identifier]"
+	"license_start": /@license[^\S\n]+magnet:\S+[^\S\n]+\S+/g,	
+	// "@license-end"	
+	"license_end": /\/\/\s*@license\-end/g
+}
 
 /**
 *
 *	Runs regexes to search for explicit delcarations of script
-*	licenses on the argument.
+*	licenses on the argument. (// @license, //@license-end)
+*	
+*	Returns the identifier string or "fail".
 *
 */
 function license_read(script_src){
+	var license_attempts = [];
+	var comment_regex = new RegExp(license_regexes["JSallcomment"]);	
+	var comments = script_src.match(comment_regex);
+	if(comments == null){
+		comments = [];
+	}
+	console.log("%c comments:","color:green;")
+	console.log(comments);
+	for(var i = 0; i < comments.length; i++){
+		if(comments[i] !== undefined){
+			if(comments[i].match(license_regexes["license_start"]) != null){
+				console.log("License start:");
+				console.log(comments[i])			
+			}
 
-
+			if(comments[i].match(license_regexes["license_end"]) != null){
+				console.log("License end:");
+				console.log(comments[i])			
+			}
+		}
+	}
 }
 
+// The Javascript evaluation can be tested as a content script	until we have
+// the API features we need to make it run before the page's scripts do.
+
+// To run this, set it as a content script active on all URLs in the manifest.json.
 
 
+// called when invoked by the button
+function handler(){
+	for(var i = 0; i < document.scripts.length; i++){
+		if(document.scripts[i].src != ""){
+			var name = document.scripts[i].src;
+			var xml = new XMLHttpRequest();
+			xml.open("get", document.scripts[i].src);
+			xml.onload = function(response){
+				console.log("%c Script " + i + ": (src: " + name + ")","color:red;");
+				license_read(this.responseText);
+			}
+			xml.send();
+		} else{
+			name = "inline";
+			source = document.scripts[i].innerText;
+			console.log("%c Script " + i + ": (src: inline)","color:red;");
+			license_read(document.scripts[i]);	
+		}	
+	}
+}
+var button_i = 0;
+if(document.getElementById("abc123_main_div") !== null){
+	document.getElementById("abc123_main_div").remove();
+}
 
+function new_debug_button(name_text,callback){
+	if(document.getElementById("abc123_main_div") === null){
+		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
+		document.body.insertAdjacentHTML('afterbegin', to_insert);
+	}
+	var button_html = '<input id="abc123_button_' + button_i + '" value="' + name_text +'"type="button"></input><br>';	
+	document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	
+	document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
+	button_i = button_i + 1;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+new_debug_button("Evaluate scripts",handler);
+new_debug_button("Remove these buttons",function(){
+	if(document.getElementById("abc123_main_div") !== null){
+		document.getElementById("abc123_main_div").remove();
+	}
+});
 
 

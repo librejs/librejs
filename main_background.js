@@ -32,6 +32,14 @@ function set_webex(){
 *
 */
 function options_listener(changes, area){
+	// The cache must be flushed when settings are changed
+	// TODO: See if this can be minimized
+	function flushed(){
+		console.log("cache flushed");
+	}	
+	var flushingCache = webex.webRequest.handlerBehaviorChanged(flushed);
+	
+
 	console.log("Items updated in area" + area +": ");
 
 	var changedItems = Object.keys(changes);
@@ -323,7 +331,22 @@ function init_addon(){
 	webex.runtime.onConnect.addListener(connected);
 	webex.storage.onChanged.addListener(options_listener);
 	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
-	
+
+	/**
+	*	Callback for request traffic.
+	*
+	*/
+	/*
+	function script_request(details){
+		console.log("Request:"+details.type)
+		//return {redirectUrl: "about:blank"};
+		return true;
+	}
+	webex.webRequest.onResponseStarted.addListener(script_request,{
+		urls:["<all_urls>"]
+	});
+	*/
+
 	/**************** some debugging: ***************************/
 	// Valid input for update_popup
 	var example_input = {
@@ -369,7 +392,9 @@ function test_url_whitelisted(url,callback){
 	webex.storage.local.get(storage_got);
 }
 
-
+/**
+*	Loads the contact finder on the given tab ID.
+*/
 function inject_contact_finder(tab_id){
 	function executed(result) {
 	  console.log("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
