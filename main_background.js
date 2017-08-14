@@ -37,7 +37,7 @@ function options_listener(changes, area){
 	function flushed(){
 		console.log("cache flushed");
 	}	
-	var flushingCache = webex.webRequest.handlerBehaviorChanged(flushed);
+	//var flushingCache = webex.webRequest.handlerBehaviorChanged(flushed);
 	
 
 	console.log("Items updated in area" + area +": ");
@@ -108,6 +108,10 @@ function debug_print_local(){
 *		"url": "example.com"
 *	}
 *
+*	NOTE: This WILL break if you provide inconsistent URLs to it.
+*	Make sure it will use the right URL when refering to a certain script.
+*
+*
 */
 function update_popup(tab_id,blocked_info_arg,update=false){
 	var new_blocked_data;
@@ -168,12 +172,12 @@ function update_popup(tab_id,blocked_info_arg,update=false){
 			for(var script_arr in blocked_info[type]){
 				if(is_bl(blocked_info[type][script_arr][0])){
 					new_blocked_data["blacklisted"].push(blocked_info[type][script_arr]);
-					//console.log("Script " + blocked_info[type][script_arr][0] + " is blacklisted");
+					console.log("Script " + blocked_info[type][script_arr][0] + " is blacklisted");
 					continue;
 				}
 				if(is_wl(blocked_info[type][script_arr][0])){
 					new_blocked_data["whitelisted"].push(blocked_info[type][script_arr]);
-					//console.log("Script " + blocked_info[type][script_arr][0] + " is whitelisted");
+					console.log("Script " + blocked_info[type][script_arr][0] + " is whitelisted");
 					continue;
 				}
 				if(type == "url"){
@@ -181,9 +185,10 @@ function update_popup(tab_id,blocked_info_arg,update=false){
 				}
 				// either "blocked" or "accepted"
 				new_blocked_data[type].push(blocked_info[type][script_arr]);
-				//console.log("Script " + blocked_info[type][script_arr][0] + " isn't whitelisted or blacklisted");			
+				console.log("Script " + blocked_info[type][script_arr][0] + " isn't whitelisted or blacklisted");			
 			}
 		}		
+		console.log(new_blocked_data);
 		//***********************************************************************************************//
 		// store the blocked info until it is opened and needed
 		if(update == false && active_connections[tab_id] === undefined){
@@ -221,16 +226,13 @@ function connected(p) {
 				current_url = tabs[0]["url"];
 
 				// The space char is a valid delimiter because encodeURI() replaces it with %20 
-				
 				var scriptkey = encodeURI(current_url)+" "+encodeURI(script);
-				
 				if(val == "forget"){
 					var prom = webex.storage.local.remove(scriptkey);
 					// TODO: This should produce a "Refresh the page for this change to take effect" message
 				} else{
 					var newitem = {};
 					newitem[scriptkey] = val;
-
 					webex.storage.local.set(newitem);			
 				}
 			}
@@ -275,15 +277,9 @@ function connected(p) {
 				inject_contact_finder(tabs[0]["id"]);
 			}
 			if(update){
-				// TODO: check the Firefox equivalent reserved URL pattern
-				if(typeof(tabs[0]["url"].match(/chrome\-extension:\/\/.*display-panel\.html/g)) == "object"){ 
-					console.log("%c Not updating popup because this is a reserved page","color: red;");
-					return;
-				} else{
-					console.log("%c updating tab "+tabs[0]["id"],"color: red;");
-					update_popup(tabs[0]["id"],unused_data[tabs[0]["id"]],true);
-					active_connections[tabs[0]["id"]] = p;
-				}				
+				console.log("%c updating tab "+tabs[0]["id"],"color: red;");
+				update_popup(tabs[0]["id"],unused_data[tabs[0]["id"]],true);
+				active_connections[tabs[0]["id"]] = p;
 			}
 			for(var i = 0; i < tabs.length; i++) {
 				var tab = tabs[i];
@@ -331,33 +327,6 @@ function init_addon(){
 	webex.runtime.onConnect.addListener(connected);
 	webex.storage.onChanged.addListener(options_listener);
 	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
-
-	/**
-	*	Callback for request traffic.
-	*
-	*/
-	/*
-	function script_request(details){
-		console.log("Request:"+details.type)
-		//return {redirectUrl: "about:blank"};
-		return true;
-	}
-	webex.webRequest.onResponseStarted.addListener(script_request,{
-		urls:["<all_urls>"]
-	});
-	*/
-
-	/**************** some debugging: ***************************/
-	// Valid input for update_popup
-	var example_input = {
-		"accepted": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
-		"blocked": [["FILENAME 3","REASON 1"],["FILENAME 4","REASON 2"]],
-		"url":"chrome://extensions/"
-	};
-	// To test the default text
-	update_popup(4,example_input);
-	console.log("Set the browser action contents");
-	/*****************************************************************/
 }
 
 /**

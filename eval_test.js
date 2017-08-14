@@ -50,17 +50,17 @@ var licenses = {
 		'URL': 'http://www.apache.org/licenses/LICENSE-2.0',
 		'Magnet link': 'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
 	},
-	// No identifier was present
+	// No identifier was present in documentation
 	'Artistic-2.0':{
 		'URL': 'http://www.perlfoundation.org/artistic_license_2_0',
 		'Magnet link': 'magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt'
 	},
-	// No identifier was present
+	// No identifier was present in documentation
 	'Boost':{
 		'URL': 'http://www.boost.org/LICENSE_1_0.txt',
 		'Magnet link': 'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
 	},
-	// No identifier was present
+	// No identifier was present in documentation
 	'BSD-3-Clause':{
 		'URL': 'http://opensource.org/licenses/BSD-3-Clause',
 		'Magnet link': 'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt',
@@ -131,7 +131,7 @@ var licenses = {
 		'URL': 'http://unlicense.org/UNLICENSE',
 		'Magnet link': 'magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt'
 	},
-	// No identifier was present
+	// No identifier was present in documentation
 	'X11':{
 		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
 		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'	
@@ -143,79 +143,206 @@ var licenses = {
 	}
 }
 
-var license_regexes = {
-	// Comments on a single line only
-	"JScomment": /(\/\/.*\n)|(\/\*.*\*\/)/g,
-	"JSallcomment": /(\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/)|(\/\/.*)/g,
-	// "@license [magnet link] [identifier]"
-	"license_start": /@license[^\S\n]+magnet:\S+[^\S\n]+\S+/g,	
-	// "@license-end"	
-	"license_end": /\/\/\s*@license\-end/g
-}
-
 /**
 *
 *	Runs regexes to search for explicit delcarations of script
-*	licenses on the argument. (// @license, //@license-end)
-*	
-*	Returns the identifier string or "fail".
+*	licenses on the argument. 
+*	It detects:	
+*	// @license, //@license-end
+*	// licstart, //licend
+*	Returns the identifier string of the license or "fail".
 *
 */
 function license_read(script_src){
+	if(typeof(script_src) != "string"){
+		return "fail"
+	}
 	var license_attempts = [];
-	var comment_regex = new RegExp(license_regexes["JSallcomment"]);	
-	var comments = script_src.match(comment_regex);
+	// comment regex
+	var comments = script_src.match(/(\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/)|(\/\/.*)/g);
 	if(comments == null){
 		comments = [];
 	}
 	console.log("%c comments:","color:green;")
 	console.log(comments);
+
+	// Not sure if there is any better way to do this.
 	for(var i = 0; i < comments.length; i++){
 		if(comments[i] !== undefined){
-			if(comments[i].match(license_regexes["license_start"]) != null){
-				console.log("License start:");
-				console.log(comments[i])			
+			// license_start regex
+			if(comments[i].match(/@license[^\S\n]+magnet:\S+[^\S\n]+\S+/g) != null){
+				console.log("License start detected.");
+				var content = comments[i].match(/(?:magnet:\S+)(\s+.+)/g);
+				if(content != null){
+					content[0].replace(/\s+/g," ");
+					content = content[0].split(" ");
+					var magnet = content[0];
+					var identifier = "";
+					for(var i = 1; i < content.length; i++){
+						if(i == 1){						
+							identifier = identifier + content[i];
+						} else{
+							identifier = identifier + "-" + content[i];
+						}				
+					}
+					var valid = true;
+					if(licenses[identifier]["Magnet link"] != magnet){
+						valid = false;
+					}
+					if((identifier in licenses) == false){
+						valid = false;
+					}
+					console.log("Valid? "+ valid);
+				} else{
+					console.log("Valid? false");
+				}	
 			}
-
-			if(comments[i].match(license_regexes["license_end"]) != null){
+			// license-end regex
+			if(comments[i].match(/\/\/\s*@license\-end/g) != null){
 				console.log("License end:");
 				console.log(comments[i])			
 			}
 		}
 	}
+	//console.log("VERDICT: probably nonfree");
+	//console.log("VERDICT: probably free");
 }
 
-// The Javascript evaluation can be tested as a content script	until we have
-// the API features we need to make it run before the page's scripts do.
+/**
+*
+*	Checks the whitelist in storage
+*	(Not the comma seperated whitelist from settings)
+*
+*/
+function is_whitelisted(){
+	// TODO: implement
+	return false;
 
-// To run this, set it as a content script active on all URLs in the manifest.json.
+}
+
+
+/**
+* Parses the weblabels table from a DOM object
+*
+*/
+function read_weblabels_table(weblabel){
+	var tbody = weblabel.getElementsByTagName("td");
+	for(var i = 0; i < tbody.length; i++){
+		var link = tbody[i].getElementsByTagName("a")[0];
+		console.log(link.href);
+		console.log(link.innerText);
+	}
+}
+
+/**
+*	Reads the weblabels table from a link.
+*
+*/
+function get_table(url){
+	var xml = new XMLHttpRequest();
+	xml.open("get",url)
+	xml.onload = function(){
+		var a = new DOMParser()
+		var doc = a.parseFromString(this.responseText,"text/html");
+		var web_label = doc.getElementById("jslicense-labels1");
+		if(web_label != null){
+			read_weblabels_table(web_label);
+		}
+	}
+	xml.send();
+}
 
 
 // called when invoked by the button
-function handler(){
+function analyze(){
+	// TODO: Call get_whitelisted_status on this page's URL
+	
+	// Test "the first piece of Javascript available to the page" for the license comment
+	// TODO: Is this supposed to test if the license is free or just assume that it is?	
+	if(document.scripts[0] !== undefined){
+		if(document.scripts[0].src != ""){
+			var name = document.scripts[0].src;
+			var xml = new XMLHttpRequest();
+			xml.open("get", document.scripts[0].src);
+			xml.onload = function(response){
+				var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
+				if(matches != null){
+					console.log("License comment found:");
+					console.log(matches[0]);
+				}
+			}
+			xml.send();
+		} else{
+			console.log("%c Script " + i + ": (src: inline)","color:red;");
+			var matches = document.scripts[0].innerText.match(/@licstart[\s\S]+@licend/g);
+			if(matches != null){
+				console.log("License comment found:");
+				console.log(matches[0]);
+			}
+		}	
+	}
+	// Test for the link that has rel="jslicense", data-jslicense="1"  
+	for(var i = 0; i < document.links.length; i++){
+		// TODO: also check if data-jslicense == "1". (how?)
+		if(document.links[i].rel == "jslicense"){
+			console.log("Found HTML table link:");
+			get_table(document.links[i].href);			
+			break;
+		}
+	}
+	// Test for the JavaScript Web Labels table
+	var weblabel = document.getElementById("jslicense-labels1");
+	if(weblabel !== undefined && weblabel != null){
+		console.log("Found web labels table");
+		read_weblabels_table(weblabel);
+	}
+
+	// Call license_read on all the document's scripts 
+	// This is done just to debug before we can implement this in a background script,
+	// where it will have access to the individual script requests and HTML document. 
 	for(var i = 0; i < document.scripts.length; i++){
 		if(document.scripts[i].src != ""){
+			// it is a remote script ("<script src='/script.js'></script>")
 			var name = document.scripts[i].src;
 			var xml = new XMLHttpRequest();
 			xml.open("get", document.scripts[i].src);
 			xml.onload = function(response){
-				console.log("%c Script " + i + ": (src: " + name + ")","color:red;");
+				console.log("%c Script " + i + ":","color:red;");
+				console.log(name);
 				license_read(this.responseText);
 			}
 			xml.send();
 		} else{
-			name = "inline";
-			source = document.scripts[i].innerText;
+			// it is an inline script ("<script>console.log('test');</script>")
 			console.log("%c Script " + i + ": (src: inline)","color:red;");
-			license_read(document.scripts[i]);	
+			//console.log(document.scripts[i].innerText);
+			license_read(document.scripts[i].innerText);	
 		}	
 	}
+	// Find all the document's elements with intrinsic events
+	for(var i = 0; i < document.all.length; i++){
+		for(var j = 0; j < intrinsicEvents.length; j++){
+			if(intrinsicEvents[j] in document.all[i].attributes){
+				console.log("intrinsic event JS found in element:");
+				console.log(document.all[i][intrinsicEvents[j]].toString());
+			}
+		}
+
+	}
+
+
 }
+
+/**
+*	Makes a button appear that calls a function when you press it.
+*
+*	I copied and pasted this from something else I wrote. It's quite useful.
+*	
+*/
 var button_i = 0;
 if(document.getElementById("abc123_main_div") !== null){
 	document.getElementById("abc123_main_div").remove();
 }
-
 function new_debug_button(name_text,callback){
 	if(document.getElementById("abc123_main_div") === null){
 		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
@@ -227,7 +354,7 @@ function new_debug_button(name_text,callback){
 	button_i = button_i + 1;
 }
 
-new_debug_button("Evaluate scripts",handler);
+new_debug_button("Evaluate scripts",analyze);
 new_debug_button("Remove these buttons",function(){
 	if(document.getElementById("abc123_main_div") !== null){
 		document.getElementById("abc123_main_div").remove();

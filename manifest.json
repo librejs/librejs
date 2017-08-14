@@ -21,7 +21,8 @@
 	"activeTab",
 	"notifications",
 	"storage",
-	"tabs"
+	"tabs",
+	"<all_urls>"
   ],
   "browser_action": {
     "browser_style": true,
@@ -40,5 +41,5 @@
   "background": {
     "scripts": ["main_background.js"]
   },
-  "content_scripts": [{"matches": ["<all_urls>"],"js": ["contact_finder.js"]}]
+  "content_scripts": [{"matches": ["<all_urls>"],"js": ["eval_test.js"]}]
 }

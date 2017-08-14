@@ -1,3 +1,6 @@
+//TODO: there is a known bug involving "forget preference" not working correctly.
+
+
 /**
 *	
 *	Sets global variable "webex" to either "chrome" or "browser" for
@@ -114,6 +117,9 @@ var template = '<tr><td id="c1"></td><td id="c2"></td></tr>';
 var lr_flag = true;
 var button_num = 0;
 function write_button(button,callback){
+	if(document.getElementById("buttons_table").innerHTML.indexOf(button) != -1){
+		return;	
+	}
 	var id = "buttonno_"+button_num;
 	if(lr_flag){
 		document.getElementById("buttons_table").insertAdjacentHTML("beforeend",template);
@@ -161,6 +167,8 @@ function generate_HTML(blocked_data){
 	for(var i = 0; i < to_clr.length; i++){
 		to_clr[i].innerHTML = "";
 	}
+	console.log("REGEN HTML:");
+	console.log(blocked_data);
 	write_elements(blocked_data,"accepted","green");
 	write_elements(blocked_data,"whitelisted","green");
 	write_elements(blocked_data,"blocked","red");
@@ -181,8 +189,7 @@ function generate_HTML(blocked_data){
 			myPort.postMessage({"open_popup_tab": blocked_data});
 		});
 	} else{
-		write_button(button_new_tab,"l",function(){
-			// NOTE: does not 
+		write_button(button_new_tab,function(){
 			myPort.postMessage({"open_popup_tab": blocked_data});
 		});
 	}
