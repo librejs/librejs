@@ -148,8 +148,8 @@ var licenses = {
 *	Runs regexes to search for explicit delcarations of script
 *	licenses on the argument. 
 *	It detects:	
-*	// @license, //@license-end
-*	// licstart, //licend
+*	//@license, //@license-end
+*	//licstart, //licen
 *	Returns the identifier string of the license or "fail".
 *
 */
@@ -163,13 +163,15 @@ function license_read(script_src){
 	if(comments == null){
 		comments = [];
 	}
-	console.log("%c comments:","color:green;")
-	console.log(comments);
+	//console.log("%c comments:","color:green;")
+	//console.log(comments);
 
 	// Not sure if there is any better way to do this.
+	// More than one license section per file should be supported once we can edit scripts
+	// (this will be converted to edit the script instead of just read it)
 	for(var i = 0; i < comments.length; i++){
 		if(comments[i] !== undefined){
-			// license_start regex
+			// @license regex
 			if(comments[i].match(/@license[^\S\n]+magnet:\S+[^\S\n]+\S+/g) != null){
 				console.log("License start detected.");
 				var content = comments[i].match(/(?:magnet:\S+)(\s+.+)/g);
@@ -192,7 +194,10 @@ function license_read(script_src){
 					if((identifier in licenses) == false){
 						valid = false;
 					}
-					console.log("Valid? "+ valid);
+					console.log("Valid? " + valid);
+					// TODO: Support more than one block and check for code outside of this block
+					// Can't be implemented right now since we can't edit scripts.
+					return valid;// TODO: this is a temporary debug solution
 				} else{
 					console.log("Valid? false");
 				}	
@@ -226,12 +231,22 @@ function is_whitelisted(){
 *
 */
 function read_weblabels_table(weblabel){
+	var data = {};
 	var tbody = weblabel.getElementsByTagName("td");
 	for(var i = 0; i < tbody.length; i++){
 		var link = tbody[i].getElementsByTagName("a")[0];
-		console.log(link.href);
-		console.log(link.innerText);
+		//console.log(link.href);
+		if(link.innerText in licenses){
+			console.log("%cFree: " + link.innerText,"color:green;");
+			data[encodeURI(link.innerText)] = "free";
+		} else{
+			console.log("%cUnknown: " + link.innerText,"color:red;");
+			data[encodeURI(link.innerText)] = "unknown";
+		}
 	}
+	console.log("web labels table data:");
+	console.log(data);
+	return data;
 }
 
 /**
@@ -240,67 +255,32 @@ function read_weblabels_table(weblabel){
 */
 function get_table(url){
 	var xml = new XMLHttpRequest();
-	xml.open("get",url)
+	xml.open("get",url);
 	xml.onload = function(){
 		var a = new DOMParser()
 		var doc = a.parseFromString(this.responseText,"text/html");
 		var web_label = doc.getElementById("jslicense-labels1");
 		if(web_label != null){
-			read_weblabels_table(web_label);
+			read_w_table(read_weblabels_table(web_label));
 		}
 	}
 	xml.send();
 }
-
-
-// called when invoked by the button
-function analyze(){
-	// TODO: Call get_whitelisted_status on this page's URL
-	
-	// Test "the first piece of Javascript available to the page" for the license comment
-	// TODO: Is this supposed to test if the license is free or just assume that it is?	
-	if(document.scripts[0] !== undefined){
-		if(document.scripts[0].src != ""){
-			var name = document.scripts[0].src;
-			var xml = new XMLHttpRequest();
-			xml.open("get", document.scripts[0].src);
-			xml.onload = function(response){
-				var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
-				if(matches != null){
-					console.log("License comment found:");
-					console.log(matches[0]);
-				}
-			}
-			xml.send();
-		} else{
-			console.log("%c Script " + i + ": (src: inline)","color:red;");
-			var matches = document.scripts[0].innerText.match(/@licstart[\s\S]+@licend/g);
-			if(matches != null){
-				console.log("License comment found:");
-				console.log(matches[0]);
-			}
-		}	
-	}
-	// Test for the link that has rel="jslicense", data-jslicense="1"  
-	for(var i = 0; i < document.links.length; i++){
-		// TODO: also check if data-jslicense == "1". (how?)
-		if(document.links[i].rel == "jslicense"){
-			console.log("Found HTML table link:");
-			get_table(document.links[i].href);			
-			break;
-		}
-	}
-	// Test for the JavaScript Web Labels table
-	var weblabel = document.getElementById("jslicense-labels1");
-	if(weblabel !== undefined && weblabel != null){
-		console.log("Found web labels table");
-		read_weblabels_table(weblabel);
-	}
-
+function read_w_table(table_data){
 	// Call license_read on all the document's scripts 
 	// This is done just to debug before we can implement this in a background script,
 	// where it will have access to the individual script requests and HTML document. 
 	for(var i = 0; i < document.scripts.length; i++){
+		// convert between relative link and file name (table_data indexes by file name)
+		var scriptname = document.scripts[i].src.split("/")[document.scripts[0].src.split("/").length-1];
+		if(table_data !== undefined && scriptname in table_data){
+			console.log("script contained in weblabel data.");
+			if(table_data[scriptname] == "free"){
+				console.log("script is free");
+				continue;
+			}
+			console.log("script is unknown");		
+		}
 		if(document.scripts[i].src != ""){
 			// it is a remote script ("<script src='/script.js'></script>")
 			var name = document.scripts[i].src;
@@ -323,14 +303,101 @@ function analyze(){
 	for(var i = 0; i < document.all.length; i++){
 		for(var j = 0; j < intrinsicEvents.length; j++){
 			if(intrinsicEvents[j] in document.all[i].attributes){
-				console.log("intrinsic event JS found in element:");
-				console.log(document.all[i][intrinsicEvents[j]].toString());
+				console.log("intrinsic event '"+intrinsicEvents[j]+"' JS found in element document.all[" + i + "]");
+				license_read(document.all[i].attributes[intrinsicEvents[j]].value);
 			}
 		}
-
+	}
+}
+function read_wo_table(){
+	// Call license_read on all the document's scripts 
+	// This is done just to debug before we can implement this in a background script,
+	// where it will have access to the individual script requests and HTML document. 
+	for(var i = 0; i < document.scripts.length; i++){
+		var scriptname = document.scripts[i].src.split("/")[document.scripts[0].src.split("/").length-1];
+		console.log(scriptname);		
+		if(document.scripts[i].src != ""){
+			// it is a remote script ("<script src='/script.js'></script>")
+			var name = document.scripts[i].src;
+			var xml = new XMLHttpRequest();
+			xml.open("get", document.scripts[i].src);
+			xml.onload = function(response){
+				console.log("%c Script " + i + ":","color:red;");
+				console.log(name);
+				license_read(this.responseText);
+			}
+			xml.send();
+		} else{
+			// it is an inline script ("<script>console.log('test');</script>")
+			console.log("%c Script " + i + ": (src: inline)","color:red;");
+			//console.log(document.scripts[i].innerText);
+			license_read(document.scripts[i].innerText);	
+		}	
+	}
+	// Find all the document's elements with intrinsic events
+	for(var i = 0; i < document.all.length; i++){
+		for(var j = 0; j < intrinsicEvents.length; j++){
+			if(intrinsicEvents[j] in document.all[i].attributes){
+				console.log("intrinsic event '"+intrinsicEvents[j]+"' JS found in element document.all[" + i + "]");
+				license_read(document.all[i].attributes[intrinsicEvents[j]].value);
+			}
+		}
+	}
+}
+// called when invoked by the button
+function analyze(){
+	// TODO: Call get_whitelisted_status on this page's URL
+	
+	// Test "the first piece of Javascript available to the page" for the license comment
+	// TODO: Is this supposed to test if the license is free or just assume that it is?	
+	if(document.scripts[0] !== undefined){
+		if(document.scripts[0].src != ""){
+			var name = document.scripts[0].src;
+			var xml = new XMLHttpRequest();
+			xml.open("get", document.scripts[0].src);
+			xml.onload = function(response){
+				var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
+				if(matches != null){
+					console.log("License comment found:");
+					console.log(matches[0]);
+					console.log("Trusting that the entire page is freely licensed.");
+					return "do-nothing";
+				}
+			}
+			xml.send();
+		} else{
+			console.log("%c Script " + i + ": (src: inline)","color:red;");
+			var matches = document.scripts[0].innerText.match(/@licstart[\s\S]+@licend/g);
+			if(matches != null){
+				console.log("License comment found:");
+				console.log(matches[0]);
+				console.log("Trusting that the entire page is freely licensed.");
+				return "do-nothing";
+			}
+		}	
 	}
 
-
+	var table_data = {};
+	var found_table_flag = false;
+	// Test for the link that has rel="jslicense", data-jslicense="1"  
+	for(var i = 0; i < document.links.length; i++){
+		// TODO: also check if data-jslicense == "1". (how?)
+		if(document.links[i].rel == "jslicense"){
+			console.log("Found HTML table link:");
+			get_table(document.links[i].href);			
+			found_table_flag = true;			
+			break;
+		}
+	}
+	// Test for the JavaScript Web Labels table on this page
+	var weblabel = document.getElementById("jslicense-labels1");
+	if(weblabel !== undefined && weblabel != null && found_table_flag == false){
+		console.log("Found web labels table");
+		read_w_table(read_weblabels_table(weblabel));
+	} 
+	if(found_table_flag == false){
+		read_wo_table();
+	}
 }
 
 /**
