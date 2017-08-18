@@ -40,9 +40,7 @@ function new_debug_button(name_text,callback){
 		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
 		document.body.insertAdjacentHTML('afterbegin', to_insert);
 	}
-
 	var button_html = '<input id="abc123_button_' + button_i + '" value="' + name_text +'"type="button"></input><br>';
-	
 	document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	
 	document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
 	button_i = button_i + 1;

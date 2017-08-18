@@ -102,9 +102,6 @@ var usaPhoneNumber = new RegExp(/(?:\+ ?1 ?)?\(?[2-9]{1}[0-9]{2}\)?(?:\-|\.| )?[
 *
 */
 var button_i = 0;
-if(document.getElementById("abc123_main_div") !== null){
-	document.getElementById("abc123_main_div").remove();
-}
 function new_debug_button(name_text,callback){
 	if(document.getElementById("abc123_main_div") === null){
 		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
@@ -159,7 +156,7 @@ function attempt(certainty_lvl, first=true){
 						if(first){
 							return {"fail":false,"result":document.links[i]};
 						} else{
-							console.log(document.links[i].href + " matched " + contactStr[j][certainty_lvl][k]);
+							//console.log(document.links[i].href + " matched " + contactStr[j][certainty_lvl][k]);
 							matches.push(document.links[i]);
 							fail_flag = false;
 							flag = false;
@@ -169,7 +166,6 @@ function attempt(certainty_lvl, first=true){
 			}
 		}
 	}
-	console.log(matches);						
 	return {"fail":fail_flag,"result":matches};
 }
 
@@ -183,48 +179,69 @@ function find_contacts(){
 	var twitlinks = [];
 	var identi = [];
 	var contact_pages = [];
-	console.log("certain:");
 	var res = attempt("certain");
 	var flag = true;	
+	var type = "";
 	if(res["fail"] == false){
-		console.log("certain contact found:" + res["result"]);
+		type = "certain";
 		res = res["result"];
 		flag = false;	
 	}
 	if(flag){
-		console.log("probable:");
 		res = attempt("probable");
 		if(res["fail"] == false){
-			console.log("probable contact found:" + res["result"]);
+			type = "probable";
 			res = res["result"];
 			flag = false;	
 		}
 	}
 	if(flag){
-		console.log("uncertain:");
 		res = attempt("uncertain");
-		console.log(res);
 		if(res["fail"] == false){
-			console.log("uncertain contact found:" + res["result"]);
+			type = "uncertain";
 			res = res["result"];
 			flag = false;		
 		}
 	}
 	if(flag){
-		console.log("No contact found");
+		return res;
 	}
-	console.log("final result:");
-	console.log(res);
+	return [type,res];
 }
 // need to have this so the handler doesn't take too long
 function handler(){
-	find_contacts();
+	var res = find_contacts();
+	if(document.getElementById("librejs_contactfinder") != null){
+		document.getElementById("librejs_contactfinder").remove();
+	}
+	var to_insert;
+	if("fail" in res){
+		to_insert = '<div style="font-size: small; z-index: 2147483647; background-color: #eeeeee;'+
+						'position: fixed; display:inline-block; border: 3px solid #990000; width: 50%;"'+
+						' id="librejs_contactfinder">'+
+						"Contact finder failed."
+						'</div>';
+	} else{
+		if(typeof(res[1]) == "string"){
+			to_insert = '<div style="font-size: small; z-index: 2147483647; background-color: #eeeeee;'+
+							'position: fixed; display:inline-block; border: 3px solid #990000; width: 50%;"'+
+							' id="librejs_contactfinder"><b>Result:</b><br>'+
+							res[0] + ": " + '<a href="' + res[1] + '>'+res[1]+'</a>' +
+							'</div>';
+		}
+		if(typeof(res[1]) == "object"){
+			to_insert = '<div style="font-size: small; z-index: 2147483647; background-color: #eeeeee;'+
+							'position: fixed; display:inline-block; border: 3px solid #990000; width: 50%;"'+
+							' id="librejs_contactfinder"><b>Result:</b><br>'+
+							res[0]+": "+res[1].outerHTML +
+							'</div>';
+
+		}
+	}
+	setTimeout(function(){document.getElementById("librejs_contactfinder").remove()}, 7500);
+	document.body.insertAdjacentHTML("afterbegin",to_insert);
 	return 0;
+
 }
 
 new_debug_button("Complain to website",handler);
-new_debug_button("Remove these buttons",function(){
-	if(document.getElementById("abc123_main_div") !== null){
-		document.getElementById("abc123_main_div").remove();
-	}
-});

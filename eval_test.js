@@ -42,7 +42,6 @@ var intrinsicEvents = [
 	- Automatic whitelist: (http://bzr.savannah.gnu.org/lh/librejs/dev/annotate/head:/data/script_libraries/script-libraries.json_
 	- <table id="jslicense-labels1"><table> which may be linked to by a link tag identified by rel="jslicense" or data-jslicense="1"
 	- In the first script tag, declare the license with @licstart/@licend
-
 */
 
 var licenses = {
@@ -227,7 +226,7 @@ function is_whitelisted(){
 
 
 /**
-* Parses the weblabels table from a DOM object
+*	Parses the weblabels table from a DOM object
 *
 */
 function read_weblabels_table(weblabel){
@@ -266,14 +265,16 @@ function get_table(url){
 	}
 	xml.send();
 }
-function read_w_table(table_data){
+function read_w_table(table_data=false){
 	// Call license_read on all the document's scripts 
 	// This is done just to debug before we can implement this in a background script,
 	// where it will have access to the individual script requests and HTML document. 
+
+
 	for(var i = 0; i < document.scripts.length; i++){
 		// convert between relative link and file name (table_data indexes by file name)
 		var scriptname = document.scripts[i].src.split("/")[document.scripts[0].src.split("/").length-1];
-		if(table_data !== undefined && scriptname in table_data){
+		if(table_data != false && scriptname in table_data){
 			console.log("script contained in weblabel data.");
 			if(table_data[scriptname] == "free"){
 				console.log("script is free");
@@ -281,41 +282,6 @@ function read_w_table(table_data){
 			}
 			console.log("script is unknown");		
 		}
-		if(document.scripts[i].src != ""){
-			// it is a remote script ("<script src='/script.js'></script>")
-			var name = document.scripts[i].src;
-			var xml = new XMLHttpRequest();
-			xml.open("get", document.scripts[i].src);
-			xml.onload = function(response){
-				console.log("%c Script " + i + ":","color:red;");
-				console.log(name);
-				license_read(this.responseText);
-			}
-			xml.send();
-		} else{
-			// it is an inline script ("<script>console.log('test');</script>")
-			console.log("%c Script " + i + ": (src: inline)","color:red;");
-			//console.log(document.scripts[i].innerText);
-			license_read(document.scripts[i].innerText);	
-		}	
-	}
-	// Find all the document's elements with intrinsic events
-	for(var i = 0; i < document.all.length; i++){
-		for(var j = 0; j < intrinsicEvents.length; j++){
-			if(intrinsicEvents[j] in document.all[i].attributes){
-				console.log("intrinsic event '"+intrinsicEvents[j]+"' JS found in element document.all[" + i + "]");
-				license_read(document.all[i].attributes[intrinsicEvents[j]].value);
-			}
-		}
-	}
-}
-function read_wo_table(){
-	// Call license_read on all the document's scripts 
-	// This is done just to debug before we can implement this in a background script,
-	// where it will have access to the individual script requests and HTML document. 
-	for(var i = 0; i < document.scripts.length; i++){
-		var scriptname = document.scripts[i].src.split("/")[document.scripts[0].src.split("/").length-1];
-		console.log(scriptname);		
 		if(document.scripts[i].src != ""){
 			// it is a remote script ("<script src='/script.js'></script>")
 			var name = document.scripts[i].src;
@@ -393,10 +359,10 @@ function analyze(){
 	var weblabel = document.getElementById("jslicense-labels1");
 	if(weblabel !== undefined && weblabel != null && found_table_flag == false){
 		console.log("Found web labels table");
-		read_w_table(read_weblabels_table(weblabel));
+		read_w_table(table_data=read_weblabels_table(weblabel));
 	} 
 	if(found_table_flag == false){
-		read_wo_table();
+		read_w_table();
 	}
 }
 
