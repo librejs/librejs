@@ -143,75 +143,124 @@ var licenses = {
 }
 
 /**
+*	Determines if a block of javascript is trivial or not.
+*
+*	true = trivial, false = nontrivial	
+*
+*/
+function evaluate(script){
+	console.log("%c Evaluating","color: red;")
+	console.log(script);
+	// Remove all the strings from the script so everything left is code.
+	// This gets rid of false positives (eval appearing in an innocent string)
+	// Note: Javascript strings can not take up more than one line
+	var nostr = script.replace(/'.+?'+/gm,"");
+	nostr = script.replace(/".+?"+/gm,"");
+
+	return true;
+}
+
+/**
+*	Looks at the output of the @license regex and determines if the
+*	license is good.
+*/
+function license_valid(matches){
+	// Being overly careful with safety checks
+	if(matches.length != 4){
+		return false;
+	}
+	if(matches[1] != "@license"){
+		return false;	
+	}
+	if(licenses[matches[3]] === undefined){
+		return false;
+	}
+	if(licenses[matches[3]]["Magnet link"] != matches[2]){
+		return false;
+	}
+	return true;
+}
+/**
 *
 *	Runs regexes to search for explicit delcarations of script
 *	licenses on the argument. 
 *	It detects:	
 *	//@license, //@license-end
-*	//licstart, //licen
-*	Returns the identifier string of the license or "fail".
+*	//licstart, //licend
+*	
+*	We are assuming that the "stack depth" of @license tags can not exceed 1.
+*	If this isn't correct, we can make it recursive. 
 *
 */
+// TODO: Known bug: extra \n chars thrown in at some splices 
 function license_read(script_src){
 	if(typeof(script_src) != "string"){
 		return "fail"
 	}
-	var license_attempts = [];
-	// comment regex
-	var comments = script_src.match(/(\/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+\/)|(\/\/.*)/g);
-	if(comments == null){
-		comments = [];
-	}
-	//console.log("%c comments:","color:green;")
-	//console.log(comments);
+	// @license regex
+	// /^(@license)\s([\S]+)\s([\S]+$)/gm
+	// @license-end regex
+	// ^(@license-end)
 
-	// Not sure if there is any better way to do this.
-	// More than one license section per file should be supported once we can edit scripts
-	// (this will be converted to edit the script instead of just read it)
-	for(var i = 0; i < comments.length; i++){
-		if(comments[i] !== undefined){
-			// @license regex
-			if(comments[i].match(/@license[^\S\n]+magnet:\S+[^\S\n]+\S+/g) != null){
-				console.log("License start detected.");
-				var content = comments[i].match(/(?:magnet:\S+)(\s+.+)/g);
-				if(content != null){
-					content[0].replace(/\s+/g," ");
-					content = content[0].split(" ");
-					var magnet = content[0];
-					var identifier = "";
-					for(var i = 1; i < content.length; i++){
-						if(i == 1){						
-							identifier = identifier + content[i];
-						} else{
-							identifier = identifier + "-" + content[i];
-						}				
-					}
-					var valid = true;
-					if(licenses[identifier]["Magnet link"] != magnet){
-						valid = false;
-					}
-					if((identifier in licenses) == false){
-						valid = false;
-					}
-					console.log("Valid? " + valid);
-					// TODO: Support more than one block and check for code outside of this block
-					// Can't be implemented right now since we can't edit scripts.
-					return valid;// TODO: this is a temporary debug solution
-				} else{
-					console.log("Valid? false");
-				}	
+	// Contains only good Javascript
+	var edited_src = "";
+	// Once Javascript has been "judged", remove it from here
+	var unedited_src = script_src;
+	var first = true;
+	var watchdog = 0;
+	while(true){
+		if(first){
+			first = false;
+			//console.log("input:");
+			//console.log("%c"+unedited_src,"color:#550000");
+		}
+		var matches = /^(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+		if(matches == null){
+			//console.log("No more matches, almost done");
+			if(evaluate(unedited_src)){
+				edited_src += unedited_src;
 			}
-			// license-end regex
-			if(comments[i].match(/\/\/\s*@license\-end/g) != null){
-				console.log("License end:");
-				console.log(comments[i])			
-			}
+			return edited_src;
+			// Because we break on null, it must start at the beginning of the 
+			// source and operate on blocks seperated by license tags
+		}
+		// operate on everything before the next match.
+		//console.log("Everything before the next match");
+		var before = unedited_src.substr(0,matches["index"]);
+		//console.log(before);
+		if(evaluate(before)){
+			edited_src += before;
+		}
+		// This should remove the substring "before"
+		unedited_src = unedited_src.substr(matches["index"],unedited_src.length);
+		// find the end tag and check if it is valid
+		matches_end = /^(@license-end)/gm.exec(unedited_src);
+		if(matches_end == null){
+			//console.log("ERROR: @license with no @license-end");
+			return;
+		}
+		var endtag_end_index = matches_end["index"]+matches_end[0].length;
+		// accept next tag if its license is good.
+		if(license_valid(matches)){
+			edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
+		} else{
+			//console.log("Error: invalid license tag.");
+		}
+		// Remove the next tag (it will be in edited_src if it was accepted)
+		unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
+		//console.log("New input after iteration:");		
+		//console.log("%c"+unedited_src,"color:red;");
+		//console.log("Current output:");
+		//console.log("%c"+edited_src,"color:green;");
+		watchdog++;
+		if(watchdog > 20){
+			console.log("%c Watchdog > 20.","color:reg");
+			return 0;
 		}
 	}
-	//console.log("VERDICT: probably nonfree");
-	//console.log("VERDICT: probably free");
 }
 
+console.log("%c"+license_read(document.getElementById("bod").innerText),"color:#550000");
 /**
 *
 *	Checks the whitelist in storage
@@ -265,6 +314,11 @@ function get_table(url){
 	}
 	xml.send();
 }
+/**
+*	Doesn't really serve a specific purpose 
+*
+*	Added because I was having async issues and needed a callback	
+*/
 function read_w_table(table_data=false){
 	// Call license_read on all the document's scripts 
 	// This is done just to debug before we can implement this in a background script,
