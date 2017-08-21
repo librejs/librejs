@@ -142,6 +142,15 @@ var licenses = {
 	}
 }
 
+// Objects which could be used with bracket suffix notation to do nontrivial things
+var reserved_objects = {
+	"window":true,
+	"fetch":true,
+	"XMLHttpRequest":true, // only on chrome
+	"chrome":true, // only on chrome
+	"browser":true, // only on firefox
+	"clientInformation":true // good idea?
+};
 /**
 *	Determines if a block of javascript is trivial or not.
 *
@@ -149,13 +158,24 @@ var licenses = {
 *
 */
 function evaluate(script){
-	console.log("%c Evaluating","color: red;")
-	console.log(script);
+	//console.log("%c Evaluating","color: red;")
+	//console.log(script);
+	// Detect bracket suffix notation  
+	// this.is.bracket["suffix"].notation
+	
 	// Remove all the strings from the script so everything left is code.
 	// This gets rid of false positives (eval appearing in an innocent string)
 	// Note: Javascript strings can not take up more than one line
 	var nostr = script.replace(/'.+?'+/gm,"");
 	nostr = script.replace(/".+?"+/gm,"");
+	
+
+	// multi-line "/*" "*/" comments
+	// \/\*[\s\S]+?\*\/g;
+	// in-line "//" comments
+	// /\/\/.+/g;
+	// Eval in dot notation
+	// /[{}\]\[\(\)\.]eval/g;
 
 	return true;
 }
@@ -197,11 +217,6 @@ function license_read(script_src){
 	if(typeof(script_src) != "string"){
 		return "fail"
 	}
-	// @license regex
-	// /^(@license)\s([\S]+)\s([\S]+$)/gm
-	// @license-end regex
-	// ^(@license-end)
-
 	// Contains only good Javascript
 	var edited_src = "";
 	// Once Javascript has been "judged", remove it from here
@@ -252,6 +267,8 @@ function license_read(script_src){
 		//console.log("%c"+unedited_src,"color:red;");
 		//console.log("Current output:");
 		//console.log("%c"+edited_src,"color:green;");
+		
+		// TODO: this is here to prevent infinite loops, should be removed eventually		
 		watchdog++;
 		if(watchdog > 20){
 			console.log("%c Watchdog > 20.","color:reg");
@@ -259,8 +276,12 @@ function license_read(script_src){
 		}
 	}
 }
+// debugging (works on a test page I made)
+try{
+	console.log("%c"+license_read(document.getElementById("bod").innerText),"color:#550000");
+} catch(e){
 
-console.log("%c"+license_read(document.getElementById("bod").innerText),"color:#550000");
+}
 /**
 *
 *	Checks the whitelist in storage
@@ -268,7 +289,7 @@ console.log("%c"+license_read(document.getElementById("bod").innerText),"color:#
 *
 */
 function is_whitelisted(){
-	// TODO: implement
+	// TODO: implement when this is a background script
 	return false;
 
 }
@@ -315,7 +336,10 @@ function get_table(url){
 	xml.send();
 }
 /**
-*	Doesn't really serve a specific purpose 
+*	Basically an extension of "analyze" 
+*
+*	Calls license_read() on all the document's scripts. license_read() then returns an edited version
+*	according to license status and trivial/nontrivial status.
 *
 *	Added because I was having async issues and needed a callback	
 */
@@ -327,7 +351,8 @@ function read_w_table(table_data=false){
 
 	for(var i = 0; i < document.scripts.length; i++){
 		// convert between relative link and file name (table_data indexes by file name)
-		var scriptname = document.scripts[i].src.split("/")[document.scripts[0].src.split("/").length-1];
+		var tok_index = document.scripts[i].src.split("/").length;
+		var scriptname = document.scripts[i].src.split("/")[tok_index-1];
 		if(table_data != false && scriptname in table_data){
 			console.log("script contained in weblabel data.");
 			if(table_data[scriptname] == "free"){
@@ -338,15 +363,19 @@ function read_w_table(table_data=false){
 		}
 		if(document.scripts[i].src != ""){
 			// it is a remote script ("<script src='/script.js'></script>")
-			var name = document.scripts[i].src;
-			var xml = new XMLHttpRequest();
-			xml.open("get", document.scripts[i].src);
-			xml.onload = function(response){
-				console.log("%c Script " + i + ":","color:red;");
-				console.log(name);
-				license_read(this.responseText);
-			}
-			xml.send();
+			// this function is here because otherwise there would be async issues
+			function remote_script(i){
+				var name = document.scripts[i].src;
+				var xml = new XMLHttpRequest();			
+				xml.open("get", document.scripts[i].src);
+				xml.onload = function(response){
+					console.log("%c Script " + i + ":","color:red;");
+					console.log(name);
+					license_read(this.responseText);
+				}
+				xml.send();
+			};
+			remote_script(i);
 		} else{
 			// it is an inline script ("<script>console.log('test');</script>")
 			console.log("%c Script " + i + ": (src: inline)","color:red;");
@@ -364,27 +393,32 @@ function read_w_table(table_data=false){
 		}
 	}
 }
+// "main" for the script analyzer
 // called when invoked by the button
 function analyze(){
 	// TODO: Call get_whitelisted_status on this page's URL
 	
 	// Test "the first piece of Javascript available to the page" for the license comment
 	// TODO: Is this supposed to test if the license is free or just assume that it is?	
+	// TODO: This block of code doesn't actually do anything but print a message if it finds a license
 	if(document.scripts[0] !== undefined){
 		if(document.scripts[0].src != ""){
-			var name = document.scripts[0].src;
-			var xml = new XMLHttpRequest();
-			xml.open("get", document.scripts[0].src);
-			xml.onload = function(response){
-				var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
-				if(matches != null){
-					console.log("License comment found:");
-					console.log(matches[0]);
-					console.log("Trusting that the entire page is freely licensed.");
-					return "do-nothing";
+			// this function is here because otherwise there would be async issues
+			function get_first_js(){
+				var name = document.scripts[0].src;
+				var xml = new XMLHttpRequest();
+				xml.open("get", document.scripts[0].src);
+				xml.onload = function(response){
+					var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
+					if(matches != null){
+						console.log("License comment found:");
+						console.log(matches[0]);
+						console.log("Trusting that the entire page is freely licensed.");
+					}
 				}
+				xml.send();
 			}
-			xml.send();
+			get_first_js();
 		} else{
 			console.log("%c Script " + i + ": (src: inline)","color:red;");
 			var matches = document.scripts[0].innerText.match(/@licstart[\s\S]+@licend/g);
@@ -392,7 +426,6 @@ function analyze(){
 				console.log("License comment found:");
 				console.log(matches[0]);
 				console.log("Trusting that the entire page is freely licensed.");
-				return "do-nothing";
 			}
 		}	
 	}
@@ -440,12 +473,10 @@ function new_debug_button(name_text,callback){
 	document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
 	button_i = button_i + 1;
 }
-
+window["eval"] = function(){console.log("Not today buddy")};
 new_debug_button("Evaluate scripts",analyze);
 new_debug_button("Remove these buttons",function(){
 	if(document.getElementById("abc123_main_div") !== null){
 		document.getElementById("abc123_main_div").remove();
 	}
 });
-
-
