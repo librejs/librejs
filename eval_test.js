@@ -1,3 +1,4 @@
+
 /**
 *	This file is the "skeleton" of the final system to determine
 *	if a script is accepted or blocked.
@@ -151,332 +152,366 @@ var reserved_objects = {
 	"browser":true, // only on firefox
 	"clientInformation":true // good idea?
 };
-/**
-*	Determines if a block of javascript is trivial or not.
-*
-*	true = trivial, false = nontrivial	
-*
-*/
-function evaluate(script){
-	//console.log("%c Evaluating","color: red;")
-	//console.log(script);
-	// Detect bracket suffix notation  
-	// this.is.bracket["suffix"].notation
+
+function get_final_page(html_string, callback){
+
+	/**
+	*	Determines if a block of javascript is trivial or not.
+	*
+	*	true = trivial, false = nontrivial	
+	*
+	*/
+	function evaluate(script){
+		//console.log("%c Evaluating","color: red;")
+		//console.log(script);
+		// Detect bracket suffix notation  
+		// this.is.bracket["suffix"].notation
 	
-	// Remove all the strings from the script so everything left is code.
-	// This gets rid of false positives (eval appearing in an innocent string)
-	// Note: Javascript strings can not take up more than one line
-	var nostr = script.replace(/'.+?'+/gm,"");
-	nostr = script.replace(/".+?"+/gm,"");
+		// Remove all the strings from the script so everything left is code.
+		// This gets rid of false positives (eval appearing in an innocent string)
+		// Note: Javascript strings can not take up more than one line
+		var nostr = script.replace(/'.+?'+/gm,"");
+		nostr = script.replace(/".+?"+/gm,"");
 	
 
-	// multi-line "/*" "*/" comments
-	// \/\*[\s\S]+?\*\/g;
-	// in-line "//" comments
-	// /\/\/.+/g;
-	// Eval in dot notation
-	// /[{}\]\[\(\)\.]eval/g;
+		// multi-line "/*" "*/" comments
+		// \/\*[\s\S]+?\*\/g;
+		// in-line "//" comments
+		// /\/\/.+/g;
+		// Eval in dot notation
+		// /[{}\]\[\(\)\.]eval/g;
 
-	return true;
-}
+		return false;
+	}
 
-/**
-*	Looks at the output of the @license regex and determines if the
-*	license is good.
-*/
-function license_valid(matches){
-	// Being overly careful with safety checks
-	if(matches.length != 4){
-		return false;
-	}
-	if(matches[1] != "@license"){
-		return false;	
-	}
-	if(licenses[matches[3]] === undefined){
-		return false;
-	}
-	if(licenses[matches[3]]["Magnet link"] != matches[2]){
-		return false;
-	}
-	return true;
-}
-/**
-*
-*	Runs regexes to search for explicit delcarations of script
-*	licenses on the argument. 
-*	It detects:	
-*	//@license, //@license-end
-*	//licstart, //licend
-*	
-*	We are assuming that the "stack depth" of @license tags can not exceed 1.
-*	If this isn't correct, we can make it recursive. 
-*
-*/
-// TODO: Known bug: extra \n chars thrown in at some splices 
-function license_read(script_src){
-	if(typeof(script_src) != "string"){
-		return "fail"
-	}
-	// Contains only good Javascript
-	var edited_src = "";
-	// Once Javascript has been "judged", remove it from here
-	var unedited_src = script_src;
-	var first = true;
-	var watchdog = 0;
-	while(true){
-		if(first){
-			first = false;
-			//console.log("input:");
-			//console.log("%c"+unedited_src,"color:#550000");
+	/**
+	*	Looks at the output of the @license regex and determines if the
+	*	license is good.
+	*/
+	function license_valid(matches){
+		// Being overly careful with safety checks
+		if(matches.length != 4){
+			return false;
 		}
-		var matches = /^(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
-		if(matches == null){
-			//console.log("No more matches, almost done");
-			if(evaluate(unedited_src)){
-				edited_src += unedited_src;
+		if(matches[1] != "@license"){
+			return false;	
+		}
+		if(licenses[matches[3]] === undefined){
+			return false;
+		}
+		if(licenses[matches[3]]["Magnet link"] != matches[2]){
+			return false;
+		}
+		return true;
+	}
+	/**
+	*
+	*	Runs regexes to search for explicit delcarations of script
+	*	licenses on the argument. 
+	*	It detects:	
+	*	//@license, //@license-end
+	*	//licstart, //licend
+	*	
+	*	We are assuming that the "stack depth" of @license tags can not exceed 1.
+	*	If this isn't correct, we can make it recursive. 
+	*
+	*/
+	// TODO: Known bug: extra \n chars thrown in at some splices 
+	function license_read(script_src){
+		if(typeof(script_src) != "string"){
+			return "fail"
+		}
+		// Contains only good Javascript
+		var edited_src = "";
+		// Once Javascript has been "judged", remove it from here
+		var unedited_src = script_src;
+		var first = true;
+		var watchdog = 0;
+		while(true){
+			if(first){
+				first = false;
+				//console.log("input:");
+				//console.log("%c"+unedited_src,"color:#550000");
 			}
-			return edited_src;
-			// Because we break on null, it must start at the beginning of the 
-			// source and operate on blocks seperated by license tags
-		}
-		// operate on everything before the next match.
-		//console.log("Everything before the next match");
-		var before = unedited_src.substr(0,matches["index"]);
-		//console.log(before);
-		if(evaluate(before)){
-			edited_src += before;
-		}
-		// This should remove the substring "before"
-		unedited_src = unedited_src.substr(matches["index"],unedited_src.length);
-		// find the end tag and check if it is valid
-		matches_end = /^(@license-end)/gm.exec(unedited_src);
-		if(matches_end == null){
-			//console.log("ERROR: @license with no @license-end");
-			return;
-		}
-		var endtag_end_index = matches_end["index"]+matches_end[0].length;
-		// accept next tag if its license is good.
-		if(license_valid(matches)){
-			edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
-		} else{
-			//console.log("Error: invalid license tag.");
-		}
-		// Remove the next tag (it will be in edited_src if it was accepted)
-		unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
-		//console.log("New input after iteration:");		
-		//console.log("%c"+unedited_src,"color:red;");
-		//console.log("Current output:");
-		//console.log("%c"+edited_src,"color:green;");
+			var matches = /^(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+			if(matches == null){
+				//console.log("No more matches, almost done");
+				if(evaluate(unedited_src)){
+					edited_src += unedited_src;
+				}
+				return edited_src;
+			}
+			// operate on everything before the next match.
+			//console.log("Everything before the next match");
+			var before = unedited_src.substr(0,matches["index"]);
+			//console.log(before);
+			if(evaluate(before)){
+				edited_src += before;
+			}
+			// This should remove the substring "before"
+			unedited_src = unedited_src.substr(matches["index"],unedited_src.length);
+			// find the end tag and check if it is valid
+			matches_end = /^(@license-end)/gm.exec(unedited_src);
+			if(matches_end == null){
+				console.log("ERROR: @license with no @license-end");
+				return false;
+			}
+			var endtag_end_index = matches_end["index"]+matches_end[0].length;
+			// accept next tag if its license is good.
+			if(license_valid(matches)){
+				edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
+			} else{
+				console.log("Error: invalid license tag.");
+				return false;
+			}
+			// Remove the next tag (it will be in edited_src if it was accepted)
+			unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
+			//console.log("New input after iteration:");		
+			//console.log("%c"+unedited_src,"color:red;");
+			//console.log("Current output:");
+			//console.log("%c"+edited_src,"color:green;");
 		
-		// TODO: this is here to prevent infinite loops, should be removed eventually		
-		watchdog++;
-		if(watchdog > 20){
-			console.log("%c Watchdog > 20.","color:reg");
-			return 0;
-		}
-	}
-}
-// debugging (works on a test page I made)
-try{
-	console.log("%c"+license_read(document.getElementById("bod").innerText),"color:#550000");
-} catch(e){
-
-}
-/**
-*
-*	Checks the whitelist in storage
-*	(Not the comma seperated whitelist from settings)
-*
-*/
-function is_whitelisted(){
-	// TODO: implement when this is a background script
-	return false;
-
-}
-
-
-/**
-*	Parses the weblabels table from a DOM object
-*
-*/
-function read_weblabels_table(weblabel){
-	var data = {};
-	var tbody = weblabel.getElementsByTagName("td");
-	for(var i = 0; i < tbody.length; i++){
-		var link = tbody[i].getElementsByTagName("a")[0];
-		//console.log(link.href);
-		if(link.innerText in licenses){
-			console.log("%cFree: " + link.innerText,"color:green;");
-			data[encodeURI(link.innerText)] = "free";
-		} else{
-			console.log("%cUnknown: " + link.innerText,"color:red;");
-			data[encodeURI(link.innerText)] = "unknown";
-		}
-	}
-	console.log("web labels table data:");
-	console.log(data);
-	return data;
-}
-
-/**
-*	Reads the weblabels table from a link.
-*
-*/
-function get_table(url){
-	var xml = new XMLHttpRequest();
-	xml.open("get",url);
-	xml.onload = function(){
-		var a = new DOMParser()
-		var doc = a.parseFromString(this.responseText,"text/html");
-		var web_label = doc.getElementById("jslicense-labels1");
-		if(web_label != null){
-			read_w_table(read_weblabels_table(web_label));
-		}
-	}
-	xml.send();
-}
-/**
-*	Basically an extension of "analyze" 
-*
-*	Calls license_read() on all the document's scripts. license_read() then returns an edited version
-*	according to license status and trivial/nontrivial status.
-*
-*	Added because I was having async issues and needed a callback	
-*/
-function read_w_table(table_data=false){
-	// Call license_read on all the document's scripts 
-	// This is done just to debug before we can implement this in a background script,
-	// where it will have access to the individual script requests and HTML document. 
-
-
-	for(var i = 0; i < document.scripts.length; i++){
-		// convert between relative link and file name (table_data indexes by file name)
-		var tok_index = document.scripts[i].src.split("/").length;
-		var scriptname = document.scripts[i].src.split("/")[tok_index-1];
-		if(table_data != false && scriptname in table_data){
-			console.log("script contained in weblabel data.");
-			if(table_data[scriptname] == "free"){
-				console.log("script is free");
-				continue;
+			// TODO: this is here to prevent infinite loops, should be removed eventually		
+			watchdog++;
+			if(watchdog > 20){
+				console.log("%c Watchdog > 20.","color:red");
+				return false;
 			}
-			console.log("script is unknown");		
 		}
-		if(document.scripts[i].src != ""){
-			// it is a remote script ("<script src='/script.js'></script>")
-			// this function is here because otherwise there would be async issues
-			function remote_script(i){
-				var name = document.scripts[i].src;
-				var xml = new XMLHttpRequest();			
-				xml.open("get", document.scripts[i].src);
-				xml.onload = function(response){
-					console.log("%c Script " + i + ":","color:red;");
-					console.log(name);
-					license_read(this.responseText);
+	}
+	/**
+	*
+	*	Checks the whitelist in storage
+	*	(Not the comma seperated whitelist from settings)
+	*
+	*/
+	function is_whitelisted(){
+		// TODO: implement when this is a background script
+		return false;
+	}
+
+
+	/**
+	*	Parses the weblabels table from a DOM object
+	*
+	*/
+	function read_weblabels_table(weblabel){
+		var data = {};
+		var tbody = weblabel.getElementsByTagName("td");
+		for(var i = 0; i < tbody.length; i++){
+			var link = tbody[i].getElementsByTagName("a")[0];
+			//console.log(link.href);
+			if(link.innerText in licenses){
+				console.log("%cFree: " + link.innerText,"color:green;");
+				data[encodeURI(link.innerText)] = "free";
+			} else{
+				console.log("%cUnknown: " + link.innerText,"color:red;");
+				data[encodeURI(link.innerText)] = "unknown";
+			}
+		}
+		console.log("web labels table data:");
+		console.log(data);
+		return data;
+	}
+
+	/**
+	*	Reads the weblabels table from a link.
+	*
+	*/
+	function get_table(html_doc, callback, url){
+		var xml = new XMLHttpRequest();
+		xml.open("get",url);
+		xml.onload = function(){
+			var a = new DOMParser()
+			var doc = a.parseFromString(this.responseText,"text/html");
+			var web_label = doc.getElementById("jslicense-labels1");
+			if(web_label != null){
+				read_w_table(html_doc, callback, table_data=read_weblabels_table(web_label));
+			}
+		}
+		xml.send();
+	}
+	/**
+	*	Basically an extension of "analyze" 
+	*
+	*	Calls license_read() on all the document's scripts. license_read() then returns an edited version
+	*	according to license status and trivial/nontrivial status.
+	*
+	*	Added because I was having async issues	
+	*/
+	function read_w_table(html_doc, callback, table_data=false){
+		
+		var has_intrinsic_events = [];
+		for(var i = 0; i < html_doc.all.length; i++){
+			for(var j = 0; j < intrinsicEvents.length; j++){
+				if(intrinsicEvents[j] in html_doc.all[i].attributes){
+					has_intrinsic_events.push([i,j]);
 				}
-				xml.send();
-			};
-			remote_script(i);
-		} else{
-			// it is an inline script ("<script>console.log('test');</script>")
-			console.log("%c Script " + i + ": (src: inline)","color:red;");
-			//console.log(document.scripts[i].innerText);
-			license_read(document.scripts[i].innerText);	
-		}	
-	}
-	// Find all the document's elements with intrinsic events
-	for(var i = 0; i < document.all.length; i++){
-		for(var j = 0; j < intrinsicEvents.length; j++){
-			if(intrinsicEvents[j] in document.all[i].attributes){
-				console.log("intrinsic event '"+intrinsicEvents[j]+"' JS found in element document.all[" + i + "]");
-				license_read(document.all[i].attributes[intrinsicEvents[j]].value);
 			}
 		}
-	}
-}
-// "main" for the script analyzer
-// called when invoked by the button
-function analyze(){
-	// TODO: Call get_whitelisted_status on this page's URL
-	
-	// Test "the first piece of Javascript available to the page" for the license comment
-	// TODO: Is this supposed to test if the license is free or just assume that it is?	
-	// TODO: This block of code doesn't actually do anything but print a message if it finds a license
-	if(document.scripts[0] !== undefined){
-		if(document.scripts[0].src != ""){
-			// this function is here because otherwise there would be async issues
-			function get_first_js(){
-				var name = document.scripts[0].src;
-				var xml = new XMLHttpRequest();
-				xml.open("get", document.scripts[0].src);
-				xml.onload = function(response){
-					var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
-					if(matches != null){
-						console.log("License comment found:");
-						console.log(matches[0]);
-						console.log("Trusting that the entire page is freely licensed.");
+
+		var done = false;
+		var amt_done = 0;
+		var amt_todo = html_doc.scripts.length + has_intrinsic_events.length;
+
+		function check_done(){
+			console.log(amt_done + "/" + amt_todo);
+			if(amt_done > amt_todo){
+				console.warn("Not supposed to happen");
+			}
+			if(done == false && amt_done >= amt_todo){
+				console.log("%c DONE.","color:red;");
+				callback(html_doc);
+				done = true;
+				// TODO: Convert this to async
+				// TODO: Call update_popup() here with reasons
+			}
+		}
+		// "i" is an index in html_doc.scripts
+		function edit_src(src, i, name){
+			var edited = license_read(src);
+			if(edited == "string"){
+				html_doc.scripts[i].outerHTML = "<script name='librejs-accepted'>"+edited+"</script>";
+			} else{
+				html_doc.scripts[i].outerHTML = "<script name='librejs-denied'>"+name+"</script>";
+			}
+			amt_done++;
+		}
+		// "i" is an index in html_doc.all
+		// "j" is an index in intrinsicEvents
+		function edit_event(src,i,j){
+			var edited = license_read(src);
+
+			if(edited == "string"){
+				html_doc.all[i].attributes[intrinsicEvents[j]].value = edited;
+			} else{
+				html_doc.all[i].attributes[intrinsicEvents[j]].value = "//Denied by LibreJS";
+			}
+			amt_done++;
+		}
+
+		for(var i = 0; i < html_doc.scripts.length; i++){
+			// convert between relative link and file name (table_data indexes by file name)
+			var tok_index = html_doc.scripts[i].src.split("/").length;
+			var scriptname = html_doc.scripts[i].src.split("/")[tok_index-1];
+
+			if(table_data != false && scriptname in table_data){
+				console.log("script contained in weblabel data.");
+				if(table_data[scriptname] == "free"){
+					console.log("script is free");
+					continue;
+				}
+
+				console.log("script is unknown");		
+			}
+
+			if(html_doc.scripts[i].src != ""){
+				// it is a remote script ("<script src='/script.js'></script>")
+				// this function is here because otherwise there would be async issues
+				function remote_script(i){
+					var name = html_doc.scripts[i].src;
+					var xml = new XMLHttpRequest();			
+					xml.open("get", html_doc.scripts[i].src);
+					xml.onload = function(response){
+						console.log("%c Script " + i + ":","color:red;");
+						console.log(name);
+						edit_src(this.responseText, i, name);
+						check_done();
 					}
-				}
-				xml.send();
-			}
-			get_first_js();
-		} else{
-			console.log("%c Script " + i + ": (src: inline)","color:red;");
-			var matches = document.scripts[0].innerText.match(/@licstart[\s\S]+@licend/g);
-			if(matches != null){
-				console.log("License comment found:");
-				console.log(matches[0]);
-				console.log("Trusting that the entire page is freely licensed.");
-			}
-		}	
-	}
+					xml.send();
+				};
+				remote_script(i);
+			} else{
+				// it is an inline script ("<script>console.log('test');</script>")
+				console.log("%c Script " + i + ": (src: inline)","color:red;");
+				//console.log(html_doc.scripts[i].innerText);
+				edit_src(html_doc.scripts[i].innerText, i, "src: inline (index "+i+")");
+			}	
+		}
+		// Find all the document's elements with intrinsic events
+		for(var i = 0; i < has_intrinsic_events.length; i++){
+			edit_event(html_doc.all[has_intrinsic_events[i][0]].attributes[intrinsicEvents[has_intrinsic_events[i][1]]].value,has_intrinsic_events[i][0],has_intrinsic_events[i][1]);
+		}
 
-	var table_data = {};
-	var found_table_flag = false;
-	// Test for the link that has rel="jslicense", data-jslicense="1"  
-	for(var i = 0; i < document.links.length; i++){
-		// TODO: also check if data-jslicense == "1". (how?)
-		if(document.links[i].rel == "jslicense"){
-			console.log("Found HTML table link:");
-			get_table(document.links[i].href);			
-			found_table_flag = true;			
-			break;
+		check_done();
+
+	}
+	// "main" for the script analyzer
+	// called when invoked by the button
+	function analyze(html_source,callback){
+		// TODO: Call get_whitelisted_status on this page's URL
+
+		var parser = new DOMParser();
+		var html_doc = parser.parseFromString(html_source, "text/html");
+
+		// Test "the first piece of Javascript available to the page" for the license comment
+		// TODO: Is this supposed to test if the license is free or just assume that it is?	
+		// TODO: See if there are async bugs here; for example what if get_first_js() returns after a longer amount of time than expected?
+		var finished = false;
+		if(html_doc.scripts[0] !== undefined){
+			if(html_doc.scripts[0].src != ""){
+				// this function is here because otherwise there would be async issues
+				function get_first_js(){
+					var name = html_doc.scripts[0].src;
+					var xml = new XMLHttpRequest();
+					xml.open("get", html_doc.scripts[0].src);
+					xml.onload = function(response){
+						var matches = this.responseText.match(/@licstart[\s\S]+@licend/g);
+						if(matches != null){
+							console.log("License comment found:");
+							console.log(matches[0]);
+							console.log("Trusting that the entire page is freely licensed.");
+							callback(true);
+						}
+					}
+					xml.send();
+				}
+				get_first_js();
+			} else{
+				console.log("%c Script " + i + ": (src: inline)","color:red;");
+				var matches = html_doc.scripts[0].innerText.match(/@licstart[\s\S]+@licend/g);
+				if(matches != null){
+					console.log("License comment found:");
+					console.log(matches[0]);
+					console.log("Trusting that the entire page is freely licensed.");
+					callback(true);
+				}
+			}	
+		}
+
+		var table_data = {};
+		var found_table_flag = false;
+		// Test for the link that has rel="jslicense", data-jslicense="1"  
+		for(var i = 0; i < html_doc.links.length; i++){
+			// TODO: also check if data-jslicense == "1". (how?)
+			if(html_doc.links[i].rel == "jslicense"){
+				console.log("Found HTML table link:");
+				get_table(html_doc, callback, html_doc.links[i].href);			
+				found_table_flag = true;			
+				break;
+			}
+		}
+		// Test for the JavaScript Web Labels table on this page
+		var weblabel = html_doc.getElementById("jslicense-labels1");
+		if(weblabel !== undefined && weblabel != null && found_table_flag == false){
+			console.log("Found web labels table");
+			read_w_table(html_doc, callback, table_data=read_weblabels_table(weblabel));
+		} 
+		if(found_table_flag == false){
+			read_w_table(html_doc, callback);
 		}
 	}
-	// Test for the JavaScript Web Labels table on this page
-	var weblabel = document.getElementById("jslicense-labels1");
-	if(weblabel !== undefined && weblabel != null && found_table_flag == false){
-		console.log("Found web labels table");
-		read_w_table(table_data=read_weblabels_table(weblabel));
-	} 
-	if(found_table_flag == false){
-		read_w_table();
-	}
+
+	analyze(html_string,callback);
+
 }
 
-/**
-*	Makes a button appear that calls a function when you press it.
-*
-*	I copied and pasted this from something else I wrote. It's quite useful.
-*	
-*/
-var button_i = 0;
-if(document.getElementById("abc123_main_div") !== null){
-	document.getElementById("abc123_main_div").remove();
-}
-function new_debug_button(name_text,callback){
-	if(document.getElementById("abc123_main_div") === null){
-		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
-		document.body.insertAdjacentHTML('afterbegin', to_insert);
-	}
-	var button_html = '<input id="abc123_button_' + button_i + '" value="' + name_text +'"type="button"></input><br>';	
-	document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	
-	document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
-	button_i = button_i + 1;
-}
-window["eval"] = function(){console.log("Not today buddy")};
-new_debug_button("Evaluate scripts",analyze);
-new_debug_button("Remove these buttons",function(){
-	if(document.getElementById("abc123_main_div") !== null){
-		document.getElementById("abc123_main_div").remove();
-	}
+get_final_page(document.documentElement.outerHTML,function(a){
+	console.log("returned");
+	document.documentElement.innerHTML = a.documentElement.innerHTML;
 });
+
+
+
+
+
