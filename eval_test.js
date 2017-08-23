@@ -143,7 +143,8 @@ var licenses = {
 	}
 }
 
-// Objects which could be used with bracket suffix notation to do nontrivial things
+// Objects which could be used with bracket suffix notation to do (very) nontrivial things
+// If this system is used, bracket suffix notation could still be exploited to 
 var reserved_objects = {
 	"window":true,
 	"fetch":true,
@@ -162,24 +163,33 @@ function get_final_page(html_string, callback){
 	*
 	*/
 	function evaluate(script){
-		//console.log("%c Evaluating","color: red;")
-		//console.log(script);
-		// Detect bracket suffix notation  
-		// this.is.bracket["suffix"].notation
-	
-		// Remove all the strings from the script so everything left is code.
-		// This gets rid of false positives (eval appearing in an innocent string)
-		// Note: Javascript strings can not take up more than one line
-		var nostr = script.replace(/'.+?'+/gm,"");
-		nostr = script.replace(/".+?"+/gm,"");
-	
 
+		function reserved_object_regex(object){
+			return new RegExp('/[{}\]\[\(\)\.\s]'+object+'\s*\(/g');
+		}		
+
+		// Strings
+		var all_strings = new RegExp('/".*?"'+"|'.*?'/gm");
 		// multi-line "/*" "*/" comments
-		// \/\*[\s\S]+?\*\/g;
+		var ml_comment = new RegExp('/\/\*[\s\S]+?\*\/g');
 		// in-line "//" comments
-		// /\/\/.+/g;
-		// Eval in dot notation
-		// /[{}\]\[\(\)\.]eval/g;
+		var il_comment = new RegExp('/\/\/.+/g');
+		// Bracket suffix notation
+		var bracket_pairs = new RegExp('/\[.+?\]/g');
+
+		// Replace string consts with values that won't interfere
+		var temp = script.replace(/'.+?'+/gm,"'string'");
+		temp = temp.replace(/".+?"+/gm,'"string"');
+		// Remove comments
+		temp = temp.replace(ml_comment,"");
+		temp = temp.replace(il_comment,"");
+		// Now that there can't be any brackets inside of comments or strings,
+		// see if there are any variable assignments on 
+		var bracket_contents = temp.match(bracket_pairs);
+
+		for(var i = 0; i < bracket_contents.length; i++){
+			if(bracket_contents){}
+		}
 
 		return false;
 	}
@@ -446,7 +456,6 @@ function get_final_page(html_string, callback){
 
 		// Test "the first piece of Javascript available to the page" for the license comment
 		// TODO: Is this supposed to test if the license is free or just assume that it is?	
-		// TODO: See if there are async bugs here; for example what if get_first_js() returns after a longer amount of time than expected?
 		var finished = false;
 		if(html_doc.scripts[0] !== undefined){
 			if(html_doc.scripts[0].src != ""){
