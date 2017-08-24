@@ -143,16 +143,20 @@ var licenses = {
 	}
 }
 
-// Objects which could be used with bracket suffix notation to do (very) nontrivial things
-// If this system is used, bracket suffix notation could still be exploited to 
-var reserved_objects = {
-	"window":true,
-	"fetch":true,
-	"XMLHttpRequest":true, // only on chrome
-	"chrome":true, // only on chrome
-	"browser":true, // only on firefox
-	"clientInformation":true // good idea?
-};
+// Objects which could be used to do nontrivial things
+// Bracket suffix notation could still be exploited to get some of these objects 
+var reserved_objects = [
+	"window",
+	"fetch",
+	"XMLHttpRequest",
+	"chrome", // only on chrome
+	"browser", // only on firefox
+	"eval"
+];
+
+// Objects that can only be used with dot notation
+var reserved_
+
 
 function get_final_page(html_string, callback){
 
@@ -162,20 +166,34 @@ function get_final_page(html_string, callback){
 	*	true = trivial, false = nontrivial	
 	*
 	*/
-	function evaluate(script){
+	function evaluate(script,name){
 
 		function reserved_object_regex(object){
-			return new RegExp('/[{}\]\[\(\)\.\s]'+object+'\s*\(/g');
-		}		
+			// Matches use of object as a variable	
+			
+			// This accounts for both unary, binary and assignment operators
+			var arith_operators = "\\+\\-\\*\\/\\%\\=";
+			
+			// These are allowed to preceed or trail a variable as in 'if(true){eval("thiscode")};'
+			// However, if you have 'function(){eval}' where the "}" char trails "eval", this can't
+			// be used to invoke member objects or pass arguments.
+			var scope_chars = "\{\}\]\[\(\)\,";
+		
+			// No property accessors are allowed to follow the string stored in "object"
+			// Whitespace is allowed to come between these property accessors 
+			var trailing_chars = "\s*"+"\(\.\[";
 
+			return new RegExp("(?:[^\\w\\d]|^|(?:"+arith_operators+"))"+object+'(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)',"g");
+		}		
+		reserved_object_regex("window");
 		// Strings
-		var all_strings = new RegExp('/".*?"'+"|'.*?'/gm");
+		var all_strings = new RegExp('".*?"'+"|'.*?'","gm");
 		// multi-line "/*" "*/" comments
-		var ml_comment = new RegExp('/\/\*[\s\S]+?\*\/g');
+		var ml_comment = /\/\*([\s\S]+?)\*\//g;
 		// in-line "//" comments
-		var il_comment = new RegExp('/\/\/.+/g');
-		// Bracket suffix notation
-		var bracket_pairs = new RegExp('/\[.+?\]/g');
+		var il_comment = /\/\/.+/gm;
+		// The contents of bracket pairs
+		var bracket_pairs = /\[.+?\]/g;
 
 		// Replace string consts with values that won't interfere
 		var temp = script.replace(/'.+?'+/gm,"'string'");
@@ -184,14 +202,24 @@ function get_final_page(html_string, callback){
 		temp = temp.replace(ml_comment,"");
 		temp = temp.replace(il_comment,"");
 		// Now that there can't be any brackets inside of comments or strings,
-		// see if there are any variable assignments on 
-		var bracket_contents = temp.match(bracket_pairs);
+		//  
 
-		for(var i = 0; i < bracket_contents.length; i++){
-			if(bracket_contents){}
+		console.log("------evaluation results for "+ name +"------");
+		console.log("Script accesses reserved objects?");
+		var flag = true;
+		for(var i = 0; i < reserved_objects.length; i++){
+			var res = reserved_object_regex(reserved_objects[i]).exec(script);
+			if(res != null){
+				console.log("%c fail","color:red;");
+				console.log(res["input"].substr(res["index"]-15,res["index"]+15));
+				flag = false;		
+			}
+		}
+		if(flag){
+			console.log("%c pass","color:green;");
 		}
 
-		return false;
+		return flag;
 	}
 
 	/**
@@ -227,7 +255,7 @@ function get_final_page(html_string, callback){
 	*
 	*/
 	// TODO: Known bug: extra \n chars thrown in at some splices 
-	function license_read(script_src){
+	function license_read(script_src,name){
 		if(typeof(script_src) != "string"){
 			return "fail"
 		}
@@ -246,7 +274,7 @@ function get_final_page(html_string, callback){
 			var matches = /^(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
 			if(matches == null){
 				//console.log("No more matches, almost done");
-				if(evaluate(unedited_src)){
+				if(evaluate(unedited_src,name)){
 					edited_src += unedited_src;
 				}
 				return edited_src;
@@ -255,7 +283,7 @@ function get_final_page(html_string, callback){
 			//console.log("Everything before the next match");
 			var before = unedited_src.substr(0,matches["index"]);
 			//console.log(before);
-			if(evaluate(before)){
+			if(evaluate(before,name)){
 				edited_src += before;
 			}
 			// This should remove the substring "before"
@@ -284,7 +312,7 @@ function get_final_page(html_string, callback){
 			// TODO: this is here to prevent infinite loops, should be removed eventually		
 			watchdog++;
 			if(watchdog > 20){
-				console.log("%c Watchdog > 20.","color:red");
+				console.log("%c !!!!!WARNING!!!!! Watchdog > 20.","color:red");
 				return false;
 			}
 		}
@@ -362,14 +390,15 @@ function get_final_page(html_string, callback){
 
 		var done = false;
 		var amt_done = 0;
+		var amt_remote_scripts = 0;
 		var amt_todo = html_doc.scripts.length + has_intrinsic_events.length;
 
 		function check_done(){
-			console.log(amt_done + "/" + amt_todo);
+			console.log(amt_done + "/" + (amt_todo - amt_remote_scripts) );
 			if(amt_done > amt_todo){
 				console.warn("Not supposed to happen");
 			}
-			if(done == false && amt_done >= amt_todo){
+			if(done == false && amt_done >= (amt_todo - amt_remote_scripts) ){
 				console.log("%c DONE.","color:red;");
 				callback(html_doc);
 				done = true;
@@ -379,7 +408,7 @@ function get_final_page(html_string, callback){
 		}
 		// "i" is an index in html_doc.scripts
 		function edit_src(src, i, name){
-			var edited = license_read(src);
+			var edited = license_read(src,name);
 			if(edited == "string"){
 				html_doc.scripts[i].outerHTML = "<script name='librejs-accepted'>"+edited+"</script>";
 			} else{
@@ -389,8 +418,8 @@ function get_final_page(html_string, callback){
 		}
 		// "i" is an index in html_doc.all
 		// "j" is an index in intrinsicEvents
-		function edit_event(src,i,j){
-			var edited = license_read(src);
+		function edit_event(src,i,j,name){
+			var edited = license_read(src,name);
 
 			if(edited == "string"){
 				html_doc.all[i].attributes[intrinsicEvents[j]].value = edited;
@@ -416,31 +445,22 @@ function get_final_page(html_string, callback){
 			}
 
 			if(html_doc.scripts[i].src != ""){
-				// it is a remote script ("<script src='/script.js'></script>")
-				// this function is here because otherwise there would be async issues
-				function remote_script(i){
-					var name = html_doc.scripts[i].src;
-					var xml = new XMLHttpRequest();			
-					xml.open("get", html_doc.scripts[i].src);
-					xml.onload = function(response){
-						console.log("%c Script " + i + ":","color:red;");
-						console.log(name);
-						edit_src(this.responseText, i, name);
-						check_done();
-					}
-					xml.send();
-				};
-				remote_script(i);
+				// this is a remote script ("<script src='script.js'></script>")
+				var name = html_doc.scripts[i].src;
+				console.log("%c Will evaluate script '" + name + "' when it arrives. Document.scripts index: "+i,"color:blue;");	
+				amt_remote_scripts++;
+
 			} else{
 				// it is an inline script ("<script>console.log('test');</script>")
-				console.log("%c Script " + i + ": (src: inline)","color:red;");
+				console.log("%c Evaluating inline script. Document.scripts index: "+i,"color:blue;");
 				//console.log(html_doc.scripts[i].innerText);
 				edit_src(html_doc.scripts[i].innerText, i, "src: inline (index "+i+")");
 			}	
 		}
 		// Find all the document's elements with intrinsic events
 		for(var i = 0; i < has_intrinsic_events.length; i++){
-			edit_event(html_doc.all[has_intrinsic_events[i][0]].attributes[intrinsicEvents[has_intrinsic_events[i][1]]].value,has_intrinsic_events[i][0],has_intrinsic_events[i][1]);
+			var s_name = "html_doc.all["+has_intrinsic_events[i][0]+"]";
+			edit_event(html_doc.all[has_intrinsic_events[i][0]].attributes[intrinsicEvents[has_intrinsic_events[i][1]]].value,has_intrinsic_events[i][0],has_intrinsic_events[i][1],s_name);
 		}
 
 		check_done();
@@ -517,6 +537,9 @@ function get_final_page(html_string, callback){
 
 get_final_page(document.documentElement.outerHTML,function(a){
 	console.log("returned");
+	if(typeof(a) == "boolean"){
+		return;
+	}
 	document.documentElement.innerHTML = a.documentElement.innerHTML;
 });
 
