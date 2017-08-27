@@ -146,7 +146,6 @@ var licenses = {
 // Objects which could be used to do nontrivial things
 // Bracket suffix notation could still be exploited to get some of these objects 
 var reserved_objects = [
-	"window",
 	"fetch",
 	"XMLHttpRequest",
 	"chrome", // only on chrome
@@ -155,7 +154,9 @@ var reserved_objects = [
 ];
 
 // Objects that can only be used with dot notation
-var reserved_
+var dot_only = [
+	"window"
+]
 
 
 function get_final_page(html_string, callback){
