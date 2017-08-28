@@ -153,12 +153,6 @@ var reserved_objects = [
 	"eval"
 ];
 
-// Objects that can only be used with dot notation
-var dot_only = [
-	"window"
-]
-
-
 function get_final_page(html_string, callback){
 
 	/**

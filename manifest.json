@@ -40,6 +40,6 @@
   ],
   "background": {
     "scripts": ["main_background.js"]
-  },
-  "content_scripts": [{"matches": ["<all_urls>"],"js": ["eval_test.js","contact_finder.js"]}]
+  }
+
 }

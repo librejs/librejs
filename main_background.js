@@ -12,14 +12,13 @@ console.debug("main_background.js");
 */
 var webex;
 function set_webex(){
-	if(typeof(browser) == "undefined"){
-		webex = chrome;
-	} else{
+	if(typeof(browser) == "object"){
 		webex = browser;
 	}
+	if(typeof(chrome) == "object"){
+		webex = chrome;
+	}
 }
-
-var addon_id = "";
 
 /*
 *
@@ -322,104 +321,126 @@ function delete_removed_tab_info(tab_id, remove_info){
 /**
 *	Makes it so we can return redirect requests to local blob URLs 
 *
+*	TODO: Make it so that it adds the website itself to the permissions of all keys
+*
 */
-
-var edit_these = {
-	"content-security-policy":true,
-	"connect-src":true
-};
 function change_csp(e) {
 	var index = 0;
 	var csp = "";
 	for(var i = 0; i < e["responseHeaders"].length; i++){
-		if(edit_these[e["responseHeaders"][i]["name"].toLowerCase()] !== undefined){		
+		if(e["responseHeaders"][i]["name"].toLowerCase() == "content-security-policy"){		
 			csp = e["responseHeaders"][i]["value"];
 			index = i;
-			var b = csp.replace(/;/g,'","');
-			b = JSON.parse('["' + b.substr(0,b.length) + '"]');
-			for(var j = 0; j < b.length; j++){
-				var matchres = b[j].match(/[\-\w]+/g);
-				if(matchres != null && matchres[0] == e["responseHeaders"][i]["name"].toLowerCase()){
+			var keywords = csp.replace(/;/g,'","');
+			keywords = JSON.parse('["' + keywords.substr(0,keywords.length) + '"]');
+			// Iterates over the keywords inside the CSP header
+			for(var j = 0; j < keywords.length; j++){
+				var matchres = keywords[j].match(/[\-\w]+/g);
+				if(matchres != null && matchres[0] == "script-src"){
 					// Test to see if they have a hash and then delete it
-					// sha512 sha384 sha256
-					b[j] = b[j].replace(/\s?'sha256-[\w+/]+=+'/g,"");
-					b[j] = b[j].replace(/\s?'sha384-[\w+/]+=+'/g,"");
-					b[j] = b[j].replace(/\s?'sha512-[\w+/]+=+'/g,"");
-					b[j] = b[j].replace(/;/g,"");
+					// TODO: Make sure this is a good idea.
+					keywords[j] = keywords[j].replace(/\s?'sha256-[\w+/]+=+'/g,"");
+					keywords[j] = keywords[j].replace(/\s?'sha384-[\w+/]+=+'/g,"");
+					keywords[j] = keywords[j].replace(/\s?'sha512-[\w+/]+=+'/g,"");
+					keywords[j] = keywords[j].replace(/;/g,"");
 					// This is the string that we add to every CSP
-					b[j] += " data: blob:";	
-					console.log(b[j]);			
+					keywords[j] += " data: blob: report-sample";	
+					console.log(keywords[j]);			
 				}
 			}
-			csp = "";
-			for(var j = 0; j < b.length; j++){
-				csp = csp + b[j] + ";";
+			var csp_header = "";
+			for(var j = 0; j < keywords.length; j++){
+				csp_header = csp_header + keywords[j] + ";";
 			}
-			e["responseHeaders"][i]["value"] = csp;
+			e["responseHeaders"][i]["value"] = csp_header;
 		} 
 	}
 	if(csp == ""){
-		console.log("%c no CSP.","color: red;");
+		//console.log("%c no CSP.","color: red;");
 	}else{
-		console.log("%c new CSP:","color: green;");
-		console.log(e["responseHeaders"][index]["value"]);	
+		//console.log("%c new CSP:","color: green;");
+		//console.log(e["responseHeaders"][index]["value"]);	
 	}
 	return {responseHeaders: e.responseHeaders};
 }
 
+/*
+*
+*	XMLHttpRequests the content of a script so we can modify it
+*	before turning it to a blob and redirecting to its URL
+*
+*/
 function get_content(url){
 	return new Promise((resolve, reject) => {
 		var xhr = new XMLHttpRequest();
 		xhr.open("get",url);
 		xhr.onload = function(){
-			resolve(this.responseText);
+			resolve(this);
 		}
 		xhr.onerror = function(){
+			console.log("%c could not get content of "+url+".","color:red;")			
 			reject(JSON.stringify(this));
 		}
 		xhr.send();
 	});
 }
 
-function get_blob_url(blob){
+/**
+*	Turns a blob URL into a data URL
+*
+*/
+function get_data_url(blob){
 	return new Promise((resolve, reject) => {
 		//var url = URL.createObjectURL(blob);
 		var reader  = new FileReader();
 		reader.addEventListener("load", function(){
-			console.log("Redirecting to:");
-			console.log(reader.result.substr(0,100));
 			resolve({"redirectUrl": reader.result});
 		});
 		reader.readAsDataURL(blob);
 	});
 }
 
-function read_script(a){
-	var edited = "console.log('it worked');\n";
-	var blob = new Blob([edited], {type : 'application/javascript'});	
-	return get_blob_url(blob);
-	//var url = URL.createObjectURL(blob);
-	//console.log(url);
-	//return {"redirectUrl": url};
+/* *********************************************************************************************** */
 
+// (insert eval_test.js here)
 
+/* *********************************************************************************************** */
 
-	function get_script(url){
-		return new Promise((resolve, reject) => {
-			var response = get_content(url);
-			response.then(function(response) {
-				//var edited = "console.log('it worked');\n"+response;
-				var edited = "console.log('it worked');\n";
-				var blob = new Blob([edited], {type : 'application/javascript'});	
-				resolve({"redirectUrl": get_blob_url(blob)});
-			});
+function get_script(url){
+	return new Promise((resolve, reject) => {
+		var response = get_content(url);
+		response.then(function(response) {
+			var edited = "console.log('it worked');\n"+response.responseText;
+			var blob = new Blob([edited], {type : 'application/javascript'});	
+			resolve(get_data_url(blob));
 		});
-	}	
+	});
+}
+
+function read_script(a){
 	return get_script(a.url);
 }
 
 function read_document(a){
-	//console.log(a);
+	// This needs to be handled in a different way because it sets the domain
+	// of the document to data:, so it breaks all the relative URLs of imgs, styles, etc.
+	return;
+
+	/*
+	return new Promise((resolve, reject) => {
+		var response = get_content(a.url);
+		response.then(function(res){
+			get_final_page(res.response,function(a){
+				console.log("returned");
+				if(typeof(a) == "boolean"){
+					return;
+				}
+				var blob = new Blob([a.documentElement.innerHTML], {type : 'text/html'});	
+				resolve(get_data_url(blob));
+			});
+		});
+	});
+	*/
 
 }
 
@@ -435,12 +456,6 @@ function init_addon(){
 	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
 
 	var targetPage = "https://developer.mozilla.org/en-US/Firefox/Developer_Edition";
-
-
-	// gets the addon's ID (part of the local URL format)
-	var blob = new Blob(["asdf"], {type : 'application/json'});
-	addon_id = URL.createObjectURL(blob).match(/[a-z]+/g)[3];
-	console.log("{"+addon_id+"}");
 
 	// Updates the content security policy so we can redirect to local URLs
 	webex.webRequest.onHeadersReceived.addListener(
@@ -507,35 +522,6 @@ function inject_contact_finder(tab_id){
 }
 
 init_addon();
-
-/***************** test the comma seperated whitelist *****************/
-/*
-var test_urls = [
-	"example.subdomain.test.com/",
-	"http://example.subdomain.test.com",
-	"http://0xbeef.coffee",
-	"https://webchat.freenode.net/",
-	"https://www.chromium.org/Home/chromium-security/client-identification-mechanisms",
-	"http://stackoverflow.com/questions/874709",
-	"https://postcalc.usps.com",
-	"http://regexr.com/",
-	"https://pgw.ceca.es/tpvweb/tpv/compra.action",
-	"This is total garbage input",
-	"http://home.com/test",
-	"https://home.com/test"
-]
-
-function callback(a){console.log(a);}
-
-for(i in test_urls){
-	test_url_whitelisted(test_urls[i],callback);
-}
-*/
-/*******************************************************************/
-
-
-
-
 
 
 
