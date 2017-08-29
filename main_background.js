@@ -1,6 +1,159 @@
 console.debug("main_background.js");
 
 /**
+*	This file is the "skeleton" of the final system to determine
+*	if a script is accepted or blocked.
+*
+*	Some assets taken from script_detector.js
+*
+*/
+
+// the list of all available event attributes
+var intrinsicEvents = [
+    "onload",
+    "onunload",
+    "onclick",
+    "ondblclick",
+    "onmousedown",
+    "onmouseup",
+    "onmouseover",
+    "onmousemove",
+    "onmouseout",
+    "onfocus",
+    "onblur",
+    "onkeypress",
+    "onkeydown",
+    "onkeyup",
+    "onsubmit",
+    "onreset",
+    "onselect",
+    "onchange"
+];
+/*
+	NONTRIVIAL THINGS:
+	- Fetch
+	- XMLhttpRequest
+	- eval()
+	- ?
+	JAVASCRIPT CAN BE FOUND IN:
+	- Event handlers (onclick, onload, onsubmit, etc.)
+	- <script>JS</script>
+	- <script src="/JS.js"></script>
+	WAYS TO DETERMINE PASS/FAIL:
+	- "// @license [magnet link] [identifier]" then "// @license-end" (may also use /* comments)
+	- Automatic whitelist: (http://bzr.savannah.gnu.org/lh/librejs/dev/annotate/head:/data/script_libraries/script-libraries.json_
+	- <table id="jslicense-labels1"><table> which may be linked to by a link tag identified by rel="jslicense" or data-jslicense="1"
+	- In the first script tag, declare the license with @licstart/@licend
+*/
+
+var licenses = {
+	'Apache-2.0':{
+		'URL': 'http://www.apache.org/licenses/LICENSE-2.0',
+		'Magnet link': 'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
+	},
+	// No identifier was present in documentation
+	'Artistic-2.0':{
+		'URL': 'http://www.perlfoundation.org/artistic_license_2_0',
+		'Magnet link': 'magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt'
+	},
+	// No identifier was present in documentation
+	'Boost':{
+		'URL': 'http://www.boost.org/LICENSE_1_0.txt',
+		'Magnet link': 'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
+	},
+	// No identifier was present in documentation
+	'BSD-3-Clause':{
+		'URL': 'http://opensource.org/licenses/BSD-3-Clause',
+		'Magnet link': 'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt',
+	},
+	'CPAL-1.0':{
+		'URL': 'http://opensource.org/licenses/cpal_1.0',
+		'Magnet link': 'magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt'
+	},
+	'CC0-1.0':{
+		'URL': 'http://creativecommons.org/publicdomain/zero/1.0/legalcode',
+		'Magnet link': 'magnet:?xt=urn:btih:90dc5c0be029de84e523b9b3922520e79e0e6f08&dn=cc0.txt'
+	},
+	'EPL-1.0':{
+		'URL': 'http://www.eclipse.org/legal/epl-v10.html',
+		'Magnet link': 'magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt'
+	},
+	'Expat':{
+		'URL': 'http://www.jclark.com/xml/copying.txt',
+		'Magnet link': 'magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt'
+	},
+	'FreeBSD':{
+		'URL': 'http://www.freebsd.org/copyright/freebsd-license.html',
+		'Magnet link': 'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
+	},
+	'GPL-2.0':{
+		'URL': 'http://www.gnu.org/licenses/gpl-2.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt'
+	},
+	'GPL-3.0':{
+		'URL': 'http://www.gnu.org/licenses/gpl-3.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt'
+	},
+	'LGPL-2.1':{
+		'URL': 'http://www.gnu.org/licenses/lgpl-2.1.html',
+		'Magnet link': 'magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a89eac2&dn=lgpl-2.1.txt'
+	},
+	'LGPL-3.0':{
+		'URL': 'http://www.gnu.org/licenses/lgpl-3.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317705f85&dn=lgpl-3.0.txt'
+	},
+	'AGPL-3.0':{
+		'URL': 'http://www.gnu.org/licenses/agpl-3.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt'
+	},
+	'ISC':{
+		'URL': 'https://www.isc.org/downloads/software-support-policy/isc-license/',
+		'Magnet link': 'magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt'
+	},
+	'MPL-2.0':{
+		'URL': 'http://www.mozilla.org/MPL/2.0',
+		'Magnet link': 'magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt'
+	},
+	// "Public domain is not a license"
+	// Replace with CC0?
+	'Public-Domain':{
+		'URL': 'https://www.gnu.org/licenses/license-list.html#PublicDomain',
+		'Magnet link': 'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
+	},
+	'UPL-1.0': {
+		'URL': 'https://oss.oracle.com/licenses/upl/',
+		'Magnet link': 'magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt'
+	},
+	'WTFPL': {
+		'URL': 'http://www.wtfpl.net/txt/copying/',
+		'Magnet link': 'magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt'
+	},
+	'Unlicense':{
+		'URL': 'http://unlicense.org/UNLICENSE',
+		'Magnet link': 'magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt'
+	},
+	// No identifier was present in documentation
+	'X11':{
+		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
+		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'	
+	},
+	// Picked one of the two links that were there
+	'Modified-BSD':{
+		'URL': 'http://www.xfree86.org/current/LICENSE4.html',
+		'Magnet link': 'magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt'
+	}
+}
+
+// Objects which could be used to do nontrivial things
+// Bracket suffix notation could still be exploited to get some of these objects 
+var reserved_objects = [
+	"fetch",
+	"XMLHttpRequest",
+	"chrome", // only on chrome
+	"browser", // only on firefox
+	"eval"
+];
+/**
 *	
 *	Sets global variable "webex" to either "chrome" or "browser" for
 *	use on Chrome or a Firefox variant.
@@ -111,7 +264,6 @@ function debug_print_local(){
 *
 *	NOTE: This WILL break if you provide inconsistent URLs to it.
 *	Make sure it will use the right URL when refering to a certain script.
-*
 *
 */
 function update_popup(tab_id,blocked_info_arg,update=false){
@@ -401,47 +553,227 @@ function get_data_url(blob){
 }
 
 /* *********************************************************************************************** */
+// (This is part of eval_test.js with a few console.logs/comments removed)
 
-// (insert eval_test.js here)
+function evaluate(script,name){
+	function reserved_object_regex(object){
+		var arith_operators = "\\+\\-\\*\\/\\%\\=";
+		var scope_chars = "\{\}\]\[\(\)\,";
+		var trailing_chars = "\s*"+"\(\.\[";
+		return new RegExp("(?:[^\\w\\d]|^|(?:"+arith_operators+"))"+object+'(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)',"g");
+	}		
+	reserved_object_regex("window");
+	var all_strings = new RegExp('".*?"'+"|'.*?'","gm");
+	var ml_comment = /\/\*([\s\S]+?)\*\//g;
+	var il_comment = /\/\/.+/gm;
+	var bracket_pairs = /\[.+?\]/g;
+	var temp = script.replace(/'.+?'+/gm,"'string'");
+	temp = temp.replace(/".+?"+/gm,'"string"');
+	temp = temp.replace(ml_comment,"");
+	temp = temp.replace(il_comment,"");
+	console.log("------evaluation results for "+ name +"------");
+	console.log("Script accesses reserved objects?");
+	var flag = true;
+	var reason = ""
+	// 	This is where individual "passes" are made over the code
+	for(var i = 0; i < reserved_objects.length; i++){
+		var res = reserved_object_regex(reserved_objects[i]).exec(script);
+		if(res != null){
+			console.log("%c fail","color:red;");
+			flag = false;		
+			reason = "Script uses a reserved object (" + reserved_objects[i] + ")";
+		}
+	}
+	if(flag){
+		console.log("%c pass","color:green;");
+	}
+	// If flag is set true at this point, the script is trivial
+	if(flag){
+		reason = "Script was determined to be trivial.";
+	}
+	return [flag,reason];
+}
+function license_valid(matches){
+	if(matches.length != 4){
+		return [false, "malformed or unrecognized license tag"];
+	}
+	if(matches[1] != "@license"){
+		return [false, "malformed or unrecognized license tag"];	
+	}
+	if(licenses[matches[3]] === undefined){
+		return [false, "malformed or unrecognized license tag"];
+	}
+	if(licenses[matches[3]]["Magnet link"] != matches[2]){
+		return [false, "malformed or unrecognized license tag"];
+	}
+	return [true,"Recognized license as '"+matches[3]+"'"];
+}
+/**
+*
+*	Evaluates the content of a script (license, if it is non-trivial)
+*
+*	Returns
+*	[ 
+*		true (accepted) or false (denied),
+*		edited content,
+*		reason text		
+*	]
+*/
+function license_read(script_src,name){
+	
+	var reason_text = "";
 
+	var edited_src = "";
+	var unedited_src = script_src;
+	var nontrivial_status;
+	var parts_denied = false;
+	var parts_accepted = false;
+	while(true){
+		// TODO: support multiline comments
+		var matches = /\/\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+		if(matches == null){
+			nontrivial_status = evaluate(unedited_src,name);
+			if(nontrivial_status[0] == true){
+				parts_accepted = true;
+				edited_src += unedited_src;
+			} else{
+				parts_denied = true;
+				edited_src += "\n/*\nLIBREJS BLOCKED:"+nontrivial_status[1]+"\n*/\n";
+			}
+			reason_text += "\n" + nontrivial_status[1];
+			
+			if(parts_denied == true && parts_accepted == true){
+				reason_text = "Script was determined partly non-trivial after editing. (check source for details)\n"+reason_text;
+			}
+			if(parts_denied == true && parts_accepted == false){
+				return [false,edited_src,reason_text];
+			}
+			return [true,edited_src,reason_text];
+			
+		}
+		console.log("Found a license tag");
+		var before = unedited_src.substr(0,matches["index"]);
+		nontrivial_status = evaluate(before,name);
+		if(nontrivial_status[0] == true){
+			parts_accepted = true;
+			edited_src += before;
+		} else{
+			parts_denied = true;
+			edited_src += "\n/*\nLIBREJS BLOCKED:"+nontrivial_status[1]+"\n*/\n";
+		}
+		unedited_src = unedited_src.substr(matches["index"],unedited_src.length);
+		// TODO: support multiline comments
+		matches_end = /\/\/\s*?(@license-end)/gm.exec(unedited_src);
+		if(matches_end == null){
+			console.log("ERROR: @license with no @license-end");
+			return [false,"\n/*\n ERROR: @license with no @license-end \n*/\n","ERROR: @license with no @license-end"];
+		}
+		var endtag_end_index = matches_end["index"]+matches_end[0].length;
+		var license_res = license_valid(matches);
+		if(license_res[0] == true){
+			edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
+			reason_text += "\n" + license_res[1];		
+		} else{
+			edited_src = edited_src + "\n/*\n"+license_res[1]+"\n*/\n";
+			reason_text += "\n" + license_res[1];
+		}
+		// trim off everything we just evaluated
+		unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
+	}
+}
+
+var counters = {};
+
+/**
+*	handles the counter for how many remote scripts are loaded
+*/
+function check_done(tabid){
+	var flag = false;
+	if(counters[tabid] === undefined){
+		// For some reason, we deleted it early
+		// Return true causing it to update the popup again
+		return true;
+	}
+
+	var amt_done = counters[tabid][0];
+	var amt_remote_scripts = counters[tabid][1];
+	if(amt_done >= amt_remote_scripts ){
+		delete counters[tabid];		
+		flag = true;
+	} else{
+		counters[tabid][0]++;
+	}
+	console.log(amt_done + "/" + amt_remote_scripts);
+	return flag;
+}
+/*
+*	Initializes the check_done function for when arg "domain" is loading
+*/
+function setup_counter(source,tabid){
+	var amt_remote = 0;	
+	matches = source.match(/(<\s*script.*?>)[\s\S]*?<\s*\/script\s*>/g);
+	for(var i = 0; i < matches.length; i++){
+		if(matches[i].match(/<.*?>/g)[0].match(/src\s*=\s*(["|']).*?(["|'])/g) != null){
+			amt_remote++;
+		}
+	}
+	counters[tabid+""] = [0,amt_remote];
+}
 /* *********************************************************************************************** */
-
-function get_script(url){
+function get_script(url,tabid){
 	return new Promise((resolve, reject) => {
 		var response = get_content(url);
 		response.then(function(response) {
-			var edited = "console.log('it worked');\n"+response.responseText;
-			var blob = new Blob([edited], {type : 'application/javascript'});	
+			var tok_index = url.split("/").length;
+			var scriptname = url.split("/")[tok_index-1];
+			// TODO: test if this script is whitelisted by name (from the GUI with the button)
+			var edited = license_read(response.responseText,scriptname);
+			// TODO: Evaluate why this counter system would fail 
+			if(check_done(tabid) == true){
+				// update the popup
+			}
+			console.log("tabid:"+tabid);
+			if(unused_data[tabid] === undefined){
+				var domain = url.replace('http://','').replace('https://','').split(/[/?#]/)[0];
+				unused_data[tabid] = {"url":domain,"accepted":[],"blocked":[]};
+			}			
+			if(edited[0] == true){
+				unused_data[tabid]["accepted"].push([scriptname,edited[2]]);
+			} else{
+				unused_data[tabid]["blocked"].push([scriptname,edited[2]]);
+			}			
+			var blob = new Blob([edited[1]], {type : 'application/javascript'});	
 			resolve(get_data_url(blob));
 		});
 	});
 }
 
 function read_script(a){
-	return get_script(a.url);
+	function cb(whitelisted){
+		if(whitelisted == true){
+			// Doesn't matter if this is accepted or blocked, it will still be whitelisted
+			console.log('Accepted for reason "whitelisted"');
+		}
+		return get_script(a.url,a["tabId"]);	
+	}
+	// TODO Change this to the script name as used in eval_test.js
+	// We can't rely on the domain in this case since scripts come from all over the place
+	var domain = a.url.replace('http://','').replace('https://','').split(/[/?#]/)[0];
+	return test_url_whitelisted(domain,cb);
 }
 
 function read_document(a){
 	// This needs to be handled in a different way because it sets the domain
-	// of the document to data:, so it breaks all the relative URLs of imgs, styles, etc.
-	return;
-
-	/*
+	// of the document to "data:". This breaks relative URLs.
 	return new Promise((resolve, reject) => {
 		var response = get_content(a.url);
 		response.then(function(res){
-			get_final_page(res.response,function(a){
-				console.log("returned");
-				if(typeof(a) == "boolean"){
-					return;
-				}
-				var blob = new Blob([a.documentElement.innerHTML], {type : 'text/html'});	
-				resolve(get_data_url(blob));
-			});
+			setup_counter(res.response,a["tabId"])
+			resolve();
+			//var blob = new Blob([res.response], {type : 'text/html'});	
+			//resolve(get_data_url(blob));
 		});
 	});
-	*/
-
 }
 
 /**
@@ -486,13 +818,15 @@ function init_addon(){
 *
 *	It does NOT test against the individual entries created by hitting the "whitelist"
 *	button for a script in the browser action.
-* 
-* 
-*
 */
 function test_url_whitelisted(url,callback){
 	function storage_got(items){
-		var wl = items["pref_whitelist"].split(",");
+		var wl = items["pref_whitelist"];
+		if(wl !== undefined){
+			wl = wl.split(",");
+		} else{
+			return callback(false);
+		}
 		var regex;
 
 		for(i in wl){
@@ -501,12 +835,12 @@ function test_url_whitelisted(url,callback){
 			regex = new RegExp(s, "g");
 			if(url.match(regex)){
 				//callback("%c" + wl[i] + " matched " + url,"color: purple;");
-				callback(true);
+				return callback(true);
 			} else{
 				//console.log("%c" + wl[i] + " didn't match " + url,"color: #dd0000;");
 			}
 		}
-		callback(false);
+		return callback(false);
 	}
 	webex.storage.local.get(storage_got);
 }

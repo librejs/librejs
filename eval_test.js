@@ -162,7 +162,6 @@ function get_final_page(html_string, callback){
 	*
 	*/
 	function evaluate(script,name){
-
 		function reserved_object_regex(object){
 			// Matches use of object as a variable	
 			
@@ -259,7 +258,6 @@ function get_final_page(html_string, callback){
 		// Once Javascript has been "judged", remove it from here
 		var unedited_src = script_src;
 		var first = true;
-		var watchdog = 0;
 		while(true){
 			if(first){
 				first = false;
@@ -287,15 +285,12 @@ function get_final_page(html_string, callback){
 			matches_end = /^(@license-end)/gm.exec(unedited_src);
 			if(matches_end == null){
 				console.log("ERROR: @license with no @license-end");
-				return false;
+				return [false,"ERROR: @license with no @license-end"];
 			}
 			var endtag_end_index = matches_end["index"]+matches_end[0].length;
 			// accept next tag if its license is good.
 			if(license_valid(matches)){
 				edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
-			} else{
-				console.log("Error: invalid license tag.");
-				return false;
 			}
 			// Remove the next tag (it will be in edited_src if it was accepted)
 			unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
@@ -303,13 +298,6 @@ function get_final_page(html_string, callback){
 			//console.log("%c"+unedited_src,"color:red;");
 			//console.log("Current output:");
 			//console.log("%c"+edited_src,"color:green;");
-		
-			// TODO: this is here to prevent infinite loops, should be removed eventually		
-			watchdog++;
-			if(watchdog > 20){
-				console.log("%c !!!!!WARNING!!!!! Watchdog > 20.","color:red");
-				return false;
-			}
 		}
 	}
 	/**
@@ -461,8 +449,9 @@ function get_final_page(html_string, callback){
 		check_done();
 
 	}
-	// "main" for the script analyzer
-	// called when invoked by the button
+	/*
+	*	Basically just calls license_read() on all the Javascript in html_source
+	*/
 	function analyze(html_source,callback){
 		// TODO: Call get_whitelisted_status on this page's URL
 
