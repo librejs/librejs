@@ -459,7 +459,6 @@ function get_final_page(html_string, callback){
 		var html_doc = parser.parseFromString(html_source, "text/html");
 
 		// Test "the first piece of Javascript available to the page" for the license comment
-		// TODO: Is this supposed to test if the license is free or just assume that it is?	
 		var finished = false;
 		if(html_doc.scripts[0] !== undefined){
 			if(html_doc.scripts[0].src != ""){

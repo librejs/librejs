@@ -227,7 +227,7 @@ function open_popup_tab(data){
 
 /**
 *
-*	Prints local storage (the persistent data)
+*	Clears local storage (the persistent data)
 *
 */
 function debug_delete_local(){
@@ -237,7 +237,7 @@ function debug_delete_local(){
 
 /**
 *
-*	Clears local storage (the persistent data)
+*	Prints local storage (the persistent data) as well as the temporary popup object
 *
 */
 function debug_print_local(){
@@ -247,6 +247,8 @@ function debug_print_local(){
 			console.log("%c "+i+" = "+items[i], 'color: blue;');
 		}
 	}
+	console.log("%c Variable 'unused_data': ", 'color: red;');
+	console.log(unused_data);
 	webex.storage.local.get(storage_got);
 }
 
@@ -478,12 +480,12 @@ function delete_removed_tab_info(tab_id, remove_info){
 */
 function change_csp(e) {
 	var index = 0;
-	var csp = "";
+	var csp_header = "";
 	for(var i = 0; i < e["responseHeaders"].length; i++){
 		if(e["responseHeaders"][i]["name"].toLowerCase() == "content-security-policy"){		
-			csp = e["responseHeaders"][i]["value"];
+			csp_header = e["responseHeaders"][i]["value"];
 			index = i;
-			var keywords = csp.replace(/;/g,'","');
+			var keywords = csp_header.replace(/;/g,'","');
 			keywords = JSON.parse('["' + keywords.substr(0,keywords.length) + '"]');
 			// Iterates over the keywords inside the CSP header
 			for(var j = 0; j < keywords.length; j++){
@@ -494,20 +496,22 @@ function change_csp(e) {
 					keywords[j] = keywords[j].replace(/\s?'sha256-[\w+/]+=+'/g,"");
 					keywords[j] = keywords[j].replace(/\s?'sha384-[\w+/]+=+'/g,"");
 					keywords[j] = keywords[j].replace(/\s?'sha512-[\w+/]+=+'/g,"");
+					keywords[j] = keywords[j].replace(/'strict-dynamic'/g,"");
 					keywords[j] = keywords[j].replace(/;/g,"");
 					// This is the string that we add to every CSP
-					keywords[j] += " data: blob: report-sample";	
-					console.log(keywords[j]);			
+					keywords[j] += " data: blob: 'report-sample'";	
+					console.log("%c new script-src section:","color:green;")					
+					console.log(keywords[j]+ "; ");			
 				}
 			}
 			var csp_header = "";
 			for(var j = 0; j < keywords.length; j++){
-				csp_header = csp_header + keywords[j] + ";";
+				csp_header = csp_header + keywords[j] + "; ";
 			}
 			e["responseHeaders"][i]["value"] = csp_header;
 		} 
 	}
-	if(csp == ""){
+	if(csp_header == ""){
 		//console.log("%c no CSP.","color: red;");
 	}else{
 		//console.log("%c new CSP:","color: green;");
@@ -541,11 +545,15 @@ function get_content(url){
 *	Turns a blob URL into a data URL
 *
 */
-function get_data_url(blob){
+function get_data_url(blob,url){
 	return new Promise((resolve, reject) => {
 		//var url = URL.createObjectURL(blob);
 		var reader  = new FileReader();
 		reader.addEventListener("load", function(){
+			console.log("redirecting");
+			console.log(url);
+			console.log("to");
+			console.log(reader.result);		
 			resolve({"redirectUrl": reader.result});
 		});
 		reader.readAsDataURL(blob);
@@ -606,7 +614,7 @@ function license_valid(matches){
 	if(licenses[matches[3]]["Magnet link"] != matches[2]){
 		return [false, "malformed or unrecognized license tag"];
 	}
-	return [true,"Recognized license as '"+matches[3]+"'"];
+	return [true,"Recognized license as '"+matches[3]+"'\n"];
 }
 /**
 *
@@ -682,84 +690,74 @@ function license_read(script_src,name){
 	}
 }
 
-var counters = {};
-
-/**
-*	handles the counter for how many remote scripts are loaded
-*/
-function check_done(tabid){
-	var flag = false;
-	if(counters[tabid] === undefined){
-		// For some reason, we deleted it early
-		// Return true causing it to update the popup again
-		return true;
-	}
-
-	var amt_done = counters[tabid][0];
-	var amt_remote_scripts = counters[tabid][1];
-	if(amt_done >= amt_remote_scripts ){
-		delete counters[tabid];		
-		flag = true;
-	} else{
-		counters[tabid][0]++;
-	}
-	console.log(amt_done + "/" + amt_remote_scripts);
-	return flag;
-}
-/*
-*	Initializes the check_done function for when arg "domain" is loading
-*/
-function setup_counter(source,tabid){
-	var amt_remote = 0;	
-	matches = source.match(/(<\s*script.*?>)[\s\S]*?<\s*\/script\s*>/g);
-	for(var i = 0; i < matches.length; i++){
-		if(matches[i].match(/<.*?>/g)[0].match(/src\s*=\s*(["|']).*?(["|'])/g) != null){
-			amt_remote++;
-		}
-	}
-	counters[tabid+""] = [0,amt_remote];
-}
 /* *********************************************************************************************** */
-function get_script(url,tabid){
+// TODO: Test if this script is being loaded from another domain compared to unused_data[tabid]["url"]
+// TODO: test if this script is whitelisted by name (from the GUI with the button)
+function get_script(url,tabid,wl){
 	return new Promise((resolve, reject) => {
 		var response = get_content(url);
 		response.then(function(response) {
-			var tok_index = url.split("/").length;
+			if(unused_data[tabid] === undefined){
+				unused_data[tabid] = {"url":a.url,"accepted":[],"blocked":[]};
+			}	
+			var tok_index = url.split("/").length;		
 			var scriptname = url.split("/")[tok_index-1];
-			// TODO: test if this script is whitelisted by name (from the GUI with the button)
-			var edited = license_read(response.responseText,scriptname);
-			// TODO: Evaluate why this counter system would fail 
-			if(check_done(tabid) == true){
-				// update the popup
+			if(wl == true){
+				// Accept without reading script, it was explicitly whitelisted
+				if(typeof(unused_data[tabid]["accepted"].push) != "function"){
+					unused_data[tabid]["accepted"] = [[scriptname,"Page is whitelisted in preferences"]];
+				} else{
+					unused_data[tabid]["accepted"].push([scriptname,"Page is whitelisted in preferences"]);
+				}				
+				var blob = new Blob([response.responseText], {type : 'application/javascript'});	
+				resolve(get_data_url(blob,url));
+				return;
 			}
+			var edited = license_read(response.responseText,scriptname);
 			console.log("tabid:"+tabid);
 			if(unused_data[tabid] === undefined){
-				var domain = url.replace('http://','').replace('https://','').split(/[/?#]/)[0];
-				unused_data[tabid] = {"url":domain,"accepted":[],"blocked":[]};
-			}			
+				unused_data[tabid] = {"url":url,"accepted":[],"blocked":[]};
+			}
+			// If a script is whitelisted/blacklisted throught the GUI, put in accepted/blocked
+			// and it will be sorted out by the logic for the popup. 
 			if(edited[0] == true){
-				unused_data[tabid]["accepted"].push([scriptname,edited[2]]);
+				if(typeof(unused_data[tabid]["accepted"].push) != "function"){
+					unused_data[tabid]["accepted"] = [[scriptname,edited[2]]];
+				} else{
+					unused_data[tabid]["accepted"].push([scriptname,edited[2]]);
+				}	
 			} else{
-				unused_data[tabid]["blocked"].push([scriptname,edited[2]]);
-			}			
-			var blob = new Blob([edited[1]], {type : 'application/javascript'});	
-			resolve(get_data_url(blob));
+				if(typeof(unused_data[tabid]["blocked"].push) != "function"){
+					unused_data[tabid]["blocked"] = [[scriptname,edited[2]]];
+				} else{
+					unused_data[tabid]["blocked"].push([scriptname,edited[2]]);
+				}	
+			}
+			var blob = new Blob(["console.log('it worked');\n"+edited[1]], {type : 'application/javascript'});
+			resolve(get_data_url(blob,url));
 		});
 	});
 }
 
 function read_script(a){
-	function cb(whitelisted){
-		if(whitelisted == true){
-			// Doesn't matter if this is accepted or blocked, it will still be whitelisted
-			console.log('Accepted for reason "whitelisted"');
-		}
-		return get_script(a.url,a["tabId"]);	
-	}
-	// TODO Change this to the script name as used in eval_test.js
-	// We can't rely on the domain in this case since scripts come from all over the place
-	var domain = a.url.replace('http://','').replace('https://','').split(/[/?#]/)[0];
-	return test_url_whitelisted(domain,cb);
+	return new Promise((resolve, reject) => {
+		var res = test_url_whitelisted(a.url);
+		res.then(function(whitelisted){
+			if(whitelisted == true){
+				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
+				resolve(get_script(a.url,a["tabId"],true));
+			} else{
+				resolve(get_script(a.url,a["tabId"],false));
+			}
+		});		
+
+	});
+	/*
+	// Minimal example of how to edit scripts
+	var edited = "console.log('it worked');\n";
+	var blob = new Blob([edited], {type : 'application/javascript'});
+	return get_data_url(blob);
+	*/
 }
 
 function read_document(a){
@@ -768,7 +766,10 @@ function read_document(a){
 	return new Promise((resolve, reject) => {
 		var response = get_content(a.url);
 		response.then(function(res){
-			setup_counter(res.response,a["tabId"])
+			if(unused_data[a["tabId"]] === undefined){
+				unused_data[a["tabId"]] = {"url":a.url,"accepted":[],"blocked":[]};
+			}	
+			//setup_counter(res.response,a["tabId"])
 			resolve();
 			//var blob = new Blob([res.response], {type : 'text/html'});	
 			//resolve(get_data_url(blob));
@@ -819,30 +820,34 @@ function init_addon(){
 *	It does NOT test against the individual entries created by hitting the "whitelist"
 *	button for a script in the browser action.
 */
-function test_url_whitelisted(url,callback){
-	function storage_got(items){
-		var wl = items["pref_whitelist"];
-		if(wl !== undefined){
-			wl = wl.split(",");
-		} else{
-			return callback(false);
-		}
-		var regex;
-
-		for(i in wl){
-			var s = wl[i].replace(/\*/g,"\\S*");
-			s = s.replace(/\./g,"\\.");
-			regex = new RegExp(s, "g");
-			if(url.match(regex)){
-				//callback("%c" + wl[i] + " matched " + url,"color: purple;");
-				return callback(true);
+function test_url_whitelisted(url){
+	return new Promise((resolve, reject) => {
+		function cb(items){
+			var wl = items["pref_whitelist"];
+			if(wl !== undefined){
+				wl = wl.split(",");
 			} else{
-				//console.log("%c" + wl[i] + " didn't match " + url,"color: #dd0000;");
+				resolve(false);
+				return;
 			}
+			var regex;
+			for(i in wl){
+				var s = wl[i].replace(/\*/g,"\\S*");
+				s = s.replace(/\./g,"\\.");
+				regex = new RegExp(s, "g");
+				if(url.match(regex)){
+					//console.log("%c" + wl[i] + " matched " + url,"color: purple;");
+					resolve(true);
+					return;
+				} else{
+					//console.log("%c" + wl[i] + " didn't match " + url,"color: #dd0000;");
+				}
+			}
+			resolve(false);
+			return;
 		}
-		return callback(false);
-	}
-	webex.storage.local.get(storage_got);
+		webex.storage.local.get(cb);
+	});
 }
 
 /**
@@ -856,9 +861,4 @@ function inject_contact_finder(tab_id){
 }
 
 init_addon();
-
-
-
-
-
 
