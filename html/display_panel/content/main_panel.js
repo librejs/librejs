@@ -82,20 +82,20 @@ function write_elements(data,name,color){
 		for(var i = 0; i < data[name].length; i++){
 			// Make sure this causes generate_html to get called again with updated data
 			document.getElementById(name+"_"+i).addEventListener("click",function(info){
-				var temp = current_blocked_data[name][parseInt(info.path[0].id.match(/\d/g)[0])];
+				var temp = current_blocked_data[name][parseInt(info.target.id.match(/\d/g)[0])];
 				console.log("Moving script " + temp[0] + " to blacklist");
 				var script_name = this.parentElement.parentElement.parentElement.parentElement.id;
 				myPort.postMessage({"blacklist": temp});
 			});	
 			document.getElementById(name+"_2_"+i).addEventListener("click",function(info){
-				var temp = current_blocked_data[name][parseInt(info.path[0].id.match(/\d/g)[1])];
+				var temp = current_blocked_data[name][parseInt(info.target.id.match(/\d+/g)[1])];
 				console.log("Moving script " + temp[0] + " to whitelist");
 				var script_name = this.parentElement.parentElement.parentElement.parentElement.id;
 				myPort.postMessage({"whitelist": temp});
 			});	
 
 			document.getElementById(name+"_3_"+i).addEventListener("click",function(info){
-				var temp = current_blocked_data[name][parseInt(info.path[0].id.match(/\d/g)[1])];
+				var temp = current_blocked_data[name][parseInt(info.target.id.match(/\d/g)[1])];
 				console.log("Forget preferences for script " + temp[0]);
 				var script_name = this.parentElement.parentElement.parentElement.parentElement.id;
 				if(this.parentElement.parentElement.innerHTML.indexOf("Refresh the page") == -1){

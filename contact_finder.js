@@ -13,6 +13,8 @@
 //Copyright (C) 2011, 2012, 2014 Loic J. Duros
 //Copyright (C) 2014, 2015 Nik Nyby
 
+console.log("contact_finder.js");
+
 // email address regexp
 var reEmail = /^mailto\:(admin|feedback|webmaster|info|contact|support|comments|team|help)\@[a-z0-9.\-]+\.[a-z]{2,4}$/i;
 
@@ -107,10 +109,12 @@ function new_debug_button(name_text,callback){
 		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
 		document.body.insertAdjacentHTML('afterbegin', to_insert);
 	}
-	var button_html = '<input id="abc123_button_' + button_i + '" value="' + name_text +'"type="button"></input><br>';	
-	document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	
-	document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
-	button_i = button_i + 1;
+	if(document.getElementById("abc123_button_"+button_i) === undefined){
+		var button_html = '<input id="abc123_button_' + button_i + '" value="' + name_text +'"type="button"></input><br>';	
+		document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	
+		document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
+		button_i = button_i + 1;
+	}
 }
 /**
 *	returns input with all elements not of type string removed

@@ -254,9 +254,8 @@ function debug_print_local(){
 
 /**
 *
-*	This is what you call when a page gets changed to update the info box.
 *
-*	Sends a message to the content script that updates the popup for a page.
+*	Sends a message to the content script that sets the popup entries for a tab.
 *
 *	var example_blocked_info = {
 *		"accepted": [["REASON 1","SOURCE 1"],["REASON 2","SOURCE 2"]],
@@ -268,30 +267,13 @@ function debug_print_local(){
 *	Make sure it will use the right URL when refering to a certain script.
 *
 */
-function update_popup(tab_id,blocked_info_arg,update=false){
+function update_popup(tab_id,blocked_info,update=false){
 	var new_blocked_data;
-
-	var blocked_info = blocked_info_arg;
-
-	if(blocked_info["whitelisted"] === undefined){
-		blocked_info["whitelisted"] = [];
-	}
-
-	if(blocked_info["blacklisted"] === undefined){
-		blocked_info["blacklisted"] = [];
-	}
-	if(blocked_info["accepted"] === undefined){
-		blocked_info["accepted"] = [];
-	}
-
-	if(blocked_info["blocked"] === undefined){
-		blocked_info["blocked"] = [];
-	}
 	function get_sto(items){
 		//************************************************************************//
 		// Move scripts that are accepted/blocked but whitelisted to "whitelisted" category
 		// (Ideally, they just would not be tested in the first place because that would be faster)
-		var url = blocked_info["url"];		
+		var url = blocked_info["url"];	
 		if(url === undefined){
 			console.error("No url passed to update_popup");
 			return 1;
@@ -359,6 +341,112 @@ function update_popup(tab_id,blocked_info_arg,update=false){
 	webex.storage.local.get(get_sto);
 }
 
+/**
+*
+*	This is what you call when a page gets changed to update the info box.
+*
+*	Sends a message to the content script that adds a popup entry for a tab.
+*
+*	var example_blocked_info = {
+*		"accepted"or "blocked": ["name","reason"],
+*		"url": "example.com"
+*	}
+*
+*	Returns true/false based on if script should be accepted/denied respectively
+*
+*	NOTE: This WILL break if you provide inconsistent URLs to it.
+*	Make sure it will use the right URL when refering to a certain script.
+*
+*/
+function add_popup_entry(tab_id,blocked_info,update=false){
+	return new Promise((resolve, reject) => {
+		var new_blocked_data;
+
+		// Make sure the entry in unused_data exists 
+
+		var url = blocked_info["url"];		
+		if(url === undefined){
+			console.error("No url passed to update_popup");
+			return 1;
+		}
+
+		if(unused_data[tab_id] === undefined){
+			unused_data[tab_id] = {
+				"accepted":[],
+				"blocked":[],
+				"blacklisted":[],
+				"whitelisted":[],
+				"url": url
+			};
+		}
+		if(unused_data[tab_id]["accepted"] === undefined){unused_data[tab_id]["accepted"] = [];}
+		if(unused_data[tab_id]["blocked"] === undefined){unused_data[tab_id]["blocked"] = [];}
+		if(unused_data[tab_id]["blacklisted"] === undefined){unused_data[tab_id]["blacklisted"] = [];}
+		if(unused_data[tab_id]["whitelisted"] === undefined){unused_data[tab_id]["whitelisted"] = [];}
+	
+		var type = "";
+
+		if(blocked_info["accepted"] !== undefined){
+			type = "accepted";
+		}
+		if(blocked_info["blocked"] !== undefined){
+			type = "blocked";
+		}
+
+		function get_sto(items){
+			function get_status(script_name){
+				var script_key = encodeURI(url)+" "+encodeURI(script_name);		
+				if(items[script_key] === undefined){
+					return "none";
+				}
+				return items[script_key];
+			}
+			function is_bl(script_name){
+				if(get_status(script_name) == "blacklist"){
+					return true;			
+				}
+				return false;
+			}
+			function is_wl(script_name){
+				if(get_status(script_name) == "whitelist"){
+					return true;			
+				}
+				return false;
+			}
+			if(is_bl(blocked_info[type][0])){
+				unused_data[tab_id]["blacklisted"].push(blocked_info[type]);
+				//console.log("Script " + blocked_info[type][0] + " is blacklisted");
+				resolve("bl");
+			}
+			else if(is_wl(blocked_info[type][0])){
+				unused_data[tab_id]["whitelisted"].push(blocked_info[type]);
+				//console.log("Script " + blocked_info[type][0] + " is whitelisted");
+				resolve("wl");		
+			} else{
+				// either "blocked" or "accepted"
+				unused_data[tab_id][type].push(blocked_info[type]);
+				//console.log("Script " + blocked_info[type][0] + " isn't whitelisted or blacklisted");
+				resolve("none");		
+			}
+		}
+		webex.storage.local.get(get_sto);
+	});
+}
+
+
+function get_domain(url){
+	var domain = url.replace('http://','').replace('https://','').split(/[/?#]/)[0];
+	if(url.indexOf("http://") == 0){
+		domain = "http://" + domain;
+	}
+	else if(url.indexOf("https://") == 0){
+		domain = "https://" + domain;
+	}
+	domain = domain + "/";
+	domain = domain.replace(/ /g,"");
+	return domain;
+}
+
 
 /**
 *
@@ -379,9 +467,10 @@ function connected(p) {
 			var current_url = "";
 			function geturl(tabs) {
 				current_url = tabs[0]["url"];
+				var domain = get_domain(current_url);
 
 				// The space char is a valid delimiter because encodeURI() replaces it with %20 
-				var scriptkey = encodeURI(current_url)+" "+encodeURI(script);
+				var scriptkey = encodeURI(domain)+" "+encodeURI(script);
 				if(val == "forget"){
 					var prom = webex.storage.local.remove(scriptkey);
 					// TODO: This should produce a "Refresh the page for this change to take effect" message
@@ -550,10 +639,10 @@ function get_data_url(blob,url){
 		//var url = URL.createObjectURL(blob);
 		var reader  = new FileReader();
 		reader.addEventListener("load", function(){
-			console.log("redirecting");
-			console.log(url);
-			console.log("to");
-			console.log(reader.result);		
+			//console.log("redirecting");
+			//console.log(url);
+			//console.log("to");
+			//console.log(reader.result);		
 			resolve({"redirectUrl": reader.result});
 		});
 		reader.readAsDataURL(blob);
@@ -599,7 +688,7 @@ function evaluate(script,name){
 	if(flag){
 		reason = "Script was determined to be trivial.";
 	}
-	return [flag,reason];
+	return [flag,reason+"<br>"];
 }
 function license_valid(matches){
 	if(matches.length != 4){
@@ -614,7 +703,7 @@ function license_valid(matches){
 	if(licenses[matches[3]]["Magnet link"] != matches[2]){
 		return [false, "malformed or unrecognized license tag"];
 	}
-	return [true,"Recognized license as '"+matches[3]+"'\n"];
+	return [true,"Recognized license as '"+matches[3]+"'<br>"];
 }
 /**
 *
@@ -698,7 +787,7 @@ function get_script(url,tabid,wl){
 		var response = get_content(url);
 		response.then(function(response) {
 			if(unused_data[tabid] === undefined){
-				unused_data[tabid] = {"url":a.url,"accepted":[],"blocked":[]};
+				unused_data[tabid] = {"url":url,"accepted":[],"blocked":[]};
 			}	
 			var tok_index = url.split("/").length;		
 			var scriptname = url.split("/")[tok_index-1];
@@ -714,27 +803,31 @@ function get_script(url,tabid,wl){
 				return;
 			}
 			var edited = license_read(response.responseText,scriptname);
-			console.log("tabid:"+tabid);
-			if(unused_data[tabid] === undefined){
-				unused_data[tabid] = {"url":url,"accepted":[],"blocked":[]};
-			}
-			// If a script is whitelisted/blacklisted throught the GUI, put in accepted/blocked
-			// and it will be sorted out by the logic for the popup. 
-			if(edited[0] == true){
-				if(typeof(unused_data[tabid]["accepted"].push) != "function"){
-					unused_data[tabid]["accepted"] = [[scriptname,edited[2]]];
-				} else{
-					unused_data[tabid]["accepted"].push([scriptname,edited[2]]);
-				}	
+			var verdict = edited[0];
+			var popup_res;
+
+			var domain = get_domain(url);
+
+			if(verdict == true){
+				popup_res = add_popup_entry(tabid,{"url":domain,"accepted":[scriptname,edited[2]]});
 			} else{
-				if(typeof(unused_data[tabid]["blocked"].push) != "function"){
-					unused_data[tabid]["blocked"] = [[scriptname,edited[2]]];
-				} else{
-					unused_data[tabid]["blocked"].push([scriptname,edited[2]]);
-				}	
+				popup_res = add_popup_entry(tabid,{"url":domain,"blocked":[scriptname,edited[2]]});
 			}
-			var blob = new Blob(["console.log('it worked');\n"+edited[1]], {type : 'application/javascript'});
-			resolve(get_data_url(blob,url));
+			popup_res.then(function(list_verdict){
+				var blob;
+				if(list_verdict == "wl"){
+					// redirect to the unedited version
+					blob = new Blob(["\n/*\n LibreJS: Script whitelisted by user \n*/\n"+response.responseText], {type : 'application/javascript'});
+				}else if(list_verdict == "bl"){
+					// Blank the entire script
+					blob = new Blob(["\n/*\n LibreJS: Script blacklisted by user \n*/\n"], {type : 'application/javascript'});
+				} else{
+					// Return the edited (normal) version
+					blob = new Blob([edited[1]], {type : 'application/javascript'});
+				}
+				//blob = new Blob(["console.log('LibreJS edited script');\n"+edited[1]], {type : 'application/javascript'});
+				resolve(get_data_url(blob,url));
+			});
 		});
 	});
 }
@@ -762,13 +855,15 @@ function read_script(a){
 
 function read_document(a){
 	// This needs to be handled in a different way because it sets the domain
-	// of the document to "data:". This breaks relative URLs.
+	// of the document to "data:" which breaks relative URLs.
 	return new Promise((resolve, reject) => {
 		var response = get_content(a.url);
 		response.then(function(res){
-			if(unused_data[a["tabId"]] === undefined){
-				unused_data[a["tabId"]] = {"url":a.url,"accepted":[],"blocked":[]};
-			}	
+			
+			// Reset the block scripts since we just opened a new document
+			unused_data[a["tabId"]] = {"url":a.url,"accepted":[],"blocked":[]};
+
+
 			//setup_counter(res.response,a["tabId"])
 			resolve();
 			//var blob = new Blob([res.response], {type : 'text/html'});	
