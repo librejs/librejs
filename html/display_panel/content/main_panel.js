@@ -58,9 +58,9 @@ function new_debug_button(name_text,callback){
 */
 function write_elements(data,name,color){
 	var url = data["url"];
-	var button_html = '<div style="float:right"><input id="temp" type="button" value="blacklist"></input></div>';
-	var button_html_2 = '<div style="float:right"><input id="temp2" type="button" value="whitelist"></input></div>';
-	var button_html_3 = '<div style="float:right"><input id="temp3" type="button" value="forget preference"></input></div>';
+	var button_html = '<div style="float:right; position: relative;"><input id="temp" type="button" value="blacklist"></input></div><br>';
+	var button_html_2 = '<div style="float:right; position: relative;"><input id="temp2" type="button" value="whitelist"></input></div><br>';
+	var button_html_3 = '<div style="float:right; position: relative;"><input id="temp3" type="button" value="forget preference"></input></div><br>';
 	var heading = document.getElementById(name).getElementsByTagName("h2")[0];
 	var list = document.getElementById(name).getElementsByTagName("ul")[0];
 	if(typeof(data[name]) == "undefined" || data[name].length == 0){
