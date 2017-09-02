@@ -517,6 +517,14 @@ function get_domain(url){
 */
 var portFromCS;
 function connected(p) {
+	if(p["name"] == "contact_finder"){
+		// Send a message back with the relevant settings
+		function cb(items){
+			p.postMessage(items);
+		}
+		webex.storage.local.get(cb);
+		return;		
+	}
 	p.onMessage.addListener(function(m) {
 		/**
 		*	Updates the entry of the current URL in storage
@@ -580,7 +588,7 @@ function connected(p) {
 		function logTabs(tabs) {
 			if(contact_finder){
 				console.log("[TABID:"+tab_id+"] Injecting contact finder");
-				inject_contact_finder(tabs[0]["id"]);
+				//inject_contact_finder(tabs[0]["id"]);
 			}
 			if(update){
 				console.log("%c updating tab "+tabs[0]["id"],"color: red;");
@@ -651,8 +659,8 @@ function change_csp(e) {
 					keywords[j] = keywords[j].replace(/;/g,"");
 					// This is the string that we add to every CSP
 					keywords[j] += " data: blob: 'report-sample'";	
-					console.log("%c new script-src section:","color:green;")					
-					console.log(keywords[j]+ "; ");			
+					//console.log("%c new script-src section:","color:green;")					
+					//console.log(keywords[j]+ "; ");			
 				}
 			}
 			var csp_header = "";
@@ -991,7 +999,7 @@ function test_url_whitelisted(url){
 				return;
 			}
 			var regex;
-			for(i in wl){
+			for(var i in wl){
 				var s = wl[i].replace(/\*/g,"\\S*");
 				s = s.replace(/\./g,"\\.");
 				regex = new RegExp(s, "g");

@@ -93,9 +93,11 @@ var contactStr = {
 };
 
 var usaPhoneNumber = new RegExp(/(?:\+ ?1 ?)?\(?[2-9]{1}[0-9]{2}\)?(?:\-|\.| )?[0-9]{3}(?:\-|\.| )[0-9]{4}(?:[^0-9])/mg);
-
+// Taken from http://emailregex.com/
+var email_regex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
 //*********************************************************************************************
 
+var prefs;
 
 /**
 *
@@ -103,18 +105,18 @@ var usaPhoneNumber = new RegExp(/(?:\+ ?1 ?)?\(?[2-9]{1}[0-9]{2}\)?(?:\-|\.| )?[
 *
 *
 */
-var button_i = 0;
 function new_debug_button(name_text,callback){
+	if(document.getElementById("abc123_main_div") !== null){
+		document.getElementById("abc123_main_div").remove();
+	}
+	console.log("adding button");
 	if(document.getElementById("abc123_main_div") === null){
 		var to_insert = '<div style="opacity: 0.5; font-size: small; z-index: 2147483647; position: fixed; right: 1%; top: 4%;" id="abc123_main_div"></div>';
 		document.body.insertAdjacentHTML('afterbegin', to_insert);
 	}
-	if(document.getElementById("abc123_button_"+button_i) === undefined){
-		var button_html = '<input id="abc123_button_' + button_i + '" value="' + name_text +'"type="button"></input><br>';	
-		document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	
-		document.getElementById("abc123_button_"+button_i).addEventListener("click",callback);
-		button_i = button_i + 1;
-	}
+	var button_html = '<input id="abc123_button_complain" value="' + name_text +'" type="button"></input><br>';
+	document.getElementById("abc123_main_div").insertAdjacentHTML('afterbegin', button_html);	document.getElementById("abc123_button_complain").addEventListener("click",callback);
+
 }
 /**
 *	returns input with all elements not of type string removed
@@ -223,29 +225,88 @@ function handler(){
 		to_insert = '<div style="font-size: small; z-index: 2147483647; background-color: #eeeeee;'+
 						'position: fixed; display:inline-block; border: 3px solid #990000; width: 50%;"'+
 						' id="librejs_contactfinder">'+
-						"Contact finder failed."
-						'</div>';
+						"Contact finder failed.";
 	} else{
 		if(typeof(res[1]) == "string"){
 			to_insert = '<div style="font-size: small; z-index: 2147483647; background-color: #eeeeee;'+
 							'position: fixed; display:inline-block; border: 3px solid #990000; width: 50%;"'+
 							' id="librejs_contactfinder"><b>Result:</b><br>'+
-							res[0] + ": " + '<a href="' + res[1] + '>'+res[1]+'</a>' +
-							'</div>';
+							res[0] + ": " + '<a href="' + res[1] + '>'+res[1]+'</a>';
 		}
 		if(typeof(res[1]) == "object"){
 			to_insert = '<div style="font-size: small; z-index: 2147483647; background-color: #eeeeee;'+
 							'position: fixed; display:inline-block; border: 3px solid #990000; width: 50%;"'+
 							' id="librejs_contactfinder"><b>Result:</b><br>'+
-							res[0]+": "+res[1].outerHTML +
-							'</div>';
+							res[0]+": "+res[1].outerHTML;
 
 		}
 	}
+
+	var email = document.documentElement.innerText.match(email_regex);
+	if(email != null){
+		var max_i = 0;
+		if(email.length >= 10){
+			max_i = 10;
+		} else{
+			max_i = email.length;
+		}
+		for(var i = 0; i < max_i; i++){
+			var mailto = "mailto:"+email[i]+"?subject="+encodeURI(prefs["pref_subject"])+"&body="+encodeURI(prefs["pref_body"]);
+			to_insert += '<br>' + 'Possible email: <a href="' + mailto + '">'+email[i]+'</a>';
+		}
+	}
+
+	to_insert += '</div>';
+
 	setTimeout(function(){document.getElementById("librejs_contactfinder").remove()}, 7500);
 	document.body.insertAdjacentHTML("afterbegin",to_insert);
 	return 0;
 
 }
 
-new_debug_button("Complain to website",handler);
+function main(){
+	new_debug_button("Complain to website",handler);
+}
+
+// See main_background.js
+var webex;
+var myPort;
+function set_webex(){
+	if(typeof(browser) == "object"){
+		webex = browser;
+	}
+	if(typeof(chrome) == "object"){
+		webex = chrome;
+	}
+}
+set_webex();
+var myPort = webex.runtime.connect({name:"contact_finder"});
+
+myPort.onMessage.addListener(function(m) {
+	prefs = m;
+	main();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
