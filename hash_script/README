@@ -1,0 +1,5 @@
+Generates the default whitelist. 
+
+To run this: 
+
+$ node index.js
