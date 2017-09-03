@@ -320,14 +320,22 @@ function update_popup(tab_id,blocked_info,update=false){
 		}
 
 		function get_status(script_name){
-			console.log("Is in correct format?");
-			console.log(script_name);
-			var script_key = script_name;
-			//var script_key = encodeURI(url)+" "+encodeURI(script_name);
-			if(items[script_key] === undefined){
-				return "none";
+			var temp = script_name.match(/\(.*?\)/g);
+			if(temp == null){
+				return "none"
 			}
-			return items[script_key];
+			var src_hash = temp[temp.length-1].substr(1,temp[0].length-2);
+
+			for(var i in items){
+				var res = i.match(/\(.*?\)/g);
+				if(res != null){
+					var test_hash = res[res.length-1].substr(1,res[0].length-2);
+					if(test_hash == src_hash){
+						return items[i];
+					}		
+				}
+			}
+			return "none";
 		}
 		function is_bl(script_name){
 			if(get_status(script_name) == "blacklist"){
@@ -352,12 +360,12 @@ function update_popup(tab_id,blocked_info,update=false){
 			for(var script_arr in blocked_info[type]){
 				if(is_bl(blocked_info[type][script_arr][0])){
 					new_blocked_data["blacklisted"].push(blocked_info[type][script_arr]);
-					console.log("Script " + blocked_info[type][script_arr][0] + " is blacklisted");
+					//console.log("Script " + blocked_info[type][script_arr][0] + " is blacklisted");
 					continue;
 				}
 				if(is_wl(blocked_info[type][script_arr][0])){
 					new_blocked_data["whitelisted"].push(blocked_info[type][script_arr]);
-					console.log("Script " + blocked_info[type][script_arr][0] + " is whitelisted");
+					//console.log("Script " + blocked_info[type][script_arr][0] + " is whitelisted");
 					continue;
 				}
 				if(type == "url"){
@@ -365,7 +373,7 @@ function update_popup(tab_id,blocked_info,update=false){
 				}
 				// either "blocked" or "accepted"
 				new_blocked_data[type].push(blocked_info[type][script_arr]);
-				console.log("Script " + blocked_info[type][script_arr][0] + " isn't whitelisted or blacklisted");			
+				//console.log("Script " + blocked_info[type][script_arr][0] + " isn't whitelisted or blacklisted");			
 			}
 		}		
 		console.log(new_blocked_data);
@@ -438,11 +446,22 @@ function add_popup_entry(tab_id,src_hash,blocked_info,update=false){
 
 		function get_sto(items){
 			function get_status(script_name,src_hash){
-				var script_key = get_storage_key(script_name,src_hash);		
-				if(items[script_key] === undefined){
-					return "none";
+				var temp = script_name.match(/\(.*?\)/g);
+				if(temp == null){
+					return "none"
 				}
-				return items[script_key];
+				var src_hash = temp[temp.length-1].substr(1,temp[0].length-2);
+
+				for(var i in items){
+					var res = i.match(/\(.*?\)/g);
+					if(res != null){
+						var test_hash = res[res.length-1].substr(1,res[0].length-2);
+						if(test_hash == src_hash){
+							return items[i];
+						}		
+					}
+				}
+				return "none";
 			}
 			function is_bl(script_name){
 				if(get_status(script_name) == "blacklist"){
@@ -718,7 +737,29 @@ function get_data_url(blob,url){
 		reader.readAsDataURL(blob);
 	});
 }
-
+/**
+*	Check whitelisted by hash
+*
+*/
+function blocked_status(hash){
+	return new Promise((resolve, reject) => {
+		function cb(items){
+			var wl = items["pref_whitelist"];
+			for(var i in items){
+				var res = i.match(/\(.*?\)/g);
+				if(res != null){
+					var test_hash = res[res.length-1].substr(1,res[0].length-2);
+					if(test_hash == hash){
+						resolve(items[i]);
+					}		
+				}
+			}
+			resolve("none");
+			return;
+		}
+		webex.storage.local.get(cb);
+	});
+}
 /* *********************************************************************************************** */
 // (This is part of eval_test.js with a few console.logs/comments removed)
 
@@ -851,7 +892,6 @@ function license_read(script_src,name){
 
 /* *********************************************************************************************** */
 // TODO: Test if this script is being loaded from another domain compared to unused_data[tabid]["url"]
-// TODO: test if this script is whitelisted by name (from the GUI with the button)
 function get_script(url,tabid,wl){
 	return new Promise((resolve, reject) => {
 		var response = get_content(url);
@@ -977,7 +1017,10 @@ function init_addon(){
 		{urls:["<all_urls>"], types:["main_frame"]},
 		["blocking"]
 	);
-
+	var test = blocked_status("9b09468b8a2a21011ca09d20da416c7fc9179f05019974a2a0830d69966e0de4");
+	test.then(function(res){
+		console.log(res);
+	});
 }
 
 /**
