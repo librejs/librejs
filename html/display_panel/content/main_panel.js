@@ -70,7 +70,7 @@ function write_elements(data,name,color){
 	} else{
 		heading.innerHTML = "<h2 class='blocked-js'>List of <div style='display:inline; color:"+color+";'>" + name.toUpperCase() + "</div> javascript in " + data["url"]+":</h2>";
 	}
-	// Iterate over data[name] and generate bulleted list
+	// Iterate over data[name] and generate list
 	for(var i = 0; i < data[name].length; i++){
 		list.innerHTML += "<li><b>"+data[name][i][0]+ ":</b><br>" + data[name][i][1]+"\n"+button_html+"<br><br>\n"+button_html_2+"<br><br>\n"+button_html_3+"</li>";
 		document.getElementById("temp").id = name+"_"+i;
@@ -154,9 +154,9 @@ function generate_HTML(blocked_data){
 	// This should send a message to invoke the content finder
 	var button_complain = '<a id="complain-contact" class="button white" href="#">Complain to site owner</a>';
 	// This should update the persistent options
-    var button_allow_all = '<a id="allow-button" class="button white" href="#">Allow all scripts in this page</a>';
+    var button_allow_all = '<a id="allow-button" class="button white" href="#">'+"Add page's domain to whitelist"+'</a>';
 	// This will call "Forget preferences" on every script.
-    var button_block_nonfree = '<a id="disallow-button" class="button white" href="#">Block all nonfree/nontrivial scripts from this page</a>';
+    var button_block_nonfree = '<a id="disallow-button" class="button white" href="#">'+"Remove page's domain from whitelist"+'</a>';
 	// This should send a message that calls "open_popup_tab()" in the background script
     var button_new_tab = '<a id="open-in-tab" class="button white" href="#">Open this report in a new tab</a>';
 
@@ -175,10 +175,11 @@ function generate_HTML(blocked_data){
 	if( blocked_data["blacklisted"].length != 0 || blocked_data["blocked"].length != 0 ||
 	blocked_data["whitelisted"].length != 0 || blocked_data["accepted"].length != 0){
 		write_button(button_allow_all,function(){
-			console.log("button_allow_all");
+			myPort.postMessage({"allow_all": blocked_data});
 		});
 		write_button(button_block_nonfree,function(){
-			console.log("button_block_nonfree");
+			myPort.postMessage({"block_all": blocked_data});
+
 		});
 		write_button(button_complain,function(){			
 			myPort.postMessage({"invoke_contact_finder": blocked_data});

@@ -179,8 +179,10 @@ var licenses = {
 	}
 }
 
-// Objects which could be used to do nontrivial things
+// Objects which could be used to do nontrivial things.
+// Scripts are not allowed to call any methods on these objects or access them in any way.
 var reserved_objects = [
+	"window",
 	"fetch",
 	"XMLHttpRequest",
 	"chrome", // only on chrome
@@ -313,7 +315,7 @@ function debug_print_local(){
 *
 *	NOTE: This WILL break if you provide inconsistent URLs to it.
 *	Make sure it will use the right URL when refering to a certain script.
-*
+* 
 */
 function update_popup(tab_id,blocked_info,update=false){
 	var new_blocked_data;
@@ -345,10 +347,10 @@ function update_popup(tab_id,blocked_info,update=false){
 			}
 
 			if(default_whitelist[src_hash] !== undefined){
-				console.log("Found script in default whitelist: "+default_whitelist[src_hash]);				
+				//console.log("Found script in default whitelist: "+default_whitelist[src_hash]);				
 				return "whitelist";
 			} else{
-				console.log("script " + script_name + " not in default whitelist.");
+				//console.log("script " + script_name + " not in default whitelist.");
 			}
 			return "none";
 		}
@@ -478,10 +480,10 @@ function add_popup_entry(tab_id,src_hash,blocked_info,update=false){
 				}
 
 				if(default_whitelist[src_hash] !== undefined){
-					console.log("Found script in default whitelist: "+default_whitelist[src_hash]);				
+					//console.log("Found script in default whitelist: "+default_whitelist[src_hash]);				
 					return "whitelist";
 				} else{
-					console.log("script " + script_name + " not in default whitelist.");
+					//console.log("script " + script_name + " not in default whitelist.");
 				}
 
 				return "none";
@@ -626,7 +628,16 @@ function connected(p) {
 		if(m["deletelocalstorage"] !== undefined){
 			debug_delete_local();
 		}
-
+		// Add this domain to the whitelist
+		if(m["allow_all"] !== undefined){
+			var domain = get_domain(m["allow_all"]["url"]);
+			add_csv_whitelist(domain);
+		}
+		// Remote this domain from the whitelist
+		if(m["block_all"] !== undefined){
+			var domain = get_domain(m["block_all"]["url"]);
+			remove_csv_whitelist(domain);
+		}
 		function logTabs(tabs) {
 			if(contact_finder){
 				console.log("[TABID:"+tab_id+"] Injecting contact finder");
@@ -1058,7 +1069,7 @@ function test_url_whitelisted(url){
 	return new Promise((resolve, reject) => {
 		function cb(items){
 			var wl = items["pref_whitelist"];
-			if(wl !== undefined){
+			if(wl !== undefined && wl !== ""){
 				wl = wl.split(",");
 			} else{
 				resolve(false);
@@ -1092,6 +1103,49 @@ function inject_contact_finder(tab_id){
 	  console.log("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
 	}
 	var executing = webex.tabs.executeScript(tab_id, {file: "/contact_finder.js"}, executed);
+}
+/**
+*	Adds given domain to the whitelist in options
+*/
+function add_csv_whitelist(domain){
+	function storage_got(items){
+		if(items["pref_whitelist"] == ""){
+			items["pref_whitelist"] = domain + "*";
+		} else if(items["pref_whitelist"] == "undefined"){
+			items["pref_whitelist"] = domain + "*";		
+		} else{
+			items["pref_whitelist"] += "," + domain + "*";		
+		}
+		console.log("New CSV whitelist:");
+		console.log(items["pref_whitelist"]);
+		webex.storage.local.set({"pref_whitelist":items["pref_whitelist"]});
+	}
+	webex.storage.local.get(storage_got);	
+}
+
+/**
+*	removes given domain from the whitelist in options
+*/
+function remove_csv_whitelist(domain){
+	function storage_got(items){
+		if(items["pref_whitelist"] != ""){
+			domain = domain + "\\*";
+			domain.replace(/\./g,"\.");
+			// remove domain
+			console.log(new RegExp(domain,"g"));
+			items["pref_whitelist"] = items["pref_whitelist"].replace(new RegExp(domain,"g"),"")
+			// if an entry was deleted, it will leave an extra comma
+			items["pref_whitelist"] = items["pref_whitelist"].replace(/,+/g,",");
+			// remove trailing comma if the last one was deleted
+			if(items["pref_whitelist"].charAt(items["pref_whitelist"].length-1) == ","){
+				items["pref_whitelist"] = items["pref_whitelist"].substr(0,items["pref_whitelist"].length-2);
+			}
+		}
+		console.log("New CSV whitelist:");
+		console.log(items["pref_whitelist"]);
+		webex.storage.local.set({"pref_whitelist":items["pref_whitelist"]});
+	}
+	webex.storage.local.get(storage_got);	
 }
 
 init_addon();
