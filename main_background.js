@@ -711,7 +711,7 @@ function change_csp(e) {
 					keywords[j] = keywords[j].replace(/'strict-dynamic'/g,"");
 					keywords[j] = keywords[j].replace(/;/g,"");
 					// This is the string that we add to every CSP
-					keywords[j] += " data: blob: 'report-sample'";	
+					keywords[j] += "'self' data: blob: 'report-sample'";	
 					//console.log("%c new script-src section:","color:green;")					
 					//console.log(keywords[j]+ "; ");			
 				}
@@ -730,27 +730,6 @@ function change_csp(e) {
 		//console.log(e["responseHeaders"][index]["value"]);	
 	}
 	return {responseHeaders: e.responseHeaders};
-}
-
-/*
-*
-*	XMLHttpRequests the content of a script so we can modify it
-*	before turning it to a blob and redirecting to its URL
-*
-*/
-function get_content(url){
-	return new Promise((resolve, reject) => {
-		var xhr = new XMLHttpRequest();
-		xhr.open("get",url);
-		xhr.onload = function(){
-			resolve(this);
-		}
-		xhr.onerror = function(){
-			console.log("%c could not get content of "+url+".","color:red;")			
-			reject(JSON.stringify(this));
-		}
-		xhr.send();
-	});
 }
 
 /**
@@ -926,97 +905,180 @@ function license_read(script_src,name){
 
 /* *********************************************************************************************** */
 // TODO: Test if this script is being loaded from another domain compared to unused_data[tabid]["url"]
-function get_script(url,tabid,wl){
+
+/**
+*
+*	Returns a promise that resolves with the final edited script as a string.
+*/
+function get_script(response,url,tabid,wl,index=-1){
 	return new Promise((resolve, reject) => {
-		var response = get_content(url);
-		response.then(function(response) {
-			if(unused_data[tabid] === undefined){
-				unused_data[tabid] = {"url":url,"accepted":[],"blocked":[]};
-			}	
-			var tok_index = url.split("/").length;		
-			var scriptname = url.split("/")[tok_index-1];
-			if(wl == true){
-				// Accept without reading script, it was explicitly whitelisted
-				if(typeof(unused_data[tabid]["accepted"].push) != "function"){
-					unused_data[tabid]["accepted"] = [[scriptname,"Page is whitelisted in preferences"]];
-				} else{
-					unused_data[tabid]["accepted"].push([scriptname,"Page is whitelisted in preferences"]);
-				}				
-				var blob = new Blob([response.responseText], {type : 'application/javascript'});	
-				resolve(get_data_url(blob,url));
-				return;
-			}
-			
-			var src_hash = hash(response.responseText);
-
-			var edited = license_read(response.responseText,scriptname);
-			var verdict = edited[0];
-			var popup_res;
-
-			var domain = get_domain(url);
-
-			if(verdict == true){
-				popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"accepted":[scriptname+" ("+src_hash+")",edited[2]]});
+		if(unused_data[tabid] === undefined){
+			unused_data[tabid] = {"url":url,"accepted":[],"blocked":[]};
+		}
+		var tok_index = url.split("/").length;		
+		var scriptname = url.split("/")[tok_index-1];
+		if(wl == true){
+			// Accept without reading script, it was explicitly whitelisted
+			if(typeof(unused_data[tabid]["accepted"].push) != "function"){
+				unused_data[tabid]["accepted"] = [[scriptname,"Page is whitelisted in preferences"]];
 			} else{
-				popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"blocked":[scriptname+" ("+src_hash+")",edited[2]]});
+				unused_data[tabid]["accepted"].push([scriptname,"Page is whitelisted in preferences"]);
+			}				
+			resolve("\n/*\n LibreJS: Script whitelisted by user (From a URL found in comma seperated whitelist)\n*/\n"+response);
+			if(index != -1){
+				resolve(["\n/*\n LibreJS: Script whitelisted by user (From a URL found in comma seperated whitelist)\n*/\n"+response,index]);
+			} else{
+				resolve("\n/*\n LibreJS: Script whitelisted by user (From a URL found in comma seperated whitelist)\n*/\n"+response);
 			}
-			popup_res.then(function(list_verdict){
-				var blob;
-				if(list_verdict == "wl"){
-					// redirect to the unedited version
-					blob = new Blob(["\n/*\n LibreJS: Script whitelisted by user \n*/\n"+response.responseText], {type : 'application/javascript'});
-				}else if(list_verdict == "bl"){
-					// Blank the entire script
-					blob = new Blob(["\n/*\n LibreJS: Script blacklisted by user \n*/\n"], {type : 'application/javascript'});
+		}
+	
+		var src_hash = hash(response);
+		var edited = license_read(response,scriptname);
+		var verdict = edited[0];
+		var popup_res;
+		var domain = get_domain(url);
+
+		if(verdict == true){
+			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"accepted":[scriptname+" ("+src_hash+")",edited[2]]});
+		} else{
+			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"blocked":[scriptname+" ("+src_hash+")",edited[2]]});
+		}
+		popup_res.then(function(list_verdict){
+			var blob;
+			if(list_verdict == "wl"){
+				// redirect to the unedited version
+				if(index != -1){
+					resolve(["\n/*\n LibreJS: Script whitelisted by user \n*/\n"+response,index]);
 				} else{
-					// Return the edited (normal) version
-					blob = new Blob([edited[1]], {type : 'application/javascript'});
+					resolve("\n/*\n LibreJS: Script whitelisted by user \n*/\n"+response);
 				}
-				//blob = new Blob(["console.log('LibreJS edited script');\n"+edited[1]], {type : 'application/javascript'});
-				resolve(get_data_url(blob,url));
-			});
+			}else if(list_verdict == "bl"){
+				// Blank the entire script
+				if(index != -1){
+					resolve(["\n/*\n LibreJS: Script blacklisted by user \n*/\n",index]);
+				} else{
+					resolve("\n/*\n LibreJS: Script blacklisted by user \n*/\n");
+				}
+			} else{
+				// Return the edited (normal) version
+				if(index != -1){
+					resolve([edited[1],index]);
+				} else{
+					resolve(edited[1]);
+				}
+			}
 		});
 	});
 }
 
 function read_script(a){
-	return new Promise((resolve, reject) => {
+
+	var filter = webex.webRequest.filterResponseData(a.requestId);
+	var decoder = new TextDecoder("utf-8");
+	var encoder = new TextEncoder(); // TODO: make sure this doesn't cause undeclared decoding
+
+	filter.ondata = event => {
+		var str = decoder.decode(event.data, {stream: true});
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
+			var edit_script;
 			if(whitelisted == true){
 				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
-				resolve(get_script(a.url,a["tabId"],true));
+				edit_script = get_script(str,a.url,a["tabId"],true);
 			} else{
-				resolve(get_script(a.url,a["tabId"],false));
+				edit_script = get_script(str,a.url,a["tabId"],false);
 			}
-		});		
+			edit_script.then(function(edited){
+				filter.write(encoder.encode(edited));
+				filter.disconnect();
+			});
+		});
+	}
+	return {};
+
+}
+
+function edit_html(html,url,tabid,wl){
+	return new Promise((resolve, reject) => {
+		if(wl == true){
+			// Don't bother, page is whitelisted
+			resolve(html);	 
+		}
+
+		// A DOMParser object won't work because the HTML doesn't exist after the DOM is built.
+		// This makes it impossible to go from DOM back to HTML source without a lot of distortion.
+		// For the vast majority of cases, it should work to parse the DOM, extract Javascript source,
+		// and then replace the unedited source with the edited source using string.replace().
+		
+		var parser = new DOMParser();
+		var html_doc = parser.parseFromString(html, "text/html");
+		var after = html;
+
+		console.log("text encoding declaration?");
+		var meta = document.getElementsByTagName("meta")[0]
+		var charset;		
+		if(meta !== undefined){
+			charset = meta.attributes["charset"].value.toLowerCase();
+			console.log("Yes, '"+charset+"'");
+			if(charset !== "utf-8"){
+				console.log("%c Warning: decoded it wrong. (how is it reading this then? lol)");
+			}
+		} else{
+			console.log("No, guessing 'utf-8'");
+		}
+		var amt_scripts = 0;
+		var total_scripts = 0;
+		var scripts = html_doc.scripts;		
+		for(var i = 0; i < scripts.length; i++){
+			if(scripts[i].src == ""){
+				total_scripts++;
+			}
+		}
+		for(var i = 0; i < scripts.length; i++){
+			if(scripts[i].src == ""){
+				console.log("%c not remote (document.scripts["+i+"])","color:purple");
+				console.log(scripts[i].innerHTML);
+				var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
+				edit_script.then(function(edited){
+					//html_doc.scripts[edited[1]].setAttribute("type","application/json");
+					scripts[edited[1]].innerHTML = edited[0];					
+					amt_scripts++;		
+					if(amt_scripts == total_scripts){
+						resolve(html_doc.documentElement.innerHTML);
+					}		
+				});
+			}
+		}
 
 	});
-	/*
-	// Minimal example of how to edit scripts
-	var edited = "console.log('it worked');\n";
-	var blob = new Blob([edited], {type : 'application/javascript'});
-	return get_data_url(blob);
-	*/
 }
 
 function read_document(a){
-	// This needs to be handled in a different way because it sets the domain
-	// of the document to "data:" which breaks relative URLs.
-	return new Promise((resolve, reject) => {
-		var response = get_content(a.url);
-		response.then(function(res){
-			
-			// Reset the block scripts since we just opened a new document
-			unused_data[a["tabId"]] = {"url":a.url,"accepted":[],"blocked":[]};
 
 
-			//setup_counter(res.response,a["tabId"])
-			resolve();
-			//var blob = new Blob([res.response], {type : 'text/html'});	
-			//resolve(get_data_url(blob));
+	var filter = webex.webRequest.filterResponseData(a.requestId);
+	var decoder = new TextDecoder("utf-8");
+	var encoder = new TextEncoder(); // TODO: make sure this doesn't cause undeclared decoding
+
+	filter.ondata = event => {
+		var str = decoder.decode(event.data, {stream: true});
+		var res = test_url_whitelisted(a.url);
+		res.then(function(whitelisted){
+			var edit_page;
+			if(whitelisted == true){
+				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
+				edit_page = edit_html(str,a.url,a["tabId"],true);
+			} else{
+				edit_page = edit_html(str,a.url,a["tabId"],false);
+			}
+			edit_page.then(function(edited){
+				filter.write(encoder.encode(edited));
+				filter.disconnect();
+			});
 		});
-	});
+	}
+	return {};
+
 }
 
 /**
@@ -1051,10 +1113,6 @@ function init_addon(){
 		{urls:["<all_urls>"], types:["main_frame"]},
 		["blocking"]
 	);
-	var test = blocked_status("b0b09468b8a2a21011ca09d20da416c7fc9179f05019974a2a0830d69966e0de4");
-	test.then(function(res){
-		console.log(res);
-	});
 }
 
 /**
