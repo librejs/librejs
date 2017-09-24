@@ -693,6 +693,14 @@ function delete_removed_tab_info(tab_id, remove_info){
 function change_csp(e) {
 	var index = 0;
 	var csp_header = "";
+
+
+	for(var i = 0; i < e["responseHeaders"].length; i++){
+		console.log("%c"+e["responseHeaders"][i]["name"],"color:white");
+		console.log(e["responseHeaders"][i]["value"]);
+	}
+	console.log("done");
+
 	for(var i = 0; i < e["responseHeaders"].length; i++){
 		if(e["responseHeaders"][i]["name"].toLowerCase() == "content-security-policy"){		
 			csp_header = e["responseHeaders"][i]["value"];
@@ -948,23 +956,23 @@ function get_script(response,url,tabid,wl,index=-1){
 			if(list_verdict == "wl"){
 				// redirect to the unedited version
 				if(index != -1){
-					resolve(["\n/*\n LibreJS: Script whitelisted by user \n*/\n"+response,index]);
+					resolve(["/* LibreJS: Script whitelisted by user */\n"+response,index]);
 				} else{
-					resolve("\n/*\n LibreJS: Script whitelisted by user \n*/\n"+response);
+					resolve("/* LibreJS: Script whitelisted by user */\n"+response);
 				}
 			}else if(list_verdict == "bl"){
 				// Blank the entire script
 				if(index != -1){
-					resolve(["\n/*\n LibreJS: Script blacklisted by user \n*/\n",index]);
+					resolve(["/* LibreJS: Script blacklisted by user */\n",index]);
 				} else{
-					resolve("\n/*\n LibreJS: Script blacklisted by user \n*/\n");
+					resolve("/* LibreJS: Script blacklisted by user */\n");
 				}
 			} else{
 				// Return the edited (normal) version
 				if(index != -1){
-					resolve(["\n/*\n LibreJS: Script acknowledged\n*/\n"+edited[1],index]);
+					resolve(["/* LibreJS: Script acknowledged */\n"+edited[1],index]);
 				} else{
-					resolve("\n/*\n LibreJS: Script acknowledged\n*/\n"+edited[1]);
+					resolve("/* LibreJS: Script acknowledged */\n"+edited[1]);
 				}
 			}
 		});
@@ -1004,40 +1012,36 @@ function edit_html(html,url,tabid,wl){
 			// Don't bother, page is whitelisted
 			resolve(html);	 
 		}
-
-		// A DOMParser object won't work because the HTML doesn't exist after the DOM is built.
-		// This makes it impossible to go from DOM back to HTML source without a lot of distortion.
-		// For the vast majority of cases, it should work to parse the DOM, extract Javascript source,
-		// and then replace the unedited source with the edited source using string.replace().
 		
 		var parser = new DOMParser();
 		var html_doc = parser.parseFromString(html, "text/html");
 
 		var amt_scripts = 0;
 		var total_scripts = 0;
-		var scripts = html_doc.scripts;		
+		var scripts = html_doc.scripts;
+		
 		for(var i = 0; i < scripts.length; i++){
 			if(scripts[i].src == ""){
 				total_scripts++;
 			}
 		}
+
 		console.log("Analyzing "+total_scripts+" inline scripts...");
+
 		for(var i = 0; i < scripts.length; i++){
 			if(scripts[i].src == ""){
 				var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
 				edit_script.then(function(edited){
-					//html_doc.scripts[edited[1]].setAttribute("type","application/json");
-					console.log("%c  ------ not remote (document.scripts["+edited[1]+"]) ------","color:white");					
-    				console.log("%c"+edited[1]+":"+html_doc.scripts[edited[1]].innerHTML.substr(0,100),"color:gray");
-    				console.log("%c"+edited[1]+":"+edited[0].substr(0,100),"color:gray");
-					//html_doc.scripts[edited[1]].insertAdjacentHTML("afterend",'<script type="text/javascript">'+edited[0]+"</script>");
-					//html_doc.scripts[edited[1]].remove();				
-					if(html.indexOf(html_doc.scripts[edited[1]].outerHTML) == -1){
+					var edited_source = edited[0].trim();					
+					var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
+					console.log("%c  ------ not remote (document.scripts["+edited[1]+"]) ------","color:white");
+					if(html.indexOf(unedited_source) == -1){
 						console.log("NOT in original source");
+						debugger;
 					}else{
 						console.log("Found in original source");				
 					}
-					html = html.replace(html_doc.scripts[edited[1]].outerHTML,'<script type="text/javascript">'+edited[0]+"</script>");					
+					html = html.replace(unedited_source,edited_source);					
 					amt_scripts++;
 					if(amt_scripts == total_scripts){
 						//resolve(html_doc.documentElement.innerHTML);
@@ -1046,6 +1050,7 @@ function edit_html(html,url,tabid,wl){
 				});
 			}
 		}
+
 		if(total_scripts == 0){
 			console.log("Nothing to analyze.");
 			resolve(html);
