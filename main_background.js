@@ -688,18 +688,19 @@ function delete_removed_tab_info(tab_id, remove_info){
 *	Makes it so we can return redirect requests to local blob URLs 
 *
 *	TODO: Make it so that it adds the website itself to the permissions of all keys
-*
+*	TODO: Is this neccessary now that we aren't loading blob URLs?
 */
 function change_csp(e) {
 	var index = 0;
 	var csp_header = "";
 
-
+	/*
 	for(var i = 0; i < e["responseHeaders"].length; i++){
 		console.log("%c"+e["responseHeaders"][i]["name"],"color:white");
 		console.log(e["responseHeaders"][i]["value"]);
 	}
 	console.log("done");
+	*/	
 
 	for(var i = 0; i < e["responseHeaders"].length; i++){
 		if(e["responseHeaders"][i]["name"].toLowerCase() == "content-security-policy"){		
@@ -859,7 +860,7 @@ function license_read(script_src,name){
 	var parts_accepted = false;
 	while(true){
 		// TODO: support multiline comments
-		var matches = /\/\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+		var matches = /\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
 		if(matches == null){
 			nontrivial_status = evaluate(unedited_src,name);
 			if(nontrivial_status[0] == true){
@@ -880,7 +881,7 @@ function license_read(script_src,name){
 			return [true,edited_src,reason_text];
 			
 		}
-		console.log("Found a license tag");
+onsole.log("Found a license tag");
 		var before = unedited_src.substr(0,matches["index"]);
 		nontrivial_status = evaluate(before,name);
 		if(nontrivial_status[0] == true){
@@ -946,9 +947,41 @@ function get_script(response,url,tabid,wl,index=-1){
 		var popup_res;
 		var domain = get_domain(url);
 
+		//var badge_str = unused_data[tabid]["blocked"].length + unused_data[tabid]["blacklisted"].length;
+		var badge_str = 0;
+
+		if(unused_data[tabid]["blocked"] !== undefined){
+			badge_str += unused_data[tabid]["blocked"].length;
+		}
+
+		if(unused_data[tabid]["blacklisted"] !== undefined){
+			badge_str += unused_data[tabid]["blacklisted"].length;
+		}
+		console.log("amt. blocked on page:"+badge_str);
+		if(badge_str > 0){
+			webex.browserAction.setBadgeText({
+				text: " ",
+				tabId: tabid
+			});
+			webex.browserAction.setBadgeBackgroundColor({
+				color: "red",
+				tabId: tabid
+			});			
+		} else{
+			webex.browserAction.setBadgeText({
+				text: " ",
+				tabId: tabid
+			});
+			webex.browserAction.setBadgeBackgroundColor({
+				color: "green",
+				tabId: tabid
+			});	
+		}
+
 		if(verdict == true){
 			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"accepted":[scriptname+" ("+src_hash+")",edited[2]]});
 		} else{
+
 			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"blocked":[scriptname+" ("+src_hash+")",edited[2]]});
 		}
 		popup_res.then(function(list_verdict){
@@ -1006,7 +1039,72 @@ function read_script(a){
 
 }
 
+function source_replace(html,replace_this,with_this){
+	// This is absolutely neccessary. Not sure if it can cause bugs.
+	html = html.replace(/\r\n|\r|\n/g,"\n");
+	replace_this = replace_this.replace(/\r\n|\r|\n/g,"\n");
+
+	// Get all match indices
+	var match_indices = [];
+	var watchdog = 0;
+	
+	var lower_index = 0;
+
+	while(true){
+		var match_index = html.indexOf(replace_this,lower_index);
+		if(match_index == -1){
+			break;
+		} else{
+			match_indices.push(lower_index + match_index);
+			lower_index += match_index + 1;
+		}
+
+		watchdog++;
+		if(watchdog == 50){
+			debugger;
+			return;
+		}
+	}
+
+	function print_substr(orig,a,str){
+		//console.log(a+","+(a+str.length));
+		console.log(orig.substring(a+str.length,a));	
+	}
+
+	if(match_indices.length == 0){
+		console.log("%c No matches","color:red;");	
+		debugger;	
+	}
+
+	if(match_indices.length == 1){
+		console.log("%c Matched","color:green;");	
+		html = html.replace(replace_this,with_this);	
+	}
+
+	if(match_indices.length > 1){
+		console.log("%c Multiple matches","color:orange;");		
+	}
+
+//	for(var i = 0; i < match_indices.length; i++){
+//		console.log(match_indices[i]);
+//		print_substr(html,match_indices[i],replace_this);
+//	}
+
+	return html;
+
+}
+//source_replace("ababababasdasdasbabababaabababdab","ab","xx");
+
+function remove_noscripts(html){
+	// Remove noscript tags with name "librejs-path"		
+	// This leaves a trailing </noscript> tag (shouldn't be a big deal) and also is vulnerable to a (harmless) injection
+	return html;
+
+
+}
+
 function edit_html(html,url,tabid,wl){
+	
 	return new Promise((resolve, reject) => {
 		if(wl == true){
 			// Don't bother, page is whitelisted
@@ -1032,28 +1130,30 @@ function edit_html(html,url,tabid,wl){
 			if(scripts[i].src == ""){
 				var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
 				edit_script.then(function(edited){
-					var edited_source = edited[0].trim();					
+					console.groupCollapsed("%c  ------ not remote (document.scripts["+edited[1]+"]) ------","color:white");
+					
+					var edited_source = edited[0];
 					var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
-					console.log("%c  ------ not remote (document.scripts["+edited[1]+"]) ------","color:white");
-					if(html.indexOf(unedited_source) == -1){
-						console.log("NOT in original source");
-						debugger;
-					}else{
-						console.log("Found in original source");				
-					}
-					html = html.replace(unedited_source,edited_source);					
+
+					html = source_replace(html,unedited_source,edited_source);
+					html_doc.scripts[edited[1]].innerHTML = edited_source;
 					amt_scripts++;
+
+					console.groupEnd();
+
 					if(amt_scripts == total_scripts){
-						//resolve(html_doc.documentElement.innerHTML);
-						resolve(html);
+						//resolve(remove_noscripts(html_doc.documentElement.innerHTML));
+						resolve(remove_noscripts(html));
 					}		
+
 				});
 			}
 		}
 
 		if(total_scripts == 0){
 			console.log("Nothing to analyze.");
-			resolve(html);
+			//resolve(remove_noscripts(html_doc.documentElement.innerHTML));
+			resolve(remove_noscripts(html));
 		}
 
 	});
