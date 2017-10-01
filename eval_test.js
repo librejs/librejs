@@ -8,7 +8,7 @@
 */
 
 // the list of all available event attributes
-var intrinsicEvents = [
+var intrinsic_events = [
     "onload",
     "onunload",
     "onclick",

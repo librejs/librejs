@@ -182,6 +182,7 @@ var licenses = {
 // Objects which could be used to do nontrivial things.
 // Scripts are not allowed to call any methods on these objects or access them in any way.
 var reserved_objects = [
+	"document",
 	"window",
 	"fetch",
 	"XMLHttpRequest",
@@ -189,7 +190,27 @@ var reserved_objects = [
 	"browser", // only on firefox
 	"eval"
 ];
-
+// the list of all available event attributes
+var intrinsic_events = [
+    "onload",
+    "onunload",
+    "onclick",
+    "ondblclick",
+    "onmousedown",
+    "onmouseup",
+    "onmouseover",
+    "onmousemove",
+    "onmouseout",
+    "onfocus",
+    "onblur",
+    "onkeypress",
+    "onkeydown",
+    "onkeyup",
+    "onsubmit",
+    "onreset",
+    "onselect",
+    "onchange"
+];
 
 // TODO: make it so that there is a list of objects that have certain banned methods (which also means it must ban bracket suffix notation on these objects)
 
@@ -685,63 +706,6 @@ function delete_removed_tab_info(tab_id, remove_info){
 }
 
 /**
-*	Makes it so we can return redirect requests to local blob URLs 
-*
-*	TODO: Make it so that it adds the website itself to the permissions of all keys
-*	TODO: Is this neccessary now that we aren't loading blob URLs?
-*/
-function change_csp(e) {
-	var index = 0;
-	var csp_header = "";
-
-	/*
-	for(var i = 0; i < e["responseHeaders"].length; i++){
-		console.log("%c"+e["responseHeaders"][i]["name"],"color:white");
-		console.log(e["responseHeaders"][i]["value"]);
-	}
-	console.log("done");
-	*/	
-
-	for(var i = 0; i < e["responseHeaders"].length; i++){
-		if(e["responseHeaders"][i]["name"].toLowerCase() == "content-security-policy"){		
-			csp_header = e["responseHeaders"][i]["value"];
-			index = i;
-			var keywords = csp_header.replace(/;/g,'","');
-			keywords = JSON.parse('["' + keywords.substr(0,keywords.length) + '"]');
-			// Iterates over the keywords inside the CSP header
-			for(var j = 0; j < keywords.length; j++){
-				var matchres = keywords[j].match(/[\-\w]+/g);
-				if(matchres != null && matchres[0] == "script-src"){
-					// Test to see if they have a hash and then delete it
-					// TODO: Make sure this is a good idea.
-					keywords[j] = keywords[j].replace(/\s?'sha256-[\w+/]+=+'/g,"");
-					keywords[j] = keywords[j].replace(/\s?'sha384-[\w+/]+=+'/g,"");
-					keywords[j] = keywords[j].replace(/\s?'sha512-[\w+/]+=+'/g,"");
-					keywords[j] = keywords[j].replace(/'strict-dynamic'/g,"");
-					keywords[j] = keywords[j].replace(/;/g,"");
-					// This is the string that we add to every CSP
-					keywords[j] += "'self' data: blob: 'report-sample'";	
-					//console.log("%c new script-src section:","color:green;")					
-					//console.log(keywords[j]+ "; ");			
-				}
-			}
-			var csp_header = "";
-			for(var j = 0; j < keywords.length; j++){
-				csp_header = csp_header + keywords[j] + "; ";
-			}
-			e["responseHeaders"][i]["value"] = csp_header;
-		} 
-	}
-	if(csp_header == ""){
-		//console.log("%c no CSP.","color: red;");
-	}else{
-		//console.log("%c new CSP:","color: green;");
-		//console.log(e["responseHeaders"][index]["value"]);	
-	}
-	return {responseHeaders: e.responseHeaders};
-}
-
-/**
 *	Turns a blob URL into a data URL
 *
 */
@@ -801,7 +765,7 @@ function evaluate(script,name){
 	temp = temp.replace(/".+?"+/gm,'"string"');
 	temp = temp.replace(ml_comment,"");
 	temp = temp.replace(il_comment,"");
-	console.log("------evaluation results for "+ name +"------");
+	console.log("%c ------evaluation results for "+ name +"------","color:white");
 	console.log("Script accesses reserved objects?");
 	var flag = true;
 	var reason = ""
@@ -947,7 +911,6 @@ function get_script(response,url,tabid,wl,index=-1){
 		var popup_res;
 		var domain = get_domain(url);
 
-		//var badge_str = unused_data[tabid]["blocked"].length + unused_data[tabid]["blacklisted"].length;
 		var badge_str = 0;
 
 		if(unused_data[tabid]["blocked"] !== undefined){
@@ -958,9 +921,9 @@ function get_script(response,url,tabid,wl,index=-1){
 			badge_str += unused_data[tabid]["blacklisted"].length;
 		}
 		console.log("amt. blocked on page:"+badge_str);
-		if(badge_str > 0){
+		if(badge_str > 0 || verdict == false){
 			webex.browserAction.setBadgeText({
-				text: " ",
+				text: "GRR",
 				tabId: tabid
 			});
 			webex.browserAction.setBadgeBackgroundColor({
@@ -969,7 +932,7 @@ function get_script(response,url,tabid,wl,index=-1){
 			});			
 		} else{
 			webex.browserAction.setBadgeText({
-				text: " ",
+				text: "OK",
 				tabId: tabid
 			});
 			webex.browserAction.setBadgeBackgroundColor({
@@ -981,9 +944,9 @@ function get_script(response,url,tabid,wl,index=-1){
 		if(verdict == true){
 			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"accepted":[scriptname+" ("+src_hash+")",edited[2]]});
 		} else{
-
 			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"blocked":[scriptname+" ("+src_hash+")",edited[2]]});
 		}
+
 		popup_res.then(function(list_verdict){
 			var blob;
 			if(list_verdict == "wl"){
@@ -1039,6 +1002,18 @@ function read_script(a){
 
 }
 
+/**
+*	Changes the DOM
+*
+*/
+function DOM_replace(element,newtext){
+
+
+}
+/**
+*	Changes the source
+*
+*/
 function source_replace(html,replace_this,with_this){
 	// This is absolutely neccessary. Not sure if it can cause bugs.
 	html = html.replace(/\r\n|\r|\n/g,"\n");
@@ -1046,7 +1021,6 @@ function source_replace(html,replace_this,with_this){
 
 	// Get all match indices
 	var match_indices = [];
-	var watchdog = 0;
 	
 	var lower_index = 0;
 
@@ -1058,22 +1032,11 @@ function source_replace(html,replace_this,with_this){
 			match_indices.push(lower_index + match_index);
 			lower_index += match_index + 1;
 		}
-
-		watchdog++;
-		if(watchdog == 50){
-			debugger;
-			return;
-		}
-	}
-
-	function print_substr(orig,a,str){
-		//console.log(a+","+(a+str.length));
-		console.log(orig.substring(a+str.length,a));	
 	}
 
 	if(match_indices.length == 0){
 		console.log("%c No matches","color:red;");	
-		debugger;	
+		// TODO: handle this
 	}
 
 	if(match_indices.length == 1){
@@ -1083,26 +1046,30 @@ function source_replace(html,replace_this,with_this){
 
 	if(match_indices.length > 1){
 		console.log("%c Multiple matches","color:orange;");		
+		// TODO: handle this
 	}
-
-//	for(var i = 0; i < match_indices.length; i++){
-//		console.log(match_indices[i]);
-//		print_substr(html,match_indices[i],replace_this);
-//	}
 
 	return html;
 
 }
 //source_replace("ababababasdasdasbabababaabababdab","ab","xx");
 
-function remove_noscripts(html){
-	// Remove noscript tags with name "librejs-path"		
-	// This leaves a trailing </noscript> tag (shouldn't be a big deal) and also is vulnerable to a (harmless) injection
-	return html;
-
-
+/**
+*	Removes noscript tags with name "librejs-path" leaving the inner content to load.
+*/
+function remove_noscripts(html,doc){
+	for(var i = 0; i < doc.getElementsByName("librejs-path").length; i++){
+		if(doc.getElementsByName("librejs-path")[i].tagName == "NOSCRIPT"){
+			debugger;
+		}
+	}
+	
+	return doc.documentElement.innerHTML;
 }
-
+/**
+* 	Changes the HTML of a page and the scripts within it.
+*
+*/
 function edit_html(html,url,tabid,wl){
 	
 	return new Promise((resolve, reject) => {
@@ -1126,24 +1093,32 @@ function edit_html(html,url,tabid,wl){
 
 		console.log("Analyzing "+total_scripts+" inline scripts...");
 
+		var temphtml = html;
+
 		for(var i = 0; i < scripts.length; i++){
 			if(scripts[i].src == ""){
 				var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
 				edit_script.then(function(edited){
-					console.groupCollapsed("%c  ------ not remote (document.scripts["+edited[1]+"]) ------","color:white");
+					console.log("%c  ------ not remote (document.scripts["+edited[1]+"]) ------","color:white");
 					
 					var edited_source = edited[0];
 					var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
 
-					html = source_replace(html,unedited_source,edited_source);
+					/* Source based */
+					//temphtml = source_replace(temphtml,unedited_source,edited_source);
+					/* DOM based */
 					html_doc.scripts[edited[1]].innerHTML = edited_source;
+			
 					amt_scripts++;
 
-					console.groupEnd();
-
-					if(amt_scripts == total_scripts){
-						//resolve(remove_noscripts(html_doc.documentElement.innerHTML));
-						resolve(remove_noscripts(html));
+					if(amt_scripts >= total_scripts){
+						//console.log(html);
+						//console.log(temphtml);
+						
+						/* Source based */
+						//resolve(remove_noscripts(temphtml,html_doc));
+						/* DOM based */
+						resolve(remove_noscripts(temphtml,html_doc));					
 					}		
 
 				});
@@ -1152,15 +1127,21 @@ function edit_html(html,url,tabid,wl){
 
 		if(total_scripts == 0){
 			console.log("Nothing to analyze.");
-			//resolve(remove_noscripts(html_doc.documentElement.innerHTML));
-			resolve(remove_noscripts(html));
+			resolve(remove_noscripts(temphtml,html_doc));
 		}
 
 	});
 }
-
+/**
+* Callback for main frame requests
+*
+*/
 function read_document(a){
-
+	
+	if(unused_data[a["tabId"]] !== undefined && unused_data[a["tabId"]]["url"] != get_domain(a["url"])){
+		delete unused_data[a["tabId"]];
+		console.log("Page Changed!!!");
+	}
 
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
@@ -1172,6 +1153,7 @@ function read_document(a){
 		res.then(function(whitelisted){
 			var edit_page;
 			if(whitelisted == true){
+				console.log("WHITELISTED");
 				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
 				filter.write(encoder.encode(str));
 				filter.disconnect();
@@ -1202,12 +1184,6 @@ function init_addon(){
 
 	var targetPage = "https://developer.mozilla.org/en-US/Firefox/Developer_Edition";
 
-	// Updates the content security policy so we can redirect to local URLs
-	webex.webRequest.onHeadersReceived.addListener(
-		change_csp,
-		{urls: ["<all_urls>"]},
-		["blocking", "responseHeaders"]
-	);
 	// Analyzes remote scripts
 	webex.webRequest.onBeforeRequest.addListener(
 		read_script,
