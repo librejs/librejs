@@ -39,7 +39,7 @@
     "html/report_page/report.html"
   ],
   "background": {
-    "scripts": ["main_background.js"]
+    "scripts": ["bundle.js"]
   }
 
 }
