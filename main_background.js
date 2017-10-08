@@ -1,6 +1,11 @@
+// TO BUILD:
+// browserify main_background.js -o bundle.js
+// you'll have to get these required packages with npm:
 
-var acorn = require('acorn');
+const acornbase = require("acorn");
+var acorn = require('acorn/dist/acorn_loose');
 var jssha = require('jssha');
+var walk = require("acorn/dist/walk");
 
 console.log("main_background.js");
 
@@ -23,7 +28,7 @@ var intrinsicEvents = [
     "ondblclick",
     "onmousedown",
     "onmouseup",
-    "onmouseover",
+    "onmouseovr",
     "onmousemove",
     "onmouseout",
     "onfocus",
@@ -719,19 +724,105 @@ function blocked_status(hash){
 	});
 }
 /* *********************************************************************************************** */
+
+// - For each definition of anything executable that gets a name, including methods:
+//  It must call only primitives. (except altering the dom, eval, ajax, square bracket notation) 
+
+
+// The number of conditionals and loops must be at most 3.
+
+// It does not declare an array more than 50 elements long.
+// (This will be under VariableDeclarator)
+// At every VariableDeclarator, see if it has 
+
+
+//  It must not call itself
+
+
+// "The number of conditionals and loops must be at most 5" 
+var loops = ["ForInStatement","ForStatement","DoWhileStatement","WhileStatement","IfStatement","SwitchStatement"];
+
+
 /**
 *	Rigorously determines if code is trivial or not based on the official triviality criterion 
 */
 function full_evaluate(script){
-	try{
-		var ast = window.parse(script);
-	}catch(e){
-		console.log("%cError parsing","color:red;");
-		return false;
-	}
-	console.log(ast);
-	return true;
+	var ast = acorn.parse_dammit(script);
+	
+	var amtloops = 0;
+	var conditionals = 0;
+	var flag = true;
+	walk.full(ast, node => {
+		if(flag){
+			if(node.type != "Literal"){
+				console.log("%c"+node.type+":","color:purple;");
+				console.log(script.substring(node["start"],node["end"]));
+			}
+		
+
+
+			// Pretty sure this is bracket suffix notation
+			if(node.type == "MemberExpression"){
+				console.log("%c NONTRIVIAL: Bracket suffix notation.","color:red");
+				flag = false;				
+			}
+
+
+
+
+
+
+
+			// "It does not declare an array more than 50 elements long."
+			// (what about dictionaries?)
+			if(node.type == "ArrayExpression"){
+
+				var len = 0;
+			
+				try{
+					var temp = script.substring(node["start"],node["end"]);
+					len = JSON.parse(temp).length;
+				} catch(e){
+					console.warn("Invalid array?");
+					len = 99;
+				}
+			
+				if(len > 50){
+					console.log("%c NONTRIVIAL: Array longer than 50 elements. ("+len+")","color:red");
+					flag = false;
+				}
+
+			}
+
+			// "The number of conditionals and loops must be at most 3."
+			for(var i = 0; i < loops.length; i++){
+				if(node.type == loops[i]){
+					amtloops++;
+					break;
+				}
+			}
+
+			if(amtloops > 3){
+				console.log("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
+				flag = false;
+			}
+
+		}
+	});
+
+	if(flag == true){
+		console.log("%cScript is trivial.","color:green");
+	}	
+
+	return flag;
+
 }
+//full_evaluate("if(true){}if(true){}if(true){}if(true){}");
+//full_evaluate("var test  =[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50];");
+
+var test = 'object[test];';
+full_evaluate(test);
+full_evaluate('object.test.method["something"];');
 /**
 *	Performs the initial pass on code to see if it needs to be completely parsed
 */
@@ -1088,7 +1179,7 @@ function edit_html(html,url,tabid,wl){
 }
 /**
 * Callback for main frame requests
-*
+* 
 */
 function read_document(a){
 	
