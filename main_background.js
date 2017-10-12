@@ -1,8 +1,5 @@
-// TO BUILD:
-// browserify main_background.js -o bundle.js
-// you'll have to get these required packages with npm:
 
-const acornbase = require("acorn");
+var acornbase = require("acorn");
 var acorn = require('acorn/dist/acorn_loose');
 var jssha = require('jssha');
 var walk = require("acorn/dist/walk");
@@ -159,8 +156,8 @@ var licenses = {
 // Objects which could be used to do nontrivial things.
 // Scripts are not allowed to call any methods on these objects or access them in any way.
 var reserved_objects = [
-	"document",
-	"window",
+	//"document",
+	//"window",
 	"fetch",
 	"XMLHttpRequest",
 	"chrome", // only on chrome
@@ -752,14 +749,18 @@ function full_evaluate(script){
 	var amtloops = 0;
 	var conditionals = 0;
 	var flag = true;
+
+
+	console.log(ast);
+
+	return true;
+	
 	walk.full(ast, node => {
 		if(flag){
 			if(node.type != "Literal"){
 				console.log("%c"+node.type+":","color:purple;");
 				console.log(script.substring(node["start"],node["end"]));
 			}
-		
-
 
 			// Pretty sure this is bracket suffix notation
 			if(node.type == "MemberExpression"){
@@ -767,11 +768,15 @@ function full_evaluate(script){
 				flag = false;				
 			}
 
+			// This is the beginning of some "object chain"
+			if(node.type == "ExpressionStatement"){
+				
+			}
 
-
-
-
-
+			if(node.arguments !== undefined){
+				console.log("%cCalls function:","color:white");
+				script.substring(node.start,node.end)
+			}
 
 			// "It does not declare an array more than 50 elements long."
 			// (what about dictionaries?)
