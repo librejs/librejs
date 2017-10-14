@@ -1,94 +1,114 @@
 var acorn = require('acorn/dist/acorn_loose');
 var walk = require("acorn/dist/walk");
+var acorn_base = require("acorn");
+
+
+
+
+/**
+*	Loop over a function and get a list of things being called.
+*
+*	Tests to see if the function calls itself.
+*	
+*	Note: If it is an anonmyous function, recursion isn't possible.
+*
+*/
+function get_function_names(input_node_src,scope){
+	var func_name = "";
+	var flag = true;
+
+	// The name of the function can't appear anywhere.
+	// No bracket suffix notation either.
+	console.log("Searching for identifier '"+scope+"' in this code:");
+	console.log(input_node_src);
+	
+	var tokens = acorn_base.tokenizer(input_node_src);
+	var toke = tokens.getToken();
+	while(toke.type != acorn_base.tokTypes.eof){
+		if(toke.type.label == "name" && scope == toke.value){
+			return true;
+		}
+		toke = tokens.getToken();
+	}
+
+	return false;
+}
+
+
+
 
 window.onload = function () {
 
 	document.getElementById("parse").addEventListener("click",function(){
-	
-		var ast = acorn.parse_dammit(document.getElementById("input").value).body[0];
+		var res = true;		
+
+		var script = document.getElementById("input").value;
+
+		var ast = acorn.parse_dammit(script).body[0];
 		document.getElementById("output").innerHTML = JSON.stringify(ast, null, "\t"); // Indented with tab
-		console.log(ast);
 
 		var flag = false;
 		var amtloops = 0;
 
-		walk.recursive(ast, null, {
-			Literal(node, state, c) {
-				console.log("literal");
-			},
-			Identifier(node, state, c){
-				if(state.called === true){
-					console.log("calls '"+node.name+"'");
-				}
-			},
-			// The beggining of an "object chain" (obj1.obj2().property.value......)
-			ExpressionStatement(node, state, c) {
-				c(node["expression"],{});
-			},
-			CallExpression(node, state, c) {
-				console.log("CallExpression");
-				c(node["callee"],{"called":true});
-				for(var i = 0; i < node.arguments.length; i++){
-					console.log(node.arguments[i]);
-					c(node.arguments[i],{});
-				}
-			},
-			MemberExpression(node, state, c){
-				if(state.called === true){
-					console.log("calls '"+node.property.name+"'");
-				}
-				c(node["object"],{});
-			},
-			ArrayExpression(node, state, c){
-				var len = 0;
-				try{
-					var temp = script.substring(node["start"],node["end"]);
-					len = JSON.parse(temp).length;
-				} catch(e){
-					console.warn("Invalid array?");
-					len = 99;
-				}
-				if(len > 50){
-					console.log("%c NONTRIVIAL: Array longer than 50 elements. ("+len+")","color:red");
-					flag = false;
-				}
-
-			},
-			ForInStatement(node, state, c){
+		// COUNTS LOOPS AND CONDITIONALS
+		walk.simple(ast, {
+			ForInStatement(node){
+				if(amtloops > 3){return;}				
 				console.log("ForInStatement");
 				amtloops++;
 			},
-			ForStatement(node, state, c){
+			ForStatement(node){
+				if(amtloops > 3){return;}
 				console.log("ForStatement");
 				amtloops++;
 			},
-			DoWhileStatement(node, state, c){
+			DoWhileStatement(node){
+				if(amtloops > 3){return;}
 				console.log("DoWhileStatement");
 				amtloops++;
 			},
-			WhileStatement(node, state, c){
+			WhileStatement(node){
+				if(amtloops > 3){return;}
 				console.log("WhileStatement");
 				amtloops++;
 			},
-			IfStatement(node, state, c){
+			IfStatement(node){
+				if(amtloops > 3){return;}
 				console.log("IfStatement");
-				c(node.test,{});
-				c(node.consequent,{});
 				amtloops++;
 			},
-			SwitchStatement(node, state, c){
+			SwitchStatement(node){
+				if(amtloops > 3){return;}
 				console.log("SwitchStatement");
 				amtloops++;
 			}
-
 		});
-		if(flag == false){
-			return false;
-		}
+
 		if(amtloops > 3){
 			console.log("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
-			return false;
+			// TODO: return here
 		}
+		// DETECT RECURSION
+		var nontrivial = false;
+		walk.simple(ast, {
+			CallExpression(node){
+				if(nontrivial == true){
+					return;
+				}
+				test_function_name(node.callee.name);
+			}
+		});
+
+		if(nontrivial == true){
+			console.log("%c NONTRIVIAL: Recursion detected.","color:red");
+			res = false;// TODO: return here
+		}
+
+
+
+
+		document.getElementById("output").innerHTML =  res + "\n\n" + document.getElementById("output").innerHTML;		
+
 	});
 
 }
