@@ -1,0 +1,42 @@
+<!doctype html>
+
+<head>
+</head>
+<body>
+
+<script>
+window.onload = function (){
+	var s = Object.getOwnPropertyNames(window);
+	for(var i = 0; i < s.length; i++){
+		var checkbox = "<input name='opt' id='"+s[i]+"' type='checkbox'></input>";	
+		document.getElementById("input").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+	}
+	document.getElementById("gen").addEventListener("click",function(){
+		var temp = document.getElementsByName("opt");
+		var outputjson = {};
+		for(var i = 0; i < temp.length; i++){
+			if(temp[i].checked){
+				outputjson[temp[i].id] = "non-trivial";
+			}else{
+				outputjson[temp[i].id] = "trivial";
+			}
+		}
+		document.getElementById("output").innerHTML = JSON.stringify(outputjson);
+	});
+}
+</script>
+
+This page allows us to generate the allowed/disallowed object JSON.
+<br>
+<br>
+We know it's up to date because it iterates over all keys of the window variable (which is the global object for browsers)
+<br>
+<br>
+(Checked = nontrivial)
+<br><br><br>
+<input id="gen" type="button" value="Generate"></input>
+<br>
+<pre id="output"></pre>
+<pre id="input"></pre>
+
+</body>
