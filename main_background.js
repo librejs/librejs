@@ -722,112 +722,989 @@ function blocked_status(hash){
 }
 /* *********************************************************************************************** */
 
-// - For each definition of anything executable that gets a name, including methods:
-//  It must call only primitives. (except altering the dom, eval, ajax, square bracket notation) 
 
-
-// The number of conditionals and loops must be at most 3.
-
-// It does not declare an array more than 50 elements long.
-// (This will be under VariableDeclarator)
-// At every VariableDeclarator, see if it has 
-
-
-//  It must not call itself
-
+var fname_data = {
+	"WebGLShader": true,
+	"WebGLShaderPrecisionFormat": true,
+	"WebGLQuery": true,
+	"WebGLRenderbuffer": true,
+	"WebGLSampler": true,
+	"WebGLUniformLocation": true,
+	"WebGLFramebuffer": true,
+	"WebGLProgram": true,
+	"WebGLContextEvent": true,
+	"WebGL2RenderingContext": true,
+	"WebGLTexture": true,
+	"WebGLRenderingContext": true,
+	"WebGLVertexArrayObject": true,
+	"WebGLActiveInfo": true,
+	"WebGLTransformFeedback": true,
+	"WebGLSync": true,
+	"WebGLBuffer": true,
+	"cat_svg": true,
+	"SVGPoint": true,
+	"SVGEllipseElement": true,
+	"SVGRadialGradientElement": true,
+	"SVGComponentTransferFunctionElement": true,
+	"SVGPathSegCurvetoQuadraticAbs": true,
+	"SVGAnimatedNumberList": true,
+	"SVGPathSegCurvetoQuadraticSmoothRel": true,
+	"SVGFEColorMatrixElement": true,
+	"SVGPathSegLinetoHorizontalAbs": true,
+	"SVGLinearGradientElement": true,
+	"SVGStyleElement": true,
+	"SVGPathSegMovetoRel": true,
+	"SVGStopElement": true,
+	"SVGPathSegLinetoRel": true,
+	"SVGFEConvolveMatrixElement": true,
+	"SVGAnimatedAngle": true,
+	"SVGPathSegLinetoAbs": true,
+	"SVGPreserveAspectRatio": true,
+	"SVGFEOffsetElement": true,
+	"SVGFEImageElement": true,
+	"SVGFEDiffuseLightingElement": true,
+	"SVGAnimatedNumber": true,
+	"SVGTextElement": true,
+	"SVGFESpotLightElement": true,
+	"SVGFEMorphologyElement": true,
+	"SVGAngle": true,
+	"SVGScriptElement": true,
+	"SVGFEDropShadowElement": true,
+	"SVGPathSegArcRel": true,
+	"SVGNumber": true,
+	"SVGPathSegLinetoHorizontalRel": true,
+	"SVGFEFuncBElement": true,
+	"SVGClipPathElement": true,
+	"SVGPathSeg": true,
+	"SVGUseElement": true,
+	"SVGPathSegArcAbs": true,
+	"SVGPathSegCurvetoQuadraticSmoothAbs": true,
+	"SVGRect": true,
+	"SVGAnimatedPreserveAspectRatio": true,
+	"SVGImageElement": true,
+	"SVGAnimatedEnumeration": true,
+	"SVGAnimatedLengthList": true,
+	"SVGFEFloodElement": true,
+	"SVGFECompositeElement": true,
+	"SVGAElement": true,
+	"SVGAnimatedBoolean": true,
+	"SVGMaskElement": true,
+	"SVGFilterElement": true,
+	"SVGPathSegLinetoVerticalRel": true,
+	"SVGAnimatedInteger": true,
+	"SVGTSpanElement": true,
+	"SVGMarkerElement": true,
+	"SVGStringList": true,
+	"SVGTransform": true,
+	"SVGTitleElement": true,
+	"SVGFEBlendElement": true,
+	"SVGTextPositioningElement": true,
+	"SVGFEFuncGElement": true,
+	"SVGFEPointLightElement": true,
+	"SVGAnimateElement": true,
+	"SVGPolylineElement": true,
+	"SVGDefsElement": true,
+	"SVGPathSegList": true,
+	"SVGAnimatedTransformList": true,
+	"SVGPathSegClosePath": true,
+	"SVGGradientElement": true,
+	"SVGSwitchElement": true,
+	"SVGViewElement": true,
+	"SVGUnitTypes": true,
+	"SVGPathSegMovetoAbs": true,
+	"SVGSymbolElement": true,
+	"SVGFEFuncAElement": true,
+	"SVGAnimatedString": true,
+	"SVGFEMergeElement": true,
+	"SVGPathSegLinetoVerticalAbs": true,
+	"SVGAnimationElement": true,
+	"SVGPathSegCurvetoCubicAbs": true,
+	"SVGLength": true,
+	"SVGTextPathElement": true,
+	"SVGPolygonElement": true,
+	"SVGAnimatedRect": true,
+	"SVGPathSegCurvetoCubicRel": true,
+	"SVGFEFuncRElement": true,
+	"SVGLengthList": true,
+	"SVGTextContentElement": true,
+	"SVGFETurbulenceElement": true,
+	"SVGMatrix": true,
+	"SVGZoomAndPan": true,
+	"SVGMetadataElement": true,
+	"SVGFEDistantLightElement": true,
+	"SVGAnimateMotionElement": true,
+	"SVGDescElement": true,
+	"SVGPathSegCurvetoCubicSmoothRel": true,
+	"SVGFESpecularLightingElement": true,
+	"SVGFEGaussianBlurElement": true,
+	"SVGFEComponentTransferElement": true,
+	"SVGNumberList": true,
+	"SVGTransformList": true,
+	"SVGForeignObjectElement": true,
+	"SVGRectElement": true,
+	"SVGFEDisplacementMapElement": true,
+	"SVGAnimateTransformElement": true,
+	"SVGAnimatedLength": true,
+	"SVGPointList": true,
+	"SVGPatternElement": true,
+	"SVGPathSegCurvetoCubicSmoothAbs": true,
+	"SVGCircleElement": true,
+	"SVGSetElement": true,
+	"SVGFETileElement": true,
+	"SVGMPathElement": true,
+	"SVGFEMergeNodeElement": true,
+	"SVGPathSegCurvetoQuadraticRel": true,
+	"SVGElement": true,
+	"SVGGraphicsElement": true,
+	"SVGSVGElement": true,
+	"SVGGElement": true,
+	"SVGGeometryElement": true,
+	"SVGPathElement": true,
+	"SVGLineElement": true,
+	"cat_html": true,
+	"HTMLTimeElement": true,
+	"HTMLPictureElement": true,
+	"HTMLMenuItemElement": true,
+	"HTMLFormElement": true,
+	"HTMLOptionElement": true,
+	"HTMLCanvasElement": true,
+	"HTMLTableSectionElement": true,
+	"HTMLSelectElement": true,
+	"HTMLUListElement": true,
+	"HTMLMetaElement": true,
+	"HTMLLinkElement": true,
+	"HTMLBaseElement": true,
+	"HTMLDataListElement": true,
+	"HTMLInputElement": true,
+	"HTMLMeterElement": true,
+	"HTMLSourceElement": true,
+	"HTMLTrackElement": true,
+	"HTMLTableColElement": true,
+	"HTMLFieldSetElement": true,
+	"HTMLDirectoryElement": true,
+	"HTMLTableCellElement": true,
+	"HTMLStyleElement": true,
+	"HTMLAudioElement": true,
+	"HTMLLegendElement": true,
+	"HTMLOListElement": true,
+	"HTMLEmbedElement": true,
+	"HTMLQuoteElement": true,
+	"HTMLMenuElement": true,
+	"HTMLHeadElement": true,
+	"HTMLUnknownElement": true,
+	"HTMLBRElement": true,
+	"HTMLProgressElement": true,
+	"HTMLMediaElement": true,
+	"HTMLFormControlsCollection": true,
+	"HTMLCollection": true,
+	"HTMLLIElement": true,
+	"HTMLDetailsElement": true,
+	"HTMLObjectElement": true,
+	"HTMLHeadingElement": true,
+	"HTMLTableCaptionElement": true,
+	"HTMLPreElement": true,
+	"HTMLAllCollection": true,
+	"HTMLFrameSetElement": true,
+	"HTMLFontElement": true,
+	"HTMLFrameElement": true,
+	"HTMLAnchorElement": true,
+	"HTMLOptGroupElement": true,
+	"HTMLVideoElement": true,
+	"HTMLModElement": true,
+	"HTMLBodyElement": true,
+	"HTMLTableElement": true,
+	"HTMLButtonElement": true,
+	"HTMLTableRowElement": true,
+	"HTMLAreaElement": true,
+	"HTMLDataElement": true,
+	"HTMLParamElement": true,
+	"HTMLLabelElement": true,
+	"HTMLTemplateElement": true,
+	"HTMLOptionsCollection": true,
+	"HTMLIFrameElement": true,
+	"HTMLTitleElement": true,
+	"HTMLMapElement": true,
+	"HTMLOutputElement": true,
+	"HTMLDListElement": true,
+	"HTMLParagraphElement": true,
+	"HTMLHRElement": true,
+	"HTMLImageElement": true,
+	"HTMLDocument": true,
+	"HTMLElement": true,
+	"HTMLScriptElement": true,
+	"HTMLHtmlElement": true,
+	"HTMLTextAreaElement": true,
+	"HTMLDivElement": true,
+	"HTMLSpanElement": true,
+	"cat_css": true,
+	"CSSStyleRule": true,
+	"CSSFontFaceRule": true,
+	"CSSPrimitiveValue": true,
+	"CSSStyleDeclaration": true,
+	"CSSStyleSheet": true,
+	"CSSPageRule": true,
+	"CSSSupportsRule": true,
+	"CSSMozDocumentRule": true,
+	"CSSKeyframeRule": true,
+	"CSSGroupingRule": true,
+	"CSS2Properties": true,
+	"CSSFontFeatureValuesRule": true,
+	"CSSRuleList": true,
+	"CSSPseudoElement": true,
+	"CSSMediaRule": true,
+	"CSSCounterStyleRule": true,
+	"CSSImportRule": true,
+	"CSSTransition": true,
+	"CSSAnimation": true,
+	"CSSValue": true,
+	"CSSNamespaceRule": true,
+	"CSSRule": true,
+	"CSS": true,
+	"CSSKeyframesRule": true,
+	"CSSConditionRule": true,
+	"CSSValueList": true,
+	"cat_event": true,
+	"ondevicemotion": true,
+	"ondeviceorientation": true,
+	"onabsolutedeviceorientation": true,
+	"ondeviceproximity": true,
+	"onuserproximity": true,
+	"ondevicelight": true,
+	"onvrdisplayconnect": true,
+	"onvrdisplaydisconnect": true,
+	"onvrdisplayactivate": true,
+	"onvrdisplaydeactivate": true,
+	"onvrdisplaypresentchange": true,
+	"onabort": true,
+	"onblur": true,
+	"onfocus": true,
+	"onauxclick": true,
+	"oncanplay": true,
+	"oncanplaythrough": true,
+	"onchange": true,
+	"onclick": true,
+	"onclose": true,
+	"oncontextmenu": true,
+	"ondblclick": true,
+	"ondrag": true,
+	"ondragend": true,
+	"ondragenter": true,
+	"ondragexit": true,
+	"ondragleave": true,
+	"ondragover": true,
+	"ondragstart": true,
+	"ondrop": true,
+	"ondurationchange": true,
+	"onemptied": true,
+	"onended": true,
+	"oninput": true,
+	"oninvalid": true,
+	"onkeydown": true,
+	"onkeypress": true,
+	"onkeyup": true,
+	"onload": true,
+	"onloadeddata": true,
+	"onloadedmetadata": true,
+	"onloadend": true,
+	"onloadstart": true,
+	"onmousedown": true,
+	"onmouseenter": true,
+	"onmouseleave": true,
+	"onmousemove": true,
+	"onmouseout": true,
+	"onmouseover": true,
+	"onmouseup": true,
+	"onwheel": true,
+	"onpause": true,
+	"onplay": true,
+	"onplaying": true,
+	"onprogress": true,
+	"onratechange": true,
+	"onreset": true,
+	"onresize": true,
+	"onscroll": true,
+	"onseeked": true,
+	"onseeking": true,
+	"onselect": true,
+	"onshow": true,
+	"onstalled": true,
+	"onsubmit": true,
+	"onsuspend": true,
+	"ontimeupdate": true,
+	"onvolumechange": true,
+	"onwaiting": true,
+	"onselectstart": true,
+	"ontoggle": true,
+	"onpointercancel": true,
+	"onpointerdown": true,
+	"onpointerup": true,
+	"onpointermove": true,
+	"onpointerout": true,
+	"onpointerover": true,
+	"onpointerenter": true,
+	"onpointerleave": true,
+	"ongotpointercapture": true,
+	"onlostpointercapture": true,
+	"onmozfullscreenchange": true,
+	"onmozfullscreenerror": true,
+	"onanimationcancel": true,
+	"onanimationend": true,
+	"onanimationiteration": true,
+	"onanimationstart": true,
+	"ontransitioncancel": true,
+	"ontransitionend": true,
+	"ontransitionrun": true,
+	"ontransitionstart": true,
+	"onwebkitanimationend": true,
+	"onwebkitanimationiteration": true,
+	"onwebkitanimationstart": true,
+	"onwebkittransitionend": true,
+	"onerror": true,
+	"onafterprint": true,
+	"onbeforeprint": true,
+	"onbeforeunload": true,
+	"onhashchange": true,
+	"onlanguagechange": true,
+	"onmessage": true,
+	"onmessageerror": true,
+	"onoffline": true,
+	"ononline": true,
+	"onpagehide": true,
+	"onpageshow": true,
+	"onpopstate": true,
+	"onstorage": true,
+	"onunload": true,
+	"cat_rtc": true,
+	"RTCDTMFSender": true,
+	"RTCStatsReport": true,
+	"RTCTrackEvent": true,
+	"RTCDataChannelEvent": true,
+	"RTCPeerConnectionIceEvent": true,
+	"RTCCertificate": true,
+	"RTCDTMFToneChangeEvent": true,
+	"RTCPeerConnection": true,
+	"RTCIceCandidate": true,
+	"RTCRtpReceiver": true,
+	"RTCRtpSender": true,
+	"RTCSessionDescription": true,
+	"cat_vr": true,
+	"VRStageParameters": true,
+	"VRFrameData": true,
+	"VRDisplay": true,
+	"VRDisplayEvent": true,
+	"VRFieldOfView": true,
+	"VRDisplayCapabilities": true,
+	"VREyeParameters": true,
+	"VRPose": true,
+	"cat_dom": true,
+	"DOMStringMap": true,
+	"DOMRectReadOnly": true,
+	"DOMException": true,
+	"DOMRect": true,
+	"DOMMatrix": true,
+	"DOMMatrixReadOnly": true,
+	"DOMPointReadOnly": true,
+	"DOMPoint": true,
+	"DOMQuad": true,
+	"DOMRequest": true,
+	"DOMParser": true,
+	"DOMTokenList": true,
+	"DOMStringList": true,
+	"DOMImplementation": true,
+	"DOMError": true,
+	"DOMRectList": true,
+	"DOMCursor": true,
+	"cat_idb": true,
+	"IDBFileRequest": true,
+	"IDBTransaction": true,
+	"IDBCursor": true,
+	"IDBFileHandle": true,
+	"IDBMutableFile": true,
+	"IDBKeyRange": true,
+	"IDBVersionChangeEvent": true,
+	"IDBObjectStore": true,
+	"IDBFactory": true,
+	"IDBCursorWithValue": true,
+	"IDBOpenDBRequest": true,
+	"IDBRequest": true,
+	"IDBIndex": true,
+	"IDBDatabase": true,
+	"cat_audio": true,
+	"AudioContext": true,
+	"AudioBuffer": true,
+	"AudioBufferSourceNode": true,
+	"Audio": true,
+	"MediaElementAudioSourceNode": true,
+	"AudioNode": true,
+	"BaseAudioContext": true,
+	"AudioListener": true,
+	"MediaStreamAudioSourceNode": true,
+	"OfflineAudioContext": true,
+	"AudioDestinationNode": true,
+	"AudioParam": true,
+	"MediaStreamAudioDestinationNode": true,
+	"OfflineAudioCompletionEvent": true,
+	"AudioStreamTrack": true,
+	"AudioScheduledSourceNode": true,
+	"AudioProcessingEvent": true,
+	"cat_gamepad": true,
+	"GamepadButton": true,
+	"GamepadHapticActuator": true,
+	"GamepadAxisMoveEvent": true,
+	"GamepadPose": true,
+	"GamepadEvent": true,
+	"Gamepad": true,
+	"GamepadButtonEvent": true,
+	"cat_media": true,
+	"MediaKeys": true,
+	"MediaKeyError": true,
+	"MediaSource": true,
+	"MediaDevices": true,
+	"MediaKeyStatusMap": true,
+	"MediaStreamTrackEvent": true,
+	"MediaRecorder": true,
+	"MediaQueryListEvent": true,
+	"MediaStream": true,
+	"MediaEncryptedEvent": true,
+	"MediaStreamTrack": true,
+	"MediaError": true,
+	"MediaStreamEvent": true,
+	"MediaQueryList": true,
+	"MediaKeySystemAccess": true,
+	"MediaDeviceInfo": true,
+	"MediaKeySession": true,
+	"MediaList": true,
+	"MediaRecorderErrorEvent": true,
+	"MediaKeyMessageEvent": true,
+	"cat_event2": true,
+	"SpeechSynthesisErrorEvent": true,
+	"BeforeUnloadEvent": true,
+	"CustomEvent": true,
+	"PageTransitionEvent": true,
+	"PopupBlockedEvent": true,
+	"CloseEvent": true,
+	"ProgressEvent": true,
+	"MutationEvent": true,
+	"MessageEvent": true,
+	"FocusEvent": true,
+	"TrackEvent": true,
+	"DeviceMotionEvent": true,
+	"TimeEvent": true,
+	"PointerEvent": true,
+	"UserProximityEvent": true,
+	"StorageEvent": true,
+	"DragEvent": true,
+	"MouseScrollEvent": true,
+	"EventSource": true,
+	"PopStateEvent": true,
+	"DeviceProximityEvent": true,
+	"SpeechSynthesisEvent": true,
+	"XMLHttpRequestEventTarget": true,
+	"ClipboardEvent": true,
+	"AnimationPlaybackEvent": true,
+	"DeviceLightEvent": true,
+	"BlobEvent": true,
+	"MouseEvent": true,
+	"WheelEvent": true,
+	"InputEvent": true,
+	"HashChangeEvent": true,
+	"DeviceOrientationEvent": true,
+	"CompositionEvent": true,
+	"KeyEvent": true,
+	"ScrollAreaEvent": true,
+	"KeyboardEvent": true,
+	"TransitionEvent": true,
+	"ErrorEvent": true,
+	"AnimationEvent": true,
+	"FontFaceSetLoadEvent": true,
+	"EventTarget": true,
+	"captureEvents": true,
+	"releaseEvents": true,
+	"Event": true,
+	"UIEvent": true,
+	"cat_other": false,
+	"undefined": false,
+	"Array": false,
+	"Boolean": false,
+	"JSON": false,
+	"Date": false,
+	"Math": false,
+	"Number": false,
+	"String": false,
+	"RegExp": false,
+	"Error": false,
+	"InternalError": false,
+	"EvalError": false,
+	"RangeError": false,
+	"ReferenceError": false,
+	"SyntaxError": false,
+	"TypeError": false,
+	"URIError": false,
+	"ArrayBuffer": true,
+	"Int8Array": true,
+	"Uint8Array": true,
+	"Int16Array": true,
+	"Uint16Array": true,
+	"Int32Array": true,
+	"Uint32Array": true,
+	"Float32Array": true,
+	"Float64Array": true,
+	"Uint8ClampedArray": true,
+	"Proxy": true,
+	"WeakMap": true,
+	"Map": true,
+	"Set": true,
+	"DataView": false,
+	"Symbol": false,
+	"SharedArrayBuffer": true,
+	"Intl": false,
+	"TypedObject": true,
+	"Reflect": true,
+	"SIMD": true,
+	"WeakSet": true,
+	"Atomics": true,
+	"Promise": true,
+	"WebAssembly": true,
+	"NaN": false,
+	"Infinity": false,
+	"isNaN": false,
+	"isFinite": false,
+	"parseFloat": false,
+	"parseInt": false,
+	"escape": false,
+	"unescape": false,
+	"decodeURI": false,
+	"encodeURI": false,
+	"decodeURIComponent": false,
+	"encodeURIComponent": false,
+	"uneval": false,
+	"BatteryManager": true,
+	"CanvasGradient": true,
+	"TextDecoder": true,
+	"Plugin": true,
+	"PushManager": true,
+	"ChannelMergerNode": true,
+	"PerformanceResourceTiming": true,
+	"ServiceWorker": true,
+	"TextTrackCueList": true,
+	"PerformanceEntry": true,
+	"TextTrackList": true,
+	"StyleSheet": true,
+	"PerformanceMeasure": true,
+	"DesktopNotificationCenter": true,
+	"Comment": true,
+	"DelayNode": true,
+	"XPathResult": true,
+	"CDATASection": true,
+	"MessageChannel": true,
+	"BiquadFilterNode": true,
+	"SpeechSynthesisUtterance": true,
+	"Crypto": true,
+	"Navigator": true,
+	"FileList": true,
+	"URLSearchParams": false,
+	"ServiceWorkerContainer": true,
+	"ValidityState": true,
+	"ProcessingInstruction": true,
+	"AbortSignal": true,
+	"FontFace": true,
+	"FileReader": true,
+	"Worker": true,
+	"External": true,
+	"ImageBitmap": true,
+	"TimeRanges": true,
+	"Option": true,
+	"TextTrack": true,
+	"Image": true,
+	"AnimationTimeline": true,
+	"VideoPlaybackQuality": true,
+	"VTTCue": true,
+	"Storage": true,
+	"XPathExpression": true,
+	"CharacterData": false,
+	"TextMetrics": true,
+	"AnimationEffectReadOnly": true,
+	"PerformanceTiming": false,
+	"PerformanceMark": true,
+	"ImageBitmapRenderingContext": true,
+	"Headers": true,
+	"Range": false,
+	"Rect": true,
+	"AnimationEffectTimingReadOnly": true,
+	"KeyframeEffect": true,
+	"Permissions": true,
+	"TextEncoder": true,
+	"ImageData": true,
+	"SpeechSynthesisVoice": true,
+	"StorageManager": true,
+	"TextTrackCue": true,
+	"WebSocket": true,
+	"DocumentType": true,
+	"XPathEvaluator": true,
+	"PerformanceNavigationTiming": true,
+	"IdleDeadline": true,
+	"FileSystem": true,
+	"FileSystemFileEntry": true,
+	"CacheStorage": true,
+	"MimeType": true,
+	"PannerNode": true,
+	"NodeFilter": true,
+	"StereoPannerNode": true,
+	"console": false,
+	"DynamicsCompressorNode": true,
+	"PaintRequest": true,
+	"RGBColor": true,
+	"FontFaceSet": false,
+	"PaintRequestList": true,
+	"FileSystemEntry": true,
+	"XMLDocument": false,
+	"SourceBuffer": false,
+	"Screen": true,
+	"NamedNodeMap": false,
+	"History": true,
+	"Response": true,
+	"AnimationEffectTiming": true,
+	"ServiceWorkerRegistration": true,
+	"CanvasRenderingContext2D": true,
+	"ScriptProcessorNode": true,
+	"FileSystemDirectoryReader": true,
+	"MimeTypeArray": true,
+	"CanvasCaptureMediaStream": true,
+	"Directory": true,
+	"mozRTCPeerConnection": true,
+	"PerformanceObserverEntryList": true,
+	"PushSubscriptionOptions": true,
+	"Text": false,
+	"IntersectionObserverEntry": true,
+	"SubtleCrypto": true,
+	"Animation": true,
+	"DataTransfer": true,
+	"TreeWalker": true,
+	"XMLHttpRequest": true,
+	"LocalMediaStream": true,
+	"ConvolverNode": true,
+	"WaveShaperNode": true,
+	"DataTransferItemList": false,
+	"Request": true,
+	"SourceBufferList": false,
+	"XSLTProcessor": true,
+	"XMLHttpRequestUpload": true,
+	"SharedWorker": true,
+	"Notification": false,
+	"DataTransferItem": true,
+	"AnalyserNode": true,
+	"mozRTCIceCandidate": true,
+	"PerformanceObserver": true,
+	"OfflineResourceList": true,
+	"FileSystemDirectoryEntry": true,
+	"DesktopNotification": false,
+	"DataChannel": true,
+	"IIRFilterNode": true,
+	"ChannelSplitterNode": true,
+	"File": true,
+	"ConstantSourceNode": true,
+	"CryptoKey": true,
+	"GainNode": true,
+	"AbortController": true,
+	"Attr": true,
+	"SpeechSynthesis": true,
+	"PushSubscription": false,
+	"XMLStylesheetProcessingInstruction": false,
+	"NodeIterator": true,
+	"VideoStreamTrack": true,
+	"XMLSerializer": true,
+	"CaretPosition": true,
+	"FormData": true,
+	"CanvasPattern": true,
+	"mozRTCSessionDescription": true,
+	"Path2D": true,
+	"PerformanceNavigation": true,
+	"URL": false,
+	"PluginArray": true,
+	"MutationRecord": true,
+	"WebKitCSSMatrix": true,
+	"PeriodicWave": true,
+	"DocumentFragment": true,
+	"DocumentTimeline": false,
+	"ScreenOrientation": true,
+	"BroadcastChannel": true,
+	"PermissionStatus": true,
+	"IntersectionObserver": true,
+	"Blob": true,
+	"MessagePort": true,
+	"BarProp": true,
+	"OscillatorNode": true,
+	"Cache": true,
+	"RadioNodeList": true,
+	"KeyframeEffectReadOnly": true,
+	"InstallTrigger": true,
+	"Function": false,
+	"Object": false,
+	"eval": true,
+	"Window": false,
+	"close": false,
+	"stop": false,
+	"focus": false,
+	"blur": false,
+	"open": true,
+	"alert": false,
+	"confirm": false,
+	"prompt": false,
+	"print": false,
+	"postMessage": true,
+	"getSelection": true,
+	"getComputedStyle": true,
+	"matchMedia": true,
+	"moveTo": false,
+	"moveBy": false,
+	"resizeTo": false,
+	"resizeBy": false,
+	"scroll": false,
+	"scrollTo": false,
+	"scrollBy": false,
+	"requestAnimationFrame": true,
+	"cancelAnimationFrame": true,
+	"getDefaultComputedStyle": false,
+	"scrollByLines": false,
+	"scrollByPages": false,
+	"sizeToContent": false,
+	"updateCommands": true,
+	"find": false,
+	"dump": true,
+	"setResizable": false,
+	"requestIdleCallback": false,
+	"cancelIdleCallback": false,
+	"btoa": true,
+	"atob": true,
+	"setTimeout": true,
+	"clearTimeout": true,
+	"setInterval": true,
+	"clearInterval": true,
+	"createImageBitmap": true,
+	"fetch": true,
+	"self": true,
+	"name": false,
+	"history": true,
+	"locationbar": true,
+	"menubar": true,
+	"personalbar": true,
+	"scrollbars": true,
+	"statusbar": true,
+	"toolbar": true,
+	"status": true,
+	"closed": true,
+	"frames": true,
+	"length": false,
+	"opener": true,
+	"parent": true,
+	"frameElement": true,
+	"navigator": true,
+	"external": true,
+	"applicationCache": true,
+	"screen": true,
+	"innerWidth": true,
+	"innerHeight": true,
+	"scrollX": true,
+	"pageXOffset": true,
+	"scrollY": true,
+	"pageYOffset": true,
+	"screenX": true,
+	"screenY": true,
+	"outerWidth": true,
+	"outerHeight": true,
+	"performance": true,
+	"mozInnerScreenX": true,
+	"mozInnerScreenY": true,
+	"devicePixelRatio": true,
+	"scrollMaxX": true,
+	"scrollMaxY": true,
+	"fullScreen": false,
+	"mozPaintCount": true,
+	"sidebar": false,
+	"crypto": true,
+	"speechSynthesis": true,
+	"localStorage": true,
+	"origin": true,
+	"isSecureContext": false,
+	"indexedDB": true,
+	"caches": true,
+	"sessionStorage": true,
+	"window": false,
+	"document": true,
+	"location": false,
+	"top": true,
+	"netscape": true,
+	"Node": true,
+	"Document": true,
+	"Performance": false,
+	"startProfiling": true,
+	"stopProfiling": true,
+	"pauseProfilers": true,
+	"resumeProfilers": true,
+	"dumpProfile": true,
+	"getMaxGCPauseSinceClear": true,
+	"clearMaxGCPauseAccumulator": true,
+	"Location": true,
+	"StyleSheetList": false,
+	"Selection": false,
+	"Element": true,
+	"AnonymousContent": false,
+	"MutationObserver": true,
+	"NodeList": true,
+	"StopIteration": true
+};
 
 // "The number of conditionals and loops must be at most 5" 
 var loops = ["ForInStatement","ForStatement","DoWhileStatement","WhileStatement","IfStatement","SwitchStatement"];
 
+/**
+*	Loop over a function and get a list of things being called.
+*
+*	Tests to see if the function calls itself.
+*	
+*	Note: If it is an anonmyous function, recursion isn't possible.
+*
+*/
+function get_function_names(input_node_src,scope){
+	var func_name = "";
+	var flag = true;
 
+	// The name of the function can't appear anywhere.
+	// No bracket suffix notation either.
+	console.log("Searching for identifier '"+scope+"' in this code:");
+	//console.log(input_node_src);
+	
+	var tokens = acorn_base.tokenizer(input_node_src);
+	var toke = tokens.getToken();
+	while(toke.type != acorn_base.tokTypes.eof){
+		if(toke.type.label == "name" && scope == toke.value){
+			return true;
+		}
+		toke = tokens.getToken();
+	}
+
+	return false;
+}
+/**
+*	Reads fname_data to determine if a function call is trivial
+*
+*/
+function test_function_name(name){
+	var res = fname_data[name];
+	if(res == false){
+		console.log("'"+name+"'"+" is trivial.");	
+		return false;
+	}
+	if(res == true){
+		console.log("%cNONTRIVIAL:'"+name+"'"+" is non-trivial.","color:red");	
+		return true;	
+	}
+	console.log("%cNONTRIVIAL:'"+name+"'"+" is probably user defined.","color:red");	
+	return false;
+
+}
 /**
 *	Rigorously determines if code is trivial or not based on the official triviality criterion 
 */
 function full_evaluate(script){
-	var ast = acorn.parse_dammit(script);
-	
+	var res = true;		
+
+	if(script === undefined || script == ""){
+		return true;
+	}
+	var ast = acorn.parse_dammit(script).body[0];
+
+	var flag = false;
 	var amtloops = 0;
-	var conditionals = 0;
-	var flag = true;
 
-
-	console.log(ast);
-
-	return true;
-	
-	walk.full(ast, node => {
-		if(flag){
-			if(node.type != "Literal"){
-				console.log("%c"+node.type+":","color:purple;");
-				console.log(script.substring(node["start"],node["end"]));
-			}
-
-			// Pretty sure this is bracket suffix notation
-			if(node.type == "MemberExpression"){
-				console.log("%c NONTRIVIAL: Bracket suffix notation.","color:red");
-				flag = false;				
-			}
-
-			// This is the beginning of some "object chain"
-			if(node.type == "ExpressionStatement"){
-				
-			}
-
-			if(node.arguments !== undefined){
-				console.log("%cCalls function:","color:white");
-				script.substring(node.start,node.end)
-			}
-
-			// "It does not declare an array more than 50 elements long."
-			// (what about dictionaries?)
-			if(node.type == "ArrayExpression"){
-
-				var len = 0;
-			
-				try{
-					var temp = script.substring(node["start"],node["end"]);
-					len = JSON.parse(temp).length;
-				} catch(e){
-					console.warn("Invalid array?");
-					len = 99;
-				}
-			
-				if(len > 50){
-					console.log("%c NONTRIVIAL: Array longer than 50 elements. ("+len+")","color:red");
-					flag = false;
-				}
-
-			}
-
-			// "The number of conditionals and loops must be at most 3."
-			for(var i = 0; i < loops.length; i++){
-				if(node.type == loops[i]){
-					amtloops++;
-					break;
-				}
-			}
-
-			if(amtloops > 3){
-				console.log("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
-				flag = false;
-			}
-
+	// COUNTS LOOPS AND CONDITIONALS
+	walk.simple(ast, {
+		ForInStatement(node){
+			if(amtloops > 3){return;}				
+			amtloops++;
+		},
+		ForStatement(node){
+			if(amtloops > 3){return;}
+			amtloops++;
+		},
+		DoWhileStatement(node){
+			if(amtloops > 3){return;}
+			amtloops++;
+		},
+		WhileStatement(node){
+			if(amtloops > 3){return;}
+			amtloops++;
+		},
+		IfStatement(node){
+			if(amtloops > 3){return;}
+			amtloops++;
+		},
+		SwitchStatement(node){
+			if(amtloops > 3){return;}
+			amtloops++;
 		}
 	});
 
-	if(flag == true){
-		console.log("%cScript is trivial.","color:green");
-	}	
+	if(amtloops > 3){
+		console.log("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
+		return false;
+	}
+	// Detect which objects are referenced and which functions are called
+	// Only cares about top level objects. Window is special because we will test its methods.
+	var nontrivial = false;
 
-	return flag;
+	walk.simple(ast, {
+		ExpressionStatement(node){
+			if(nontrivial == true){
+				return;
+			}
+			// Get the first thing in the expression	
+			if(node === undefined){
+				return;
+			}			
+			var lnode = node.expression;				
+			var last_name = "";
+			while(true){
+				// window.test()
+				if(lnode.type == "CallExpression"){
+					if(lnode.property !== undefined){
+						last_name = lnode.property.name;	
+					}
+					lnode = lnode.callee;
+				// window.test
+				}else if(lnode.type == "MemberExpression"){
+					last_name = lnode.property.name;
+					// This may be bracket suffix notation
+					lnode = lnode.object;			
+				// We should be at the first in the chain.		
+				}else if(lnode.type == "Identifier"){
+					// Since window is the global object, it is special
+					if(lnode.name == "window"){
+						nontrivial = test_function_name(last_name);
+						break;
+					} else{
+						nontrivial = test_function_name(lnode.name);
+						break;
+					}
+				}else if(lnode.type == "BinaryExpression"){
+					// This actually might not be valid. It can't be anything nontrivial.
+					console.log("%c Warn: syntax not valid","color:Red;")
+					break;
+				} else{
+					console.log("Unrecognized: "+lnode.type);
+					break;
+				}
+				//console.log(last_name+":"+lnode.name);
+			}
+		}
+	});
 
+	if(nontrivial == true){
+		return false;
+	}
+	return res;
 }
-//full_evaluate("if(true){}if(true){}if(true){}if(true){}");
-//full_evaluate("var test  =[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50];");
 
-var test = 'object[test];';
-full_evaluate(test);
-full_evaluate('object.test.method["something"];');
 /**
 *	Performs the initial pass on code to see if it needs to be completely parsed
 */
@@ -875,6 +1752,9 @@ function evaluate(script,name){
 	}
 	return [flag,reason+"<br>"];
 }
+
+
+
 function license_valid(matches){
 	if(matches.length != 4){
 		return [false, "malformed or unrecognized license tag"];

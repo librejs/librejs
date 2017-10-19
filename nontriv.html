@@ -7,21 +7,80 @@
 <script>
 window.onload = function (){
 	var s = Object.getOwnPropertyNames(window);
+
+	var kids = document.getElementById("categories").children;
+	for(var i = 0; i < kids.length; i++){
+		var checkbox = "<input name='opt' id='cat_"+kids[i].id+"' type='checkbox'></input>";
+		kids[i].insertAdjacentHTML("beforeend",checkbox+"Check entire category\n");
+		document.getElementById("cat_"+kids[i].id).addEventListener("click",function(){
+			var nontriv = document.getElementById(this.id.substring(4,this.id.length));
+			for(var j = 0; j < nontriv.children.length; j++){
+				if(this.checked){
+					nontriv.children[j].checked = true;
+				} else{
+					nontriv.children[j].checked = false;
+				}
+			}		
+		});
+	}
+
 	for(var i = 0; i < s.length; i++){
 		var checkbox = "<input name='opt' id='"+s[i]+"' type='checkbox'></input>";	
-		document.getElementById("input").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+
+		if(s[i].indexOf("HTML") == 0){
+			document.getElementById("html").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("CSS") == 0){
+			document.getElementById("css").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("SVG") == 0){
+			document.getElementById("svg").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("on") == 0){
+			document.getElementById("event").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("RTC") == 0){
+			document.getElementById("rtc").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("HTML") == 0){
+			document.getElementById("html").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("VR") == 0){
+			document.getElementById("vr").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("WebGL") == 0){
+			document.getElementById("webgl").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("DOM") == 0){
+			document.getElementById("dom").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("IDB") == 0){
+			document.getElementById("idb").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("Audio") != -1){
+			document.getElementById("audio").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("Gamepad") == 0){
+			document.getElementById("gamepad").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("Media") == 0){
+			document.getElementById("media").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else if(s[i].indexOf("Event") != -1){
+			document.getElementById("event2").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}else{
+			document.getElementById("other").insertAdjacentHTML("beforeend",checkbox + s[i] + "\n");
+		}
 	}
+
 	document.getElementById("gen").addEventListener("click",function(){
 		var temp = document.getElementsByName("opt");
 		var outputjson = {};
-		for(var i = 0; i < temp.length; i++){
-			if(temp[i].checked){
-				outputjson[temp[i].id] = "non-trivial";
-			}else{
-				outputjson[temp[i].id] = "trivial";
+		for(var i = 1; i < temp.length; i++){
+			outputjson[temp[i].id] = temp[i].checked;
+		}
+		document.getElementById("output").innerHTML = JSON.stringify(outputjson, null, '\t');
+	});
+	document.getElementById("read").addEventListener("click",function(){
+		var inputjson = JSON.parse(document.getElementById("injson").value);
+		console.log(inputjson);
+		var keys = Object.keys(inputjson);
+		for(var i = 0; i < keys.length; i++){
+			console.log(inputjson[keys[i]]);
+			if(inputjson[keys[i]] == true){
+				document.getElementById(keys[i]).checked = true;
+			} else{
+				document.getElementById(keys[i]).checked = false;
 			}
 		}
-		document.getElementById("output").innerHTML = JSON.stringify(outputjson);
+		return;
 	});
 }
 </script>
@@ -32,11 +91,45 @@ This page allows us to generate the allowed/disallowed object JSON.
 We know it's up to date because it iterates over all keys of the window variable (which is the global object for browsers)
 <br>
 <br>
-(Checked = nontrivial)
+(True = nontrivial, false = trivial)
 <br><br><br>
+<textarea id="injson" rows="4" cols="50"></textarea> 
+<br>
+<input id="read" type="button" value="Load JSON"></input>
+<br>
 <input id="gen" type="button" value="Generate"></input>
 <br>
 <pre id="output"></pre>
-<pre id="input"></pre>
+<div id="categories">
 
+<pre id="webgl">WebGL
+</pre>
+<pre id="svg">SVG
+</pre>
+<pre id="html">HTML
+</pre>
+<pre id="css">CSS
+</pre>
+<pre id="event">Events
+</pre>
+<pre id="rtc">WebRTC
+</pre>
+<pre id="vr">VR
+</pre>
+<pre id="dom">DOM
+</pre>
+<pre id="idb">IDB
+</pre>
+<pre id="audio">Audio
+</pre>
+<pre id="gamepad">Gamepad
+</pre>
+<pre id="media">Media
+</pre>
+<pre id="event2">Other events
+</pre>
+<pre id="other">All else
+</pre>
+
+</div>
 </body>
