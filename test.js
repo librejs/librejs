@@ -834,50 +834,22 @@ var fname_data = {
 };
 
 
-var DEBUG = true;
+//************************Comes from HTML file index.html's script test.js****************************
+
 /**
-*	Loop over a function and get a list of things being called.
+*	If this is true, it evaluates entire scripts instead of returning as soon as it encounters a violation.
 *
-*	Tests to see if the function calls itself.
-*	
-*	Note: If it is an anonmyous function, recursion isn't possible.
+*	Also, it controls whether or not this part of the code logs to the console.
 *
 */
-function get_function_names(input_node_src,scope){
-	var func_name = "";
-	var flag = true;
+var DEBUG = true;
+console.log("DEBUG:"+DEBUG);
 
-	// The name of the function can't appear anywhere.
-	// No bracket suffix notation either.
-	console.log("Searching for identifier '"+scope+"'");
-	
-	var tokens = acorn_base.tokenizer(input_node_src);
-	var toke = tokens.getToken();
-	while(toke.type != acorn_base.tokTypes.eof){
-		if(toke.type.label == "name" && scope == toke.value){
-			return true;
-		}
-		toke = tokens.getToken();
+function dbg_print(a,b){
+	if(DEBUG == true){
+		console.log(a,b)
 	}
-
-	return false;
 }
-
-function test_function_name(name){
-	var res = fname_data[name];
-	if(res == false){
-		console.log("'"+name+"'"+" is trivial.");	
-		return false;
-	}
-	if(res == true){
-		console.log("%cNONTRIVIAL:'"+name+"'"+" is non-trivial.","color:red");	
-		return true;	
-	}
-	console.log("%cNONTRIVIAL:'"+name+"'"+" is probably user defined.","color:red");	
-	return false;
-
-}
-//746
 
 function full_evaluate(script){
 		var res = true;		
@@ -889,121 +861,109 @@ function full_evaluate(script){
 		var flag = false;
 		var amtloops = 0;
 
-		// COUNTS LOOPS AND CONDITIONALS
-		walk.simple(ast, {
-			ForInStatement(node){
-				if(amtloops > 3){return;}				
-				amtloops++;
-			},
-			ForStatement(node){
-				if(amtloops > 3){return;}
-				amtloops++;
-			},
-			DoWhileStatement(node){
-				if(amtloops > 3){return;}
-				amtloops++;
-			},
-			WhileStatement(node){
-				if(amtloops > 3){return;}
-				amtloops++;
-			},
-			IfStatement(node){
-				if(amtloops > 3){return;}
-				amtloops++;
-			},
-			SwitchStatement(node){
-				if(amtloops > 3){return;}
-				amtloops++;
-			}
-		});
+		var loopkeys = {"for":true,"if":true,"while":true,"switch":true};
+		var tokens = acorn_base.tokenizer(script);
+		var toke = tokens.getToken();
 
-		if(amtloops > 3){
-			console.log("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
-			if(DEBUG == false){			
+		/**
+		* Given the end of an identifer token, it tests for bracket suffix notation
+		*/
+		function being_called(end){
+			var i = 0;
+			while(script.charAt(end+i).match(/\s/g) !== null){
+				i++;
+				if(i >= script.length-1){
+					return false;
+				}
+			}
+			if(script.charAt(end+i) == "("){
+				return true;
+			}else{
 				return false;
-			}		
+			}
 		}
-		// Detect which objects are referenced and which functions are called
-		// Only cares about top level objects. Window is special because we will test its methods.
-		var nontrivial = false;
+		/**
+		* Given the end of an identifer token, it tests for parentheses
+		*/
+		function is_bsn(end){
+			var i = 0;
+			while(script.charAt(end+i).match(/\s/g) !== null){
+				i++;
+				if(i >= script.length-1){
+					return false;
+				}
+			}
+			if(script.charAt(end+i) == "["){
+				return true;
+			}else{
+				return false;
+			}
+		}
+		while(toke.type != acorn_base.tokTypes.eof){
+			console.log(toke);
+			if(toke.type.keyword !== undefined){
+				// This type of loop detection ignores functional loop alternatives and ternary operators
+				dbg_print("Keyword:"+toke.type.keyword);
 
-		// Has a while loop to cut down on recursion when not needed 
-		function read(lnode){
-			while(true){
-				// window.test()
-				if(lnode.type == "CallExpression"){
-					if(lnode.property !== undefined){
-						last_name = lnode.property.name;	
+				if(toke.type.keyword == "function"){
+					dbg_print("%c NONTRIVIAL: Function declaration.","color:red");
+					if(DEBUG == false){			
+						return false;
+					}		
+				}
+
+				if(loopkeys[toke.type.keyword] !== undefined){
+					amtloops++;
+					if(amtloops > 3){
+						dbg_print("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
+						if(DEBUG == false){			
+							return false;
+						}		
 					}
-					lnode = lnode.callee;
-				// window.test
-				}else if(lnode.type == "MemberExpression"){
-					last_name = lnode.property.name;
-					// This may be bracket suffix notation
-					lnode = lnode.object;			
-				// We should be at the first in the chain.		
-				}else if(lnode.type == "Identifier"){
-					// Since window is the global object, it is special
-					if(lnode.name == "window"){
-						return test_function_name(last_name);
-					} else{
-						return test_function_name(lnode.name);
+				}
+			}else if(toke.value !== undefined){
+				var status = fname_data[toke.value];
+				if(status === true){ // is the identifier banned?				
+					dbg_print("%c NONTRIVIAL: nontrivial token: '"+toke.value+"'","color:red");
+					if(DEBUG == false){			
+						return false;
+					}	
+				}else if(status === false){// is the identifier not banned?
+					// Is there bracket suffix notation?
+					if(is_bsn(toke.end)){
+						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
+						if(DEBUG == false){			
+							return false;
+						}	
 					}
-				}else if(lnode.type == "BinaryExpression"){
-					// recurse on left side
-					if(read(lnode.left) == true){
-						return true;
+				}else if(status === undefined){// is the identifier user defined?
+					// Are arguments being passed to a user defined variable?
+					if(being_called(toke.end)){
+						dbg_print("%c NONTRIVIAL: User defined variable '"+toke.value+"' called as function","color:red");
+						if(DEBUG == false){			
+							return false;
+						}	
 					}
-					// continue on right side
-					last_name = lnode.operator;
-					// This may be bracket suffix notation
-					lnode = lnode.right;
-				}else if(lnode.type == "AssignmentExpression"){
-					// recurse on left side
-					if(read(lnode.left) == true){
-						return true;
+					// Is there bracket suffix notation?
+					if(is_bsn(toke.end)){
+						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
+						if(DEBUG == false){			
+							return false;
+						}	
 					}
-					// continue on right side
-					last_name = lnode.operator;
-					// This may be bracket suffix notation
-					lnode = lnode.right;	
-				}else if(lnode.type == "FunctionExpression"){
-					console.log("%cDefines a function.","color:red");
-					return true;
 				}else{
-					console.log("Unrecognized:");
-					console.log(lnode);
-					return;
+					dbg_print("trivial token:"+toke.value);
 				}
-				//console.log(last_name+":"+lnode.name);
 			}
-
+			// If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets 
+			toke = tokens.getToken();
 		}
 
-		walk.simple(ast, {
-			ExpressionStatement(node){
-				if(nontrivial == true && DEBUG == false){
-					return;
-				}
-				// Get the first thing in the expression	
-				if(node === undefined){
-					return;
-				}
-				var lnode = node.expression;				
-				var last_name = "";
-				console.log("%cReading ExpressionStatement","color:green");
-				read(lnode,last_name);
-			}, FunctionExpression(node){
-				// 
-			}
-		});
-
-		if(nontrivial == true){
-			return false;
-		}
-
+		dbg_print("%cAppears to be trivial.","color:green;");
 		return true;
 }
+//****************************************************************************************************
+
 window.onload = function () {
 	document.getElementById("parse").addEventListener("click",function(){
 		var script = document.getElementById("input").value;
@@ -1011,6 +971,5 @@ window.onload = function () {
 		document.getElementById("output").innerHTML = JSON.stringify(ast, null, '\t'); // Indented with tab
 		document.getElementById("output").innerHTML = full_evaluate(script) + "\n\n" + document.getElementById("output").innerHTML;
 	});
-
 }
 
