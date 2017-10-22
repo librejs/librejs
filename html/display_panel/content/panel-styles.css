@@ -32,7 +32,6 @@ body {
     overflow-y:visible;
     color:#000;
 }
-
 .libre {
     width:230px;
     height:104px;
@@ -106,7 +105,7 @@ ul.blocked-js ul li, ul.accepted-js ul li, ul.dryrun-js ul li {
     cursor: pointer;
     text-align: center;
     text-decoration: none;
-    font: 14px/100% Arial, Helvetica, sans-serif;
+    font: 10px/100% Arial, Helvetica, sans-serif;
     padding: .5em 2em .55em;
     border-radius: .5em;
 }

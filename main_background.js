@@ -5,6 +5,23 @@ var jssha = require('jssha');
 var walk = require("acorn/dist/walk");
 
 console.log("main_background.js");
+/**
+*	If this is true, it evaluates entire scripts instead of returning as soon as it encounters a violation.
+*
+*	Also, it controls whether or not this part of the code logs to the console.
+*
+*/
+var DEBUG = false;
+
+function dbg_print(a,b){
+	if(DEBUG == true){
+		if(b === undefined){
+			console.log(a);
+		} else{
+			console.log(a,b);
+		}
+	}
+}
 
 /**
 *	Wrapper around crypto lib
@@ -234,12 +251,12 @@ function options_listener(changes, area){
 	// The cache must be flushed when settings are changed
 	// TODO: See if this can be minimized
 	function flushed(){
-		console.log("cache flushed");
+		dbg_print("cache flushed");
 	}	
 	//var flushingCache = webex.webRequest.handlerBehaviorChanged(flushed);
 	
 
-	console.log("Items updated in area" + area +": ");
+	dbg_print("Items updated in area" + area +": ");
 
 	var changedItems = Object.keys(changes);
 	var changed_items = "";
@@ -247,7 +264,7 @@ function options_listener(changes, area){
 		var item = changedItems[i];		
 		changed_items += item + ",";
 	}
-	console.log(changed_items);
+	dbg_print(changed_items);
 
 }
 /**
@@ -258,10 +275,10 @@ function options_listener(changes, area){
 var active_connections = {};
 var unused_data = {};
 function open_popup_tab(data){
-	console.log(data);
+	dbg_print(data);
 	function gotPopup(popupURL){
 		var creating = webex.tabs.create({"url":popupURL},function(a){
-			console.log("[TABID:"+a["id"]+"] creating unused data entry from parent window's content");
+			dbg_print("[TABID:"+a["id"]+"] creating unused data entry from parent window's content");
 			unused_data[a["id"]] = data;
 		});
 	}
@@ -277,7 +294,7 @@ function open_popup_tab(data){
 */
 function debug_delete_local(){
 	webex.storage.local.clear();
-	console.log("Local storage cleared");
+	dbg_print("Local storage cleared");
 }
 
 /**
@@ -287,13 +304,13 @@ function debug_delete_local(){
 */
 function debug_print_local(){
 	function storage_got(items){
-		console.log("%c Local storage: ", 'color: red;');
+		dbg_print("%c Local storage: ", 'color: red;');
 		for(var i in items){
-			console.log("%c "+i+" = "+items[i], 'color: blue;');
+			dbg_print("%c "+i+" = "+items[i], 'color: blue;');
 		}
 	}
-	console.log("%c Variable 'unused_data': ", 'color: red;');
-	console.log(unused_data);
+	dbg_print("%c Variable 'unused_data': ", 'color: red;');
+	dbg_print(unused_data);
 	webex.storage.local.get(storage_got);
 }
 
@@ -388,15 +405,15 @@ function update_popup(tab_id,blocked_info,update=false){
 				//console.log("Script " + blocked_info[type][script_arr][0] + " isn't whitelisted or blacklisted");			
 			}
 		}		
-		console.log(new_blocked_data);
+		dbg_print(new_blocked_data);
 		//***********************************************************************************************//
 		// store the blocked info until it is opened and needed
 		if(update == false && active_connections[tab_id] === undefined){
-			console.log("[TABID:"+tab_id+"]"+"Storing blocked_info for when the browser action is opened or asks for it.");
+			dbg_print("[TABID:"+tab_id+"]"+"Storing blocked_info for when the browser action is opened or asks for it.");
 			unused_data[tab_id] = new_blocked_data; 
 		} else{
 			unused_data[tab_id] = new_blocked_data; 
-			console.log("[TABID:"+tab_id+"]"+"Sending blocked_info directly to browser action");
+			dbg_print("[TABID:"+tab_id+"]"+"Sending blocked_info directly to browser action");
 			active_connections[tab_id].postMessage({"show_info":new_blocked_data});
 			delete active_connections[tab_id];
 		}
@@ -548,7 +565,6 @@ function get_domain(url){
 	return domain;
 }
 
-
 /**
 *
 *	This is the callback where the content scripts of the browser action will contact the background script.
@@ -635,11 +651,11 @@ function connected(p) {
 		}
 		function logTabs(tabs) {
 			if(contact_finder){
-				console.log("[TABID:"+tab_id+"] Injecting contact finder");
+				dbg_print("[TABID:"+tab_id+"] Injecting contact finder");
 				//inject_contact_finder(tabs[0]["id"]);
 			}
 			if(update){
-				console.log("%c updating tab "+tabs[0]["id"],"color: red;");
+				dbg_print("%c updating tab "+tabs[0]["id"],"color: red;");
 				update_popup(tabs[0]["id"],unused_data[tabs[0]["id"]],true);
 				active_connections[tabs[0]["id"]] = p;
 			}
@@ -648,13 +664,13 @@ function connected(p) {
 				var tab_id = tab["id"];
 				if(unused_data[tab_id] !== undefined){
 					// If we have some data stored here for this tabID, send it
-					console.log("[TABID:"+tab_id+"]"+"Sending stored data associated with browser action");								
+					dbg_print("[TABID:"+tab_id+"]"+"Sending stored data associated with browser action");								
 					p.postMessage({"show_info":unused_data[tab_id]});
 				} else{
 					// create a new entry
 					unused_data[tab_id] = {"url":tab["url"],"blocked":"","accepted":""};
 					p.postMessage({"show_info":unused_data[tab_id]});							
-					console.log("[TABID:"+tab_id+"]"+"No data found, creating a new entry for this window.");	
+					dbg_print("[TABID:"+tab_id+"]"+"No data found, creating a new entry for this window.");	
 				}
 			}
 		}
@@ -670,7 +686,7 @@ function connected(p) {
 *
 */
 function delete_removed_tab_info(tab_id, remove_info){
-	console.log("[TABID:"+tab_id+"]"+"Deleting stored info about closed tab");
+	dbg_print("[TABID:"+tab_id+"]"+"Deleting stored info about closed tab");
 	if(unused_data[tab_id] !== undefined){
 		delete unused_data[tab_id];
 	}
@@ -1555,25 +1571,10 @@ var fname_data = {
 };
 //************************Comes from HTML file index.html's script test.js****************************
 
-
-/**
-*	If this is true, it evaluates entire scripts instead of returning as soon as it encounters a violation.
-*
-*	Also, it controls whether or not this part of the code logs to the console.
-*
-*/
-var DEBUG = true;
-
-function dbg_print(a){
-	if(DEBUG == true){
-		console.log(a)
-	}
-}
-
 function full_evaluate(script){
 		var res = true;		
 		if(script === undefined || script == ""){
-			return true;
+			return [true,"Harmless null script"];		
 		}
 
 		var ast = acorn.parse_dammit(script).body[0];
@@ -1582,11 +1583,12 @@ function full_evaluate(script){
 		var amtloops = 0;
 
 		var loopkeys = {"for":true,"if":true,"while":true,"switch":true};
+		var operators = {"||":true,"&&":true,"=":true,"==":true,"++":true,"--":true,"+=":true,"-=":true,"*":true};
 		try{
 			var tokens = acorn_base.tokenizer(script);	
 		}catch(e){
 			console.warn("Tokenizer could not be initiated (probably invalid code)");
-			return false;		
+			return [false,"Tokenizer could not be initiated (probably invalid code)"];		
 		}
 		try{
 			var toke = tokens.getToken();
@@ -1594,7 +1596,6 @@ function full_evaluate(script){
 			console.warn("couldn't get first token (probably invalid code)");
 			console.warn("Continuing evaluation");
 		}
-		var toke = tokens.getToken();
 
 		/**
 		* Given the end of an identifer token, it tests for bracket suffix notation
@@ -1630,15 +1631,16 @@ function full_evaluate(script){
 				return false;
 			}
 		}
+		var error_count = 0;
 		while(toke.type != acorn_base.tokTypes.eof){
 			if(toke.type.keyword !== undefined){
 				// This type of loop detection ignores functional loop alternatives and ternary operators
-				dbg_print("Keyword:"+toke.type.keyword);
+				//dbg_print("Keyword:"+toke.type.keyword);
 
 				if(toke.type.keyword == "function"){
 					dbg_print("%c NONTRIVIAL: Function declaration.","color:red");
 					if(DEBUG == false){			
-						return false;
+						return [false,"NONTRIVIAL: Function declaration."];
 					}		
 				}
 
@@ -1647,7 +1649,7 @@ function full_evaluate(script){
 					if(amtloops > 3){
 						dbg_print("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
 						if(DEBUG == false){			
-							return false;
+							return [false,"NONTRIVIAL: Too many loops/conditionals."];
 						}		
 					}
 				}
@@ -1656,29 +1658,31 @@ function full_evaluate(script){
 				if(status === true){ // is the identifier banned?				
 					dbg_print("%c NONTRIVIAL: nontrivial token: '"+toke.value+"'","color:red");
 					if(DEBUG == false){			
-						return false;
+						return [false,"NONTRIVIAL: nontrivial token: '"+toke.value+"'"];
 					}	
 				}else if(status === false){// is the identifier not banned?
 					// Is there bracket suffix notation?
-					if(is_bsn(toke.end)){
-						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-						if(DEBUG == false){			
-							return false;
-						}	
+					if(operators[toke.value] === undefined){					
+						if(is_bsn(toke.end)){
+							dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
+							if(DEBUG == false){			
+								return [false,"%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
+							}	
+						}
 					}
 				}else if(status === undefined){// is the identifier user defined?
 					// Are arguments being passed to a user defined variable?
 					if(being_called(toke.end)){
 						dbg_print("%c NONTRIVIAL: User defined variable '"+toke.value+"' called as function","color:red");
 						if(DEBUG == false){			
-							return false;
+							return [false,"NONTRIVIAL: User defined variable '"+toke.value+"' called as function"];
 						}	
 					}
 					// Is there bracket suffix notation?
 					if(is_bsn(toke.end)){
 						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
 						if(DEBUG == false){			
-							return false;
+							return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
 						}	
 					}
 				}else{
@@ -1689,13 +1693,15 @@ function full_evaluate(script){
 			try{
 				toke = tokens.getToken();
 			}catch(e){
-				console.warn("Tokenizer error (probably invalid code)");
+				dbg_print("Denied script because it cannot be parsed.");
+				return [false,"NONTRIVIAL: Cannot be parsed."];
 				console.warn("Continuing evaluation");
+				error_count++;
 			}
 		}
 
 		dbg_print("%cAppears to be trivial.","color:green;");
-		return true;
+		return [true,"Script appears to be trivial."];
 }
 
 
@@ -1726,34 +1732,28 @@ function evaluate(script,name){
 	temp = temp.replace(/".+?"+/gm,'"string"');
 	temp = temp.replace(ml_comment,"");
 	temp = temp.replace(il_comment,"");
-	console.log("%c ------evaluation results for "+ name +"------","color:white");
-	console.log("Script accesses reserved objects?");
+	dbg_print("%c ------evaluation results for "+ name +"------","color:white");
+	dbg_print("Script accesses reserved objects?");
 	var flag = true;
 	var reason = ""
 	// 	This is where individual "passes" are made over the code
 	for(var i = 0; i < reserved_objects.length; i++){
 		var res = reserved_object_regex(reserved_objects[i]).exec(temp);
 		if(res != null){
-			console.log("%c fail","color:red;");
+			dbg_print("%c fail","color:red;");
 			flag = false;		
 			reason = "Script uses a reserved object (" + reserved_objects[i] + ")";
 		}
 	}
 	if(flag){
-		console.log("%c pass","color:green;");
+		dbg_print("%c pass","color:green;");
 	} else{
 		return [flag,reason+"<br>"];
 	}
 	
 	var temp = full_evaluate(temp);
-	flag = temp[0];
-	reason = flag[1];
-
-	// If flag is set true at this point, the script is trivial
-	if(flag){
-		reason = "Script was determined to be trivial.";
-	}
-	return [flag,reason+"<br>"];
+	temp[1] = temp[1] + "<br>";
+	return temp;
 }
 
 
@@ -1829,7 +1829,7 @@ function license_read(script_src,name){
 		// TODO: support multiline comments
 		var matches_end = /\/\/\s*?(@license-end)/gm.exec(unedited_src);
 		if(matches_end == null){
-			console.log("ERROR: @license with no @license-end");
+			dbg_print("ERROR: @license with no @license-end");
 			return [false,"\n/*\n ERROR: @license with no @license-end \n*/\n","ERROR: @license with no @license-end"];
 		}
 		var endtag_end_index = matches_end["index"]+matches_end[0].length;
@@ -1890,7 +1890,7 @@ function get_script(response,url,tabid,wl,index=-1){
 		if(unused_data[tabid]["blacklisted"] !== undefined){
 			badge_str += unused_data[tabid]["blacklisted"].length;
 		}
-		console.log("amt. blocked on page:"+badge_str);
+		dbg_print("amt. blocked on page:"+badge_str);
 		if(badge_str > 0 || verdict == false){
 			webex.browserAction.setBadgeText({
 				text: "GRR",
@@ -2037,7 +2037,7 @@ function edit_html(html,url,tabid,wl){
 			}
 		}
 
-		console.log("Analyzing "+total_scripts+" inline scripts...");
+		dbg_print("Analyzing "+total_scripts+" inline scripts...");
 
 		for(var i = 0; i < scripts.length; i++){
 			if(scripts[i].src == ""){
@@ -2059,7 +2059,7 @@ function edit_html(html,url,tabid,wl){
 		}
 
 		if(total_scripts == 0){
-			console.log("Nothing to analyze.");
+			dbg_print("Nothing to analyze.");
 			resolve(remove_noscripts(html_doc));
 		}
 
@@ -2073,14 +2073,14 @@ function read_document(a){
 	
 	if(unused_data[a["tabId"]] !== undefined && unused_data[a["tabId"]]["url"] != get_domain(a["url"])){
 		delete unused_data[a["tabId"]];
-		console.log("Page Changed!!!");
+		dbg_print("Page Changed!!!");
 	}
 	var str = "";
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
 	var encoder = new TextEncoder(); // TODO: make sure this doesn't cause undeclared decoding
 	filter.onerror = event => {
-		console.log("%c Error in getting document","color:red");
+		dbg_print("%c Error in getting document","color:red");
 	}
 	filter.onstop = event => {
 		var test = new ArrayBuffer();
@@ -2089,7 +2089,7 @@ function read_document(a){
 		res.then(function(whitelisted){
 			var edit_page;
 			if(whitelisted == true){
-				console.log("WHITELISTED");
+				dbg_print("WHITELISTED");
 				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
 				filter.write(encoder.encode(str));
 				filter.disconnect();
@@ -2180,7 +2180,7 @@ function test_url_whitelisted(url){
 */
 function inject_contact_finder(tab_id){
 	function executed(result) {
-	  console.log("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
+	  dbg_print("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
 	}
 	var executing = webex.tabs.executeScript(tab_id, {file: "/contact_finder.js"}, executed);
 }
@@ -2196,8 +2196,8 @@ function add_csv_whitelist(domain){
 		} else{
 			items["pref_whitelist"] += "," + domain + "*";		
 		}
-		console.log("New CSV whitelist:");
-		console.log(items["pref_whitelist"]);
+		dbg_print("New CSV whitelist:");
+		dbg_print(items["pref_whitelist"]);
 		webex.storage.local.set({"pref_whitelist":items["pref_whitelist"]});
 	}
 	webex.storage.local.get(storage_got);	
@@ -2212,7 +2212,7 @@ function remove_csv_whitelist(domain){
 			domain = domain + "\\*";
 			domain.replace(/\./g,"\.");
 			// remove domain
-			console.log(new RegExp(domain,"g"));
+			dbg_print(new RegExp(domain,"g"));
 			items["pref_whitelist"] = items["pref_whitelist"].replace(new RegExp(domain,"g"),"")
 			// if an entry was deleted, it will leave an extra comma
 			items["pref_whitelist"] = items["pref_whitelist"].replace(/,+/g,",");
@@ -2221,8 +2221,8 @@ function remove_csv_whitelist(domain){
 				items["pref_whitelist"] = items["pref_whitelist"].substr(0,items["pref_whitelist"].length-2);
 			}
 		}
-		console.log("New CSV whitelist:");
-		console.log(items["pref_whitelist"]);
+		dbg_print("New CSV whitelist:");
+		dbg_print(items["pref_whitelist"]);
 		webex.storage.local.set({"pref_whitelist":items["pref_whitelist"]});
 	}
 	webex.storage.local.get(storage_got);	
