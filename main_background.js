@@ -1569,7 +1569,7 @@ var fname_data = {
 	"NodeList": true,
 	"StopIteration": true
 };
-//************************Comes from HTML file index.html's script test.js****************************
+//************************this part can be tested in the HTML file index.html's script test.js****************************
 
 function full_evaluate(script){
 		var res = true;		
@@ -1679,11 +1679,13 @@ function full_evaluate(script){
 						}	
 					}
 					// Is there bracket suffix notation?
-					if(is_bsn(toke.end)){
-						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-						if(DEBUG == false){			
-							return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-						}	
+					if(operators[toke.value] === undefined){					
+						if(is_bsn(toke.end)){
+							dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
+							if(DEBUG == false){			
+								return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
+							}	
+						}
 					}
 				}else{
 					dbg_print("trivial token:"+toke.value);
@@ -1695,8 +1697,6 @@ function full_evaluate(script){
 			}catch(e){
 				dbg_print("Denied script because it cannot be parsed.");
 				return [false,"NONTRIVIAL: Cannot be parsed."];
-				console.warn("Continuing evaluation");
-				error_count++;
 			}
 		}
 

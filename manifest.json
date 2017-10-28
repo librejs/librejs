@@ -3,11 +3,11 @@
   "name": "GNU LibreJS [webExtensions]",
   "short_name": "LibreJS [experimental]",
   "version": "7.0",
-  "author": "See file 'authors'",
+  "author": "various",
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
     "gecko": {
-	  "id": "bug-librejs@gnu.org",
+	  "id": "librejs_webex@gnu.org",
 	  "strict_min_version": "42.0"
     }
   },
