@@ -1,0 +1,7 @@
+The file test.js is set up to run the same code that the background script uses to evaluate Javascript.
+
+To use, copy the appropriate functions from main_background.js ("full_evaluate" and anything that it references). Then, build the script with browserify by running:
+
+browserify test.js -o test_bundle.js
+
+and load the file "index.js" with a web browser.

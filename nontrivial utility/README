@@ -1,0 +1,4 @@
+
+A utility that generates the JSON that the background script uses to determine if something is user defined, trivial or nontrivial. 
+
+It is important to recognize that the objects that this script finds are likely dependent on what browser this script is running on since it gets the list by reading the contents of the global object. Make sure this is run on an up to date browser.

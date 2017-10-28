@@ -1,5 +1,7 @@
-Generates the default whitelist. 
+Script by Ethan Dorta
 
-To run this: 
+Generates the default whitelist. To run: 
 
-$ node index.js
+$ node index.js > output
+
+Then, just copy the contents of the file "output" to the appropriate place in main_background.js.

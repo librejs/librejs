@@ -1,3 +1,23 @@
+/**
+* GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+* *
+* Copyright (C) 2017 Nathan Nichols
+*
+* This file is part of GNU LibreJS.
+*
+* GNU LibreJS is free software: you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* GNU LibreJS is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 var acorn_base = require("acorn");
 var acorn = require('acorn/dist/acorn_loose');
@@ -1653,6 +1673,9 @@ function full_evaluate(script){
 						}		
 					}
 				}
+			}else if(toke.value !== undefined && operators[toke.value] !== undefined){
+				// It's just an operator. Javascript doesn't have operator overloading so it must be some
+				// kind of primitive (I.e. a number)
 			}else if(toke.value !== undefined){
 				var status = fname_data[toke.value];
 				if(status === true){ // is the identifier banned?				
@@ -1662,13 +1685,11 @@ function full_evaluate(script){
 					}	
 				}else if(status === false){// is the identifier not banned?
 					// Is there bracket suffix notation?
-					if(operators[toke.value] === undefined){					
-						if(is_bsn(toke.end)){
-							dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-							if(DEBUG == false){			
-								return [false,"%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-							}	
-						}
+					if(is_bsn(toke.end)){
+						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
+						if(DEBUG == false){			
+							return [false,"%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
+						}	
 					}
 				}else if(status === undefined){// is the identifier user defined?
 					// Are arguments being passed to a user defined variable?
@@ -1679,13 +1700,11 @@ function full_evaluate(script){
 						}	
 					}
 					// Is there bracket suffix notation?
-					if(operators[toke.value] === undefined){					
-						if(is_bsn(toke.end)){
-							dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-							if(DEBUG == false){			
-								return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-							}	
-						}
+					if(is_bsn(toke.end)){
+						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
+						if(DEBUG == false){			
+							return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
+						}	
 					}
 				}else{
 					dbg_print("trivial token:"+toke.value);
@@ -1949,7 +1968,7 @@ function read_script(a){
 
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
-	var encoder = new TextEncoder(); // TODO: make sure this doesn't cause undeclared decoding
+	var encoder = new TextEncoder();
 
 	filter.ondata = event => {
 		var str = decoder.decode(event.data, {stream: true});
@@ -2078,7 +2097,7 @@ function read_document(a){
 	var str = "";
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
-	var encoder = new TextEncoder(); // TODO: make sure this doesn't cause undeclared decoding
+	var encoder = new TextEncoder();
 	filter.onerror = event => {
 		dbg_print("%c Error in getting document","color:red");
 	}
