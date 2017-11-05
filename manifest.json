@@ -7,8 +7,8 @@
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
     "gecko": {
-	  "id": "librejs_webex@gnu.org",
-	  "strict_min_version": "42.0"
+	  "id": "librejs7@gnu.org",
+	  "strict_min_version": "57.0"
     }
   },
   "icons":{
