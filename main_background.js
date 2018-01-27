@@ -1968,7 +1968,7 @@ function get_script(response,url,tabid,wl,index=-1){
 }
 function block_ga(a){
 	console.log(a.url);
-	// This is actually just an HTML page
+	// This is just an HTML page
 	if(a.url == 'https://www.google.com/analytics/#?modal_active=none'){
 		return;
 	}

@@ -16,6 +16,10 @@ To build the extension run this:
 
 browserify main_background.js -o bundle.js
 
+To create an XPI file that can be uploaded to Mozilla run build.sh.
+
+Note: this build script relies on no new source files being created.
+
 To debug this add-on on Firefox, go to the special URL "about:debugging", enable add-on debugging load the manifest.json. 
 
 Chrome should work eventually but I haven't tested it lately. To debug the add-on on Chrome it's basically the same except you load it from "chrome://extensions" 
