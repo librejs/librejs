@@ -32,9 +32,10 @@ console.log("main_background.js");
 *
 */
 var DEBUG = false;
+var PRINT_DEBUG = true
 
 function dbg_print(a,b){
-	if(DEBUG == true){
+	if(PRINT_DEBUG == true){
 		if(b === undefined){
 			console.log(a);
 		} else{
@@ -1652,10 +1653,12 @@ function full_evaluate(script){
 			}
 		}
 		var error_count = 0;
-		while(toke.type != acorn_base.tokTypes.eof){
+		while(toke !== undefined && toke.type != acorn_base.tokTypes.eof){		
 			if(toke.type.keyword !== undefined){
+				//dbg_print("Keyword:");
+				//dbg_print(toke);
+				
 				// This type of loop detection ignores functional loop alternatives and ternary operators
-				//dbg_print("Keyword:"+toke.type.keyword);
 
 				if(toke.type.keyword == "function"){
 					dbg_print("%c NONTRIVIAL: Function declaration.","color:red");
@@ -1963,7 +1966,25 @@ function get_script(response,url,tabid,wl,index=-1){
 		});
 	});
 }
-
+function block_ga(a){
+	console.log(a.url);
+	// This is actually just an HTML page
+	if(a.url == 'https://www.google.com/analytics/#?modal_active=none'){
+		return;
+	}
+	if(a.url.match(/https:\/\/www\.google\.com\/analytics\//g)){
+		dbg_print("%c Google analytics (1)","color:red");
+		return {cancel: true};
+	}
+	if(a.url == 'https://www.google-analytics.com/analytics.js'){
+		dbg_print("%c Google analytics (2)","color:red");
+		return {cancel: true};
+	}
+	if(a.url == 'https://www.google.com/analytics/js/analytics.min.js'){
+		dbg_print("%c Google analytics (3)","color:red");
+		return {cancel: true};
+	}
+}
 function read_script(a){
 
 	var filter = webex.webRequest.filterResponseData(a.requestId);
@@ -2140,6 +2161,20 @@ function init_addon(){
 	webex.runtime.onConnect.addListener(connected);
 	webex.storage.onChanged.addListener(options_listener);
 	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
+
+	// Prevents Google Analytics from being loaded from Google servers
+	var all_types = [
+		"beacon", "csp_report", "font", "image", "imageset", "main_frame", "media",
+		"object", "object_subrequest", "ping", "script", "stylesheet", "sub_frame",
+		"web_manifest", "websocket", "xbl", "xml_dtd", "xmlhttprequest", "xslt", 
+		"other"
+	]
+	// Analyzes remote scripts
+	webex.webRequest.onBeforeRequest.addListener(
+		block_ga,
+		{urls:["<all_urls>"], types:all_types},
+		["blocking"]
+	);
 
 	// Analyzes remote scripts
 	webex.webRequest.onBeforeRequest.addListener(

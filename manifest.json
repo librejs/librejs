@@ -7,7 +7,7 @@
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
     "gecko": {
-	  "id": "librejs7@gnu.org",
+	  "id": "jid1-KtlZuoiikVfFew@jetpack",
 	  "strict_min_version": "57.0"
     }
   },
