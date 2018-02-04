@@ -32,8 +32,8 @@ console.log("main_background.js");
 *	Also, it controls whether or not this part of the code logs to the console.
 *
 */
-var DEBUG = false;
-var PRINT_DEBUG = true
+var DEBUG = false; // debug the JS evaluation 
+var PRINT_DEBUG = false; // Everything else 
 
 function dbg_print(a,b){
 	if(PRINT_DEBUG == true){
@@ -90,8 +90,6 @@ var intrinsicEvents = [
 	WAYS TO DETERMINE PASS/FAIL:
 	- "// @license [magnet link] [identifier]" then "// @license-end" (may also use /* comments)
 	- Automatic whitelist: (http://bzr.savannah.gnu.org/lh/librejs/dev/annotate/head:/data/script_libraries/script-libraries.json_
-	- <table id="jslicense-labels1"><table> which may be linked to by a link tag identified by rel="jslicense" or data-jslicense="1"
-	- In the first script tag, declare the license with @licstart/@licend
 */
 
 var licenses = {
@@ -161,12 +159,6 @@ var licenses = {
 	'MPL-2.0':{
 		'URL': 'http://www.mozilla.org/MPL/2.0',
 		'Magnet link': 'magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt'
-	},
-	// "Public domain is not a license"
-	// Replace with CC0?
-	'Public-Domain':{
-		'URL': 'https://www.gnu.org/licenses/license-list.html#PublicDomain',
-		'Magnet link': 'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
 	},
 	'UPL-1.0': {
 		'URL': 'https://oss.oracle.com/licenses/upl/',
@@ -432,8 +424,14 @@ function update_popup(tab_id,blocked_info,update=false){
 		// store the blocked info until it is opened and needed
 		if(update == false && active_connections[tab_id] === undefined){
 			dbg_print("[TABID:"+tab_id+"]"+"Storing blocked_info for when the browser action is opened or asks for it.");
+			if(tab_id == undefined){
+				dbg_print("UNDEFINED TAB_ID");
+			}
 			unused_data[tab_id] = new_blocked_data; 
 		} else{
+			if(tab_id == undefined){
+				dbg_print("UNDEFINED TAB_ID");
+			}
 			unused_data[tab_id] = new_blocked_data; 
 			dbg_print("[TABID:"+tab_id+"]"+"Sending blocked_info directly to browser action");
 			active_connections[tab_id].postMessage({"show_info":new_blocked_data});
@@ -563,6 +561,9 @@ function add_popup_entry(tab_id,src_hash,blocked_info,update=false){
 				//console.log("Script " + blocked_info[type][0] + " isn't whitelisted or blacklisted");
 			}
 			if(not_duplicate(type_key,blocked_info[type])){
+				dbg_print(unused_data);
+				dbg_print(unused_data[tab_id]);
+				dbg_print(type_key);
 				unused_data[tab_id][type_key].push(blocked_info[type]);
 				resolve(res);
 			} else{
@@ -1967,11 +1968,14 @@ function get_script(response,url,tabid,wl,index=-1){
 		});
 	});
 }
-function block_ga(a){
-	console.log(a.url);
+
+/**
+* 	Tests if a request is google analytics or not
+*/
+function test_GA(a){
 	// This is just an HTML page
 	if(a.url == 'https://www.google.com/analytics/#?modal_active=none'){
-		return;
+		return false;
 	}
 	if(a.url.match(/https:\/\/www\.google\.com\/analytics\//g)){
 		dbg_print("%c Google analytics (1)","color:red");
@@ -1985,8 +1989,20 @@ function block_ga(a){
 		dbg_print("%c Google analytics (3)","color:red");
 		return {cancel: true};
 	}
+	return false;
+}
+
+function block_ga(a){
+	var GA = test_GA(a);
+	if(GA != false){
+		return GA;
+	}
 }
 function read_script(a){
+	var GA = test_GA(a);
+	if(GA !== false){
+		return GA;
+	}
 
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
@@ -2111,7 +2127,12 @@ function edit_html(html,url,tabid,wl){
 * 
 */
 function read_document(a){
-	
+
+	var GA = test_GA(a);
+	if(GA != false){
+		return GA;
+	}
+
 	if(unused_data[a["tabId"]] !== undefined && unused_data[a["tabId"]]["url"] != get_domain(a["url"])){
 		delete unused_data[a["tabId"]];
 		dbg_print("Page Changed!!!");
