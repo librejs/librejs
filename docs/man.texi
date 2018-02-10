@@ -1,0 +1,474 @@
+\input texinfo @c -*-texinfo-*-
+@c %**start of header
+@setfilename librejs.info
+@include version.texi
+@settitle GNU LibreJS @value{VERSION}
+
+@copying
+This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}),
+a GNU IceCat extension to detect and block nonfree nontrivial
+JavaScript on webpages.
+
+Copyright @copyright{} 2011 2012 2014 2015 Loic J. Duros
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with no Front-Cover Texts, and with no Back-Cover
+Texts.  A copy of the license is included in the section entitled
+``GNU Free Documentation License''.
+@end quotation
+@end copying
+
+@dircategory GNUzilla
+@direntry
+* LibreJS: (librejs).               Detect nonfree nontrivial in GNU Icecat
+@end direntry
+
+@titlepage
+@title GNU LibreJS
+@subtitle for version @value{VERSION}, @value{UPDATED}
+@author Loic J. Duros  (@email{librejs@@lduros.net})
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+
+@contents
+
+
+@node Top
+@top LibreJS
+This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}).
+
+@menu
+* Overview::                    General purpose and information.
+* Disclaimer::                  Emphasize what LibreJS does and does not.
+* Installation::                Installing LibreJS from source. 
+* How to Use::                  How to use LibreJS in IceCat.
+* JavaScript Detection::        How LibreJS detects nontrivial Javascript.
+* Free Licenses Detection::     List of licenses detected by LibreJS.
+* Setting Your JavaScript Free::  Information for website owners/maintainers.
+* LibreJS Development Notes::   Documentation about the development of
+                                        LibreJS itself.
+* Installation Requirements::   Requirements to build and install LibreJS.
+* LibreJS Internals::           How LibreJS works under the hood.
+* GNU Free Documentation License::  Copying and sharing this documentation.
+
+
+
+
+
+
+
+
+@end menu
+
+@node Overview
+@chapter Overview
+
+@cindex overview
+GNU LibreJS ---an add-on for GNU IceCat and Mozilla Firefox--- detects
+and blocks nonfree nontrivial JavaScript while allowing its execution on
+pages containing code that is either trivial and/or free.
+
+Many websites run nontrivial JavaScript on your computer. Some use it
+for complex tasks; many use it gratuitously for minor jobs that could be
+done easily with plain HTML.  Sometimes this JavaScript code is
+malicious.  Either way, the JavaScript code is often nonfree.  For
+explanation of the issue, see "The JavaScript
+Trap"(@url{http://www.gnu.org/philosophy/javascript-trap.html}).
+
+If you care about freedom in your computing, and don't wish to let all
+and sundry make you run nonfree programs, now you can prevent it by
+using LibreJS.
+
+
+@node Disclaimer
+@chapter Disclaimer
+
+@cindex disclaimer
+
+@itemize @bullet
+@item
+LibreJS is not a security tool. Its goal is to detect nonfree nontrivial
+JavaScript, and it currently does not detect whether free or trivial
+code is malicious or not. Other free Mozilla extensions and add-ons may
+be available for this purpose.
+
+@item
+LibreJS is always a work in progress. If you find a bug, please report
+it to @email{bug-librejs@@gnu.org}.
+
+@end itemize
+
+@node Installation
+@chapter Installation
+@cindex Installation
+
+You can install LibreJS directly using a generated @file{librejs.xpi}
+file, or by building it from source.
+
+You can also download it from Mozilla, but due to Mozilla's review
+process the download isn't always up to date. 
+
+@node How to Use
+@chapter How to Use
+
+@section LibreJS in action
+
+After installing the add-on, you will see the LibreJS widget in the
+add-on bar at the top right of the browser window.  After loading a
+page, left-click on the widget to view the deactivated JavaScript code
+from the page (both on page and external) and, if applicable, the
+scripts that were accepted.
+
+@section Script Blacklist/whitelist
+
+Scripts may be blacklisted or whitelisted through the pop-up menu box.
+
+Whitelisted scripts will always be accepted and blacklisted scripts
+will always get rejected.
+
+It is important to note that this feature recognizes which scripts are
+blacklisted and whitelisted based on hash. This means that even a slight
+difference in a script's code will cause it to be recognized as a 
+seperate script. 
+
+Sometimes, JavaScript will be dynamically generated so that it is 
+different every time a website is loaded. These types of scripts cannot 
+be whitelisted or blacklisted since they cannot be recognized.
+
+LibreJS has a default whitelist of scripts that are known to be free but
+may not use the format for declaring a license that it can understand.  
+
+@section Complaint Feature
+
+It is very important to complain when a site has nonfree JavaScript
+code, especially if it won't work without that code.  LibreJS makes it
+easy to complain by heuristically finding where to send the complaint.
+
+When nonfree/nontrivial code is detected in a page, LibreJS attempts to
+find a relevant contact link or email for the website you are
+visiting. In order to do so, it will attempt to visit a few links from
+the current page (for instance, a link labeled ``contact'' on the same
+domain as the current page, @dots{})
+
+LibreJS detects contact pages, email addresses that are likely to be
+owned by the maintainer of the site, Twitter and identi.ca links, and
+phone numbers.
+
+When you complain to the website for their nonfree nontrivial
+JavaScript, provide them with the link to the JavaScript Trap essay so
+that they can get more information on what the issue is and how they can
+solve it on their own site.
+
+LibreJS includes a default subject line and body for the complaint email,
+with a link to the JavaScript Trap essay. This can be configured in the
+LibreJS add-on preferences in your web browser.
+
+@section Options
+
+@table @dfn
+@item Whitelist
+
+LibreJS lets you whitelist domain names and subdomains to bypass the
+regular JavaScript check. This might be useful, for example, if you are
+running your own code in a local web server. In order to add a whitelisted
+domain or url, go to Tools >> Add-ons. Inside the add-on window, click on 
+@dfn{Extensions}, and in the list, where you see LibreJS, click on the 
+@dfn{Preferences} button. You will see an input field labeled @dfn{Whitelist}. 
+
+In the field, enter comma-separated domain names. Do not enter the protocol. 
+For instance to whitelist all the pages of @url{http://www.gnu.org} and
+@url{https://gnu.org}, enter @samp{gnu.org}. To allow all subdomains from
+gnu.org, enter: @samp{*.gnu.org}. This will match such sites as
+@url{http://savannah.gnu.org} and @url{http://audio-video.gnu.org}.
+
+@item Complaint email subject
+Configure the default subject used in complaint emails.
+
+@item Complaint email body
+Configure the default body used in complaint emails.
+@end table
+
+@node JavaScript Detection
+@chapter JavaScript Detection
+@cindex javascript
+
+LibreJS considers a very strict subset of JavaScript to be acceptable for use
+in non-free scripts. This is meant to maximimize compatibility with websites 
+that haven't tried to be LibreJS compatible.  
+
+We consider modification of the document non-trivial. There isn't
+much that javascript could do that we would consider trivial, for
+anything else a free software license would be required.
+
+The criterion is as follows:
+
+  For each function definition:
+@itemize @bullet
+  @item
+  It must call only primitives.
+  @item
+  The number of conditionals and loops must be at most 3.
+  @item
+  It does not declare an array more than 50 elements long.
+  @item
+  It must not call itself
+@end itemize
+
+For the rest of the script, outside of function definitions:
+@itemize @bullet
+  @item
+  It must call only primitives and functions defined above in the page.
+  @item
+  The number of conditionals and loops must be at most 3.
+@end itemize
+
+"function" means anything executable that gets a name, including methods.
+
+Allowed primitives exclude:
+  @itemize @bullet
+    @item
+    eval()
+    @item
+    ajax
+    @item
+    calling methods with the square bracket notation
+    @item
+    altering the dom
+    @item 
+    most other items found as methods of the `.window` object.
+  @end itemize     
+
+
+@node Free Licenses Detection
+@chapter Free Licenses Detection
+@cindex freelicenses
+
+The machine readable format for license declarations that LibreJS uses has changed
+in the most recent version. This was necessary in order to not break the asynchronous
+JS loading model that browsers use. Scripts are now evaluated independent of eachother
+and strictly as they arrive.
+
+@node Setting Your JavaScript Free
+@chapter Setting Your JavaScript Free
+
+The first step is releasing your JavaScript under a free license. If
+you are already using a free library, or you're not using any
+third-party libraries, it might only take a few minutes.
+
+On your website, take a look at your HTML source. You can identify
+distinct pieces of JavaScript that might be free and some other that are
+nonfree.
+
+This might be the case with an analytics tracker, social media
+widgets, and code that runs ads. Removing these pieces of code from your
+site is required to have the rest accepted as free. There are
+often alternatives to nonfree libraries or to third-party services:
+
+@itemize @bullet
+
+@item
+If you have used nonfree third-party code as the base to write your own
+code, try to find a free alternative.
+
+@item
+If you're using a third-party service such as an analytics service,
+replace it with a free alternative like Piwik.
+
+@item
+If you can't find free JavaScript that has already been developed,
+write it yourself! Who knows, your own solution might be the start of
+a brilliant project!
+@end itemize
+
+
+@section License tags 
+
+LibreJS will allow non-trivial scripts to run as long as they use a 
+free license.
+
+In order for the license of a script to be recognized by LibreJS, it
+must be declared using a machine-readable license format.
+
+This format is the same for both remote in-line scripts.
+
+"// @@license [magnet link] [identifier]"
+[Script here]
+"// @@license-end"
+
+"Identifier" is a name of a license from the following list and "magnet link" is that 
+license's exact corresponding magnet link. 
+
+@verbatim
+{
+	'Apache-2.0':{
+		'URL': 'http://www.apache.org/licenses/LICENSE-2.0',
+		'Magnet link': 'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
+	},
+	'Artistic-2.0':{
+		'URL': 'http://www.perlfoundation.org/artistic_license_2_0',
+		'Magnet link': 'magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt'
+	},
+	'Boost':{
+		'URL': 'http://www.boost.org/LICENSE_1_0.txt',
+		'Magnet link': 'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
+	},
+	'BSD-3-Clause':{
+		'URL': 'http://opensource.org/licenses/BSD-3-Clause',
+		'Magnet link': 'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt',
+	},
+	'CPAL-1.0':{
+		'URL': 'http://opensource.org/licenses/cpal_1.0',
+		'Magnet link': 'magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt'
+	},
+	'CC0-1.0':{
+		'URL': 'http://creativecommons.org/publicdomain/zero/1.0/legalcode',
+		'Magnet link': 'magnet:?xt=urn:btih:90dc5c0be029de84e523b9b3922520e79e0e6f08&dn=cc0.txt'
+	},
+	'EPL-1.0':{
+		'URL': 'http://www.eclipse.org/legal/epl-v10.html',
+		'Magnet link': 'magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt'
+	},
+	'Expat':{
+		'URL': 'http://www.jclark.com/xml/copying.txt',
+		'Magnet link': 'magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt'
+	},
+	'FreeBSD':{
+		'URL': 'http://www.freebsd.org/copyright/freebsd-license.html',
+		'Magnet link': 'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
+	},
+	'GPL-2.0':{
+		'URL': 'http://www.gnu.org/licenses/gpl-2.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt'
+	},
+	'GPL-3.0':{
+		'URL': 'http://www.gnu.org/licenses/gpl-3.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt'
+	},
+	'LGPL-2.1':{
+		'URL': 'http://www.gnu.org/licenses/lgpl-2.1.html',
+		'Magnet link': 'magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a89eac2&dn=lgpl-2.1.txt'
+	},
+	'LGPL-3.0':{
+		'URL': 'http://www.gnu.org/licenses/lgpl-3.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317705f85&dn=lgpl-3.0.txt'
+	},
+	'AGPL-3.0':{
+		'URL': 'http://www.gnu.org/licenses/agpl-3.0.html',
+		'Magnet link': 'magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt'
+	},
+	'ISC':{
+		'URL': 'https://www.isc.org/downloads/software-support-policy/isc-license/',
+		'Magnet link': 'magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt'
+	},
+	'MPL-2.0':{
+		'URL': 'http://www.mozilla.org/MPL/2.0',
+		'Magnet link': 'magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt'
+	},
+	'UPL-1.0': {
+		'URL': 'https://oss.oracle.com/licenses/upl/',
+		'Magnet link': 'magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt'
+	},
+	'WTFPL': {
+		'URL': 'http://www.wtfpl.net/txt/copying/',
+		'Magnet link': 'magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt'
+	},
+	'Unlicense':{
+		'URL': 'http://unlicense.org/UNLICENSE',
+		'Magnet link': 'magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt'
+	},
+	'X11':{
+		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
+		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'	
+	},
+	'Modified-BSD':{
+		'URL': 'http://www.xfree86.org/current/LICENSE4.html',
+		'Magnet link': 'magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt'
+	}
+}
+@end verbatim
+
+@section Undetected Free Licenses
+
+If you are using a free license that isn't detected by LibreJS and isn't
+listed in the previous section, please send a message to
+@email{bug-librejs@@gnu.org} regarding this license, where code released under
+this license can be found, and where to find the license text and
+information.
+
+Many free licenses are listed in this page:
+@url{http://www.gnu.org/licenses/license-list.html}
+
+@node LibreJS Development Notes
+@chapter LibreJS Development Notes
+
+@section Debugging
+
+To debug LibreJS, visit the special URL @code{about:debugging}. Click
+on `Enable add-on debugging` then `Load Temporary Add-on`. Navigate
+to LibreJS's unpacked source directory and select @file{manifest.json}.
+
+Lines 34 and 35 in @file{main_background.js} control the printing of
+@code{dbg_print()} statements. Make sure these are set to false in 
+releases.
+
+@section Adding new whitelisted libraries
+
+The script index.js in @file{./hash_script} generates the default
+whitelist. Run it with the following command:
+
+@command{node index.js > output}
+
+Then, just copy the contents of the file "output" to the appropriate
+place in main_background.js.
+
+@section Releasing a new version
+
+Update the version number in manifest.json.
+
+Make sure debug statements are set to felse on lines 34/35 in
+@file{main_background.js}.
+
+Then, run the build script @file{build.sh}.
+
+@node Installation Requirements
+@appendix Installation Requirements
+
+
+@appendixsec Mozilla Browser
+
+You will need one of the many flavors of the Mozilla browser to use
+LibreJS. It can be installed on the following:
+
+GNU IceCat,  Mozilla Firefox, Trisquel Abrowser, Debian Iceweasel.
+
+LibreJS works on these browsers starting from version 57. We recommend
+that you use the latest version of your Mozilla browser. LibreJS has 
+been tested on a GNU/Linux distribution, but it is compatible any
+operating system as long as you're using a compatible Mozilla browser.
+
+@node LibreJS Internals
+@appendix LibreJS Internals
+
+LibreJS intercepts HTTP responses and rewrites their contents after
+analyzing JavaScript within them. It does not remove script nodes and
+attributes from the page, but instead ``deactivates'' them by replacing
+their content with a commented notice.
+
+LibreJS detects the most common cases using the HTTP response method
+described above, but in less common edge cases, or when running code
+locally, LibreJS cannot detect JavaScript during the response stage.
+
+
+@node GNU Free Documentation License
+@appendix GNU Free Documentation License
+
+@include fdl.texi
+
+
+@bye
