@@ -3,3 +3,12 @@ old/
 *.zip
 SDK LibreJS source/
 *#
+
+# dependencies
+node_modules/
+
+# artifacts
+librejs.xpi
+bundle.js
+npm-debug.log
+package-lock.json
