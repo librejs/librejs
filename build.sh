@@ -1,3 +1,7 @@
+PATH=$PATH:./node_modules/.bin
+which browserify > /dev/null || (echo "can not find browserify" && false) || exit
+
+
 # Build the main file
 browserify main_background.js -o bundle.js
 
@@ -23,4 +27,3 @@ cd ../
 rm -r ./build_temp
 # change the zip file to a xpi file that can be uploaded
 mv librejs.zip librejs.xpi
-

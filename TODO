@@ -1,0 +1,1 @@
+It is lacking some license information for the assets from the original LibreJS. Not sure what license should be used for the new source files either. Also, we probably want to sort out the licenses for the dependencies (Acorn Javascript parser and jsSHA) to make sure they are cited correctly.

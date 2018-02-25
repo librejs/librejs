@@ -1,27 +1,33 @@
-# LibreJS-webex
+## LibreJS - WebExtensions Edition ##
 
-Port of LibreJS to webExtensions.
 
-It is lacking some license information for the assets from the original LibreJS. Not sure what license should be used for the new source files either. Also, we probably want to sort out the licenses for the dependencies (Acorn Javascript parser and jsSHA) to make sure they are cited correctly. 
-
-TO BUILD: 
+BUILD:
 
 First, you need to get some stuff with npm:
+  $ npm install acorn
+  $ npm install jssha
+  $ npm install browserify
+  $ export PATH=$PATH:./node_modules/.bin
 
-npm install acorn
-npm install jssha
-npm install browserify
+To build the extension run:
+  $ browserify main_background.js -o bundle.js
 
-To build the extension run this:
+To build the extension plus create a .xpi package run:
+  $ ./build.sh
 
-browserify main_background.js -o bundle.js
+Note: this build.sh script relies on no new source files being created.
 
-To create an XPI file that can be uploaded to Mozilla run build.sh.
 
-Note: this build script relies on no new source files being created.
+DEBUG:
 
-To debug this add-on on Firefox, go to the special URL "about:debugging", enable add-on debugging load the manifest.json. 
+To debug this add-on on IceCat and other Firefox derivatives, browse to the special URL "about:debugging", select "Enable add-on debugging", and load the manifest.json in this directory with the "Load Temporary Add-on" button.
 
-Chrome should work eventually but I haven't tested it lately. To debug the add-on on Chrome it's basically the same except you load it from "chrome://extensions" 
+LibreJS should work with other WebExtensions-compliant browsers; but currently, none of them meet the freedom standards of GNU, so no help will be provided for their usage.
 
-Mailing list: bug-librejs@gnu.org
+
+CONTACT:
+
+Development mailing list: bug-librejs@gnu.org
+Users mailing list:       help-librejs@gnu.org
+Subscribe URL:            https://savannah.gnu.org/mail/?group=librejs
+Bug Reports:              https://savannah.gnu.org/bugs/?group=librejs
