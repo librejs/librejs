@@ -376,20 +376,20 @@ function update_popup(tab_id,blocked_info,update=false){
 				return "whitelist";
 			} else{
 				//console.log("script " + script_name + " not in default whitelist.");
+				return "none";
 			}
-			return "none";
 		}
 		function is_bl(script_name){
 			if(get_status(script_name) == "blacklist"){
 				return true;			
 			}
-			return false;
+			else return false;
 		}
 		function is_wl(script_name){
 			if(get_status(script_name) == "whitelist"){
 				return true;			
 			}
-			return false;
+			else return false;
 		}
 		new_blocked_data = {
 			"accepted":[],
@@ -436,6 +436,7 @@ function update_popup(tab_id,blocked_info,update=false){
 			active_connections[tab_id].postMessage({"show_info":new_blocked_data});
 			delete active_connections[tab_id];
 		}
+		return 0;
 	}
 	webex.storage.local.get(get_sto);
 }
@@ -570,6 +571,8 @@ function add_popup_entry(tab_id,src_hash,blocked_info,update=false){
 			}
 		}
 		webex.storage.local.get(get_sto);
+
+		return 0;
 	});
 }
 
@@ -628,7 +631,6 @@ function connected(p) {
 				}
 			}
 			var querying = webex.tabs.query({active: true,currentWindow: true},geturl);			
-			return;
 		}
 		var update = false;
 		var contact_finder = false;
@@ -753,7 +755,6 @@ function blocked_status(hash){
 				}
 			}
 			resolve("none");
-			return;
 		}
 		webex.storage.local.get(cb);
 	});
@@ -1621,6 +1622,7 @@ function full_evaluate(script){
 
 		/**
 		* Given the end of an identifer token, it tests for bracket suffix notation
+		* TODO: this function and the next could probably be replaced by a regex
 		*/
 		function being_called(end){
 			var i = 0;
@@ -1630,14 +1632,12 @@ function full_evaluate(script){
 					return false;
 				}
 			}
-			if(script.charAt(end+i) == "("){
-				return true;
-			}else{
-				return false;
-			}
+
+			return script.charAt(end+i) == "(";
 		}
 		/**
 		* Given the end of an identifer token, it tests for parentheses
+		* TODO: this function and the previous could probably be replaced by a regex
 		*/
 		function is_bsn(end){
 			var i = 0;
@@ -1647,11 +1647,7 @@ function full_evaluate(script){
 					return false;
 				}
 			}
-			if(script.charAt(end+i) == "["){
-				return true;
-			}else{
-				return false;
-			}
+			return script.charAt(end+i) == "[";
 		}
 		var error_count = 0;
 		while(toke !== undefined && toke.type != acorn_base.tokTypes.eof){		
@@ -1816,7 +1812,7 @@ function license_read(script_src,name){
 	var nontrivial_status;
 	var parts_denied = false;
 	var parts_accepted = false;
-	while(true){
+	while(true){ // TODO: refactor me
 		// TODO: support multiline comments
 		var matches = /\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
 		if(matches == null){
@@ -1836,7 +1832,7 @@ function license_read(script_src,name){
 			if(parts_denied == true && parts_accepted == false){
 				return [false,edited_src,reason_text];
 			}
-			return [true,edited_src,reason_text];
+			else return [true,edited_src,reason_text];
 			
 		}
 		var before = unedited_src.substr(0,matches["index"]);
@@ -1971,24 +1967,24 @@ function get_script(response,url,tabid,wl,index=-1){
 /**
 * 	Tests if a request is google analytics or not
 */
-function test_GA(a){
+function test_GA(a){ // TODO: DRY me
 	// This is just an HTML page
 	if(a.url == 'https://www.google.com/analytics/#?modal_active=none'){
 		return false;
 	}
-	if(a.url.match(/https:\/\/www\.google\.com\/analytics\//g)){
+	else if(a.url.match(/https:\/\/www\.google\.com\/analytics\//g)){
 		dbg_print("%c Google analytics (1)","color:red");
 		return {cancel: true};
 	}
-	if(a.url == 'https://www.google-analytics.com/analytics.js'){
+	else if(a.url == 'https://www.google-analytics.com/analytics.js'){
 		dbg_print("%c Google analytics (2)","color:red");
 		return {cancel: true};
 	}
-	if(a.url == 'https://www.google.com/analytics/js/analytics.min.js'){
+	else if(a.url == 'https://www.google.com/analytics/js/analytics.min.js'){
 		dbg_print("%c Google analytics (3)","color:red");
 		return {cancel: true};
 	}
-	return false;
+	else return false;
 }
 
 function block_ga(a){
@@ -1996,7 +1992,9 @@ function block_ga(a){
 	if(GA != false){
 		return GA;
 	}
+	else return {};
 }
+
 function read_script(a){
 	var GA = test_GA(a);
 	if(GA !== false){
@@ -2025,7 +2023,6 @@ function read_script(a){
 		});
 	}
 	return {};
-
 }
 
 /**
@@ -2154,7 +2151,6 @@ function read_document(a){
 				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
 				filter.write(encoder.encode(str));
 				filter.disconnect();
-				return;
 			} else{
 				edit_page = edit_html(str,a.url,a["tabId"],false);
 				edit_page.then(function(edited){
@@ -2166,10 +2162,8 @@ function read_document(a){
 	}
 	filter.ondata = event => {
 		str += decoder.decode(event.data, {stream: true});
-		return;		
 	}
 	return {};
-
 }
 
 /**
