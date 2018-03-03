@@ -98,10 +98,8 @@ function write_elements(data,name,color){
 				var temp = current_blocked_data[name][parseInt(info.target.id.match(/\d/g)[1])];
 				console.log("Forget preferences for script " + temp[0]);
 				var script_name = this.parentElement.parentElement.parentElement.parentElement.id;
-				if(this.parentElement.parentElement.innerHTML.indexOf("Refresh the page") == -1){
-					//this.parentElement.parentElement.getElementsByTagName("b")[0].insertAdjacentHTML("beforebegin","<h3>Refresh the page to revaluate this script.</h3>");
-					myPort.postMessage({"forget": temp});
-				}
+				//this.parentElement.parentElement.getElementsByTagName("b")[0].insertAdjacentHTML("beforebegin","<h3>Refresh the page to revaluate this script.</h3>");	
+				myPort.postMessage({"forget": temp});
 			});	
 		}
 	}
@@ -213,5 +211,5 @@ function delete_local_storage(){
 	myPort.postMessage({"deletelocalstorage":true});
 }
 
-//new_debug_button("Print local storage",print_local_storage);
-//new_debug_button("Clear local storage",delete_local_storage);
+new_debug_button("Print local storage",print_local_storage);
+new_debug_button("Clear local storage",delete_local_storage);

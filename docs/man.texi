@@ -431,10 +431,10 @@ place in main_background.js.
 
 Update the version number in manifest.json.
 
-Make sure debug statements are set to felse on lines 34/35 in
+Make sure debug statements are set to false on lines 34/35 in
 @file{main_background.js}.
 
-Then, run the build script @file{build.sh}.
+Then, run the build script @file{build.sh}. This 
 
 @node Installation Requirements
 @appendix Installation Requirements
