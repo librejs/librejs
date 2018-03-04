@@ -56,7 +56,7 @@ function hash(source){
 
 
 // the list of all available event attributes
-var intrinsicEvents = [
+var intrinsic_events = [
     "onload",
     "onunload",
     "onclick",
@@ -76,6 +76,7 @@ var intrinsicEvents = [
     "onselect",
     "onchange"
 ];
+
 /*
 	NONTRIVIAL THINGS:
 	- Fetch
@@ -1601,7 +1602,6 @@ function full_evaluate(script){
 
 		/**
 		* Given the end of an identifer token, it tests for bracket suffix notation
-		* TODO: this function and the next could probably be replaced by a regex
 		*/
 		function being_called(end){
 			var i = 0;
@@ -1616,7 +1616,6 @@ function full_evaluate(script){
 		}
 		/**
 		* Given the end of an identifer token, it tests for parentheses
-		* TODO: this function and the previous could probably be replaced by a regex
 		*/
 		function is_bsn(end){
 			var i = 0;
@@ -1782,7 +1781,7 @@ function license_valid(matches){
 *		reason text		
 *	]
 */
-function license_read(script_src,name){
+function license_read(script_src, name){
 	
 	var reason_text = "";
 
@@ -1977,12 +1976,9 @@ function block_ga(a){
 	else return {};
 }
 
-<<<<<<< HEAD
 /**
 *	This is a callback trigged from requests caused by script tags with the src="" attribute.
 */
-=======
->>>>>>> dae60954ec85b7939431b584b06e8f121f91ae6b
 function read_script(a){
 	var GA = test_GA(a);
 	if(GA !== false){
@@ -2027,6 +2023,56 @@ function remove_noscripts(html_doc){
 }
 
 /**
+*	Tests to see if the intrinsic events on the page are free or not.
+*	returns true if they are, false if they're not
+*/
+function read_metadata(meta_element){
+
+		if(meta_element === undefined){
+			return;		
+		}
+
+		console.log("metadata found");				
+		
+		var metadata = {};
+		
+		try{			
+			metadata = JSON.parse(meta_element.innerHTML);
+		}catch(error){
+			console.log("Could not parse metadata on page.")
+			return false;
+		}
+		
+		var license_str = metadata["intrinsic-events"];
+		if(license_str === undefined){
+			console.log("No intrinsic events license");			
+			return false;
+		}
+		console.log(license_str);
+
+		var parts = license_str.split(" ");
+		if(parts.length != 2){
+			console.log("invalid (>2 tokens)");
+			return false;
+		}
+	
+		// this should be adequete to escape the HTML escaping
+		parts[0] = parts[0].replace(/&amp;/g, '&');
+
+		try{
+			if(licenses[parts[1]]["Magnet link"] == parts[0]){
+				return true;
+			}else{
+				console.log("invalid (doesn't match licenses)");
+				return false;
+			}
+		} catch(error){
+			console.log("invalid (threw error, key didn't exist)");
+			return false;
+		}
+}
+
+/**
 * 	Reads/changes the HTML of a page and the scripts within it.
 */
 function edit_html(html,url,tabid,wl){
@@ -2043,35 +2089,38 @@ function edit_html(html,url,tabid,wl){
 		var amt_scripts = 0;
 		var total_scripts = 0;
 		var scripts = html_doc.scripts;
-	
-		// Deal with intrinsic events
-
-		var has_intrinsic_events = [];
-		for(var i = 0; i < html_doc.all.length; i++){
-			for(var j = 0; j < intrinsic_events.length; j++){
-				if(intrinsic_events[j] in html_doc.all[i].attributes){
-					has_intrinsic_events.push([i,j]);
+		
+		var meta_element = html_doc.getElementById("LibreJS-info");
+		if(read_metadata(meta_element)){
+			console.log("Valid license for intrinsic events found in metadata");
+		}else{
+			// Deal with intrinsic events
+			var has_intrinsic_events = [];
+			for(var i = 0; i < html_doc.all.length; i++){
+				for(var j = 0; j < intrinsic_events.length; j++){
+					if(intrinsic_events[j] in html_doc.all[i].attributes){
+						has_intrinsic_events.push([i,j]);
+					}
 				}
+			}
+
+			// "i" is an index in html_doc.all
+			// "j" is an index in intrinsic_events
+			function edit_event(src,i,j,name){
+				var edited = get_script(src,name);
+				edited.then(function(){
+					html_doc.all[i].attributes[intrinsic_events[j]].value = edited[0];
+				});
+			}
+
+			// Find all the document's elements with intrinsic events
+			for(var i = 0; i < has_intrinsic_events.length; i++){
+				var s_name = "Intrinsic event ["+has_intrinsic_events[i][0]+"]";
+				edit_event(html_doc.all[has_intrinsic_events[i][0]].attributes[intrinsic_events[has_intrinsic_events[i][1]]].value,has_intrinsic_events[i][0],has_intrinsic_events[i][1],s_name);
 			}
 		}
 
-		// "i" is an index in html_doc.all
-		// "j" is an index in intrinsicEvents
-		function edit_event(src,i,j,name){
-			var edited = get_script(src,name);
-			edited.then(function(){
-				html_doc.all[i].attributes[intrinsicEvents[j]].value = edited[0];
-			});
-		}
-
-		// Find all the document's elements with intrinsic events
-		for(var i = 0; i < has_intrinsic_events.length; i++){
-			var s_name = "Intrinsic event ["+has_intrinsic_events[i][0]+"]";
-			edit_event(html_doc.all[has_intrinsic_events[i][0]].attributes[intrinsicEvents[has_intrinsic_events[i][1]]].value,has_intrinsic_events[i][0],has_intrinsic_events[i][1],s_name);
-		}
-
 		// Deal with inline scripts
-		
 		for(var i = 0; i < scripts.length; i++){
 			if(scripts[i].src == ""){
 				total_scripts++;
