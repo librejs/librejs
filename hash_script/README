@@ -1,7 +1,3 @@
-Script by Ethan Dorta
+To generate the default whitelist, run generate.sh.
 
-Generates the default whitelist. To run: 
-
-$ node index.js > output
-
-Then, just copy the contents of the file "output" to the appropriate place in main_background.js.
+This is not done automatically by build.sh.
