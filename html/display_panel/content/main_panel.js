@@ -211,5 +211,5 @@ function delete_local_storage(){
 	myPort.postMessage({"deletelocalstorage":true});
 }
 
-new_debug_button("Print local storage",print_local_storage);
-new_debug_button("Clear local storage",delete_local_storage);
+//new_debug_button("Print local storage",print_local_storage);
+//new_debug_button("Clear local storage",delete_local_storage);
