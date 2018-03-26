@@ -23,6 +23,7 @@ var acorn_base = require("acorn");
 var acorn = require('acorn/dist/acorn_loose');
 var jssha = require('jssha');
 var walk = require("acorn/dist/walk");
+var legacy_license_lib = require("./legacy_license_check.js");
 
 console.log("main_background.js");
 /**
@@ -613,24 +614,6 @@ function delete_removed_tab_info(tab_id, remove_info){
 }
 
 /**
-*	Turns a blob URL into a data URL
-*
-*/
-function get_data_url(blob,url){
-	return new Promise((resolve, reject) => {
-		//var url = URL.createObjectURL(blob);
-		var reader  = new FileReader();
-		reader.addEventListener("load", function(){
-			//console.log("redirecting");
-			//console.log(url);
-			//console.log("to");
-			//console.log(reader.result);		
-			resolve({"redirectUrl": reader.result});
-		});
-		reader.readAsDataURL(blob);
-	});
-}
-/**
 *	Check whitelisted by hash
 *
 */
@@ -1175,8 +1158,18 @@ function edit_html(html,url,tabid,wl){
 		var scripts = html_doc.scripts;
 		
 		var meta_element = html_doc.getElementById("LibreJS-info");
-		if(read_metadata(meta_element)){
-			console.log("Valid license for intrinsic events found in metadata");
+		var first_scipt_src = "";
+		
+		// get the potential inline source that can contain a license
+		for(var i = 0; i < scripts.length; i++){
+			// The script must be in-line and exist
+			if(scripts[i] !== undefined && scripts[i].src == ""){
+				first_script_src = scripts[i].innerHTML;
+				break;
+			}
+		}
+		if(read_metadata(meta_element) || legacy_license_lib.check(first_script_src)){
+			console.log("Valid license for intrinsic events found");
 		}else{
 			// Deal with intrinsic events
 			var has_intrinsic_events = [];
@@ -1326,6 +1319,8 @@ function init_addon(){
 		{urls:["<all_urls>"], types:["main_frame"]},
 		["blocking"]
 	);
+
+	legacy_license_lib.init();
 }
 
 /**
