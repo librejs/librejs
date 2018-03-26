@@ -663,6 +663,8 @@ function full_evaluate(script){
 		try{
 			var toke = tokens.getToken();
 		}catch(e){
+			console.log(script);
+			console.log(e);
 			console.warn("couldn't get first token (probably invalid code)");
 			console.warn("Continuing evaluation");
 		}
@@ -815,9 +817,9 @@ function evaluate(script,name){
 		return [flag,reason+"<br>"];
 	}
 	
-	var temp = full_evaluate(temp);
-	temp[1] = temp[1] + "<br>";
-	return temp;
+	var final = full_evaluate(temp);
+	final[1] = final[1] + "<br>";
+	return final;
 }
 
 
@@ -859,7 +861,7 @@ function license_read(script_src, name){
 	var parts_accepted = false;
 	while(true){ // TODO: refactor me
 		// TODO: support multiline comments
-		var matches = /\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+		var matches = /\/\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
 		if(matches == null){
 			nontrivial_status = evaluate(unedited_src,name);
 			if(nontrivial_status[0] == true){
@@ -880,7 +882,15 @@ function license_read(script_src, name){
 			else return [true,edited_src,reason_text];
 			
 		}
-		var before = unedited_src.substr(0,matches["index"]);
+		// sponge
+		console.log("undedited_src:");
+		console.log(unedited_src);
+		console.log(matches);
+		console.log("chopping at " + matches["index"] + ".");
+		var before = unedited_src.substring(0,matches["index"]);
+		// sponge
+		console.log("before:");
+		console.log(before);
 		nontrivial_status = evaluate(before,name);
 		if(nontrivial_status[0] == true){
 			parts_accepted = true;

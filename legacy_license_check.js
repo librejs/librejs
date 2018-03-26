@@ -49,11 +49,10 @@ var	license_regexes = [];
 
 var init = function(){
 	console.log("initializing regexes");
-
 	for (var item in data.licenses) {
 		license_regexes.push(stripLicenseToRegexp(data.licenses[item]));
 	}
-	console.log(license_regexes);
+	//console.log(license_regexes);
 }
 
 module.exports.init = init;
@@ -67,8 +66,8 @@ var search_table = function(stripped_comment){
 	var stripped = match_utils.removeNonalpha(stripped_comment); 
 	//stripped = stripped.replaceTokens(stripped_comment); 
 
-	console.log("Looking up license");
-	console.log(stripped);
+	//console.log("Looking up license");
+	//console.log(stripped);
 
     for (license in data.licenses) {	    
 		frag = data.licenses[license].licenseFragments;
@@ -90,11 +89,11 @@ var search_table = function(stripped_comment){
 *	returns true for "free" and false for anything else	
 */
 var check = function(license_text){
-	console.log("checking...");
-	console.log(license_text);
+	//console.log("checking...");
+	//console.log(license_text);
 
 	if(license_text === undefined || license_text === null || license_text == ""){
-		console.log("Was not an inline script");
+		//console.log("Was not an inline script");
 		return false;
 	}
 	// remove whitespace
@@ -106,9 +105,6 @@ var check = function(license_text){
 		return false;
 	}
 	var declaration = matches[0];
-	
-	console.log("Got to this point");
-	console.log(declaration);
 
 	return search_table(declaration);
 
