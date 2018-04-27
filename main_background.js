@@ -1,7 +1,8 @@
 /**
 * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
 * *
-* Copyright (C) 2017 Nathan Nichols
+* Copyright (C) 2017, 2018 Nathan Nichols
+* Copyright (C) 2018 Ruben Rodriguez <ruben@gnu.org>
 *
 * This file is part of GNU LibreJS.
 *
@@ -814,11 +815,11 @@ function evaluate(script,name){
 	if(flag){
 		dbg_print("%c pass","color:green;");
 	} else{
-		return [flag,reason+"<br>"];
+		return [flag,reason];
 	}
 	
 	var final = full_evaluate(temp);
-	final[1] = final[1] + "<br>";
+//	final[1] = final[1] + "<br>";
 	return final;
 }
 
@@ -937,9 +938,9 @@ function get_script(response,url,tabid,wl,index=-1){
 		if(wl == true){
 			// Accept without reading script, it was explicitly whitelisted
 			if(typeof(unused_data[tabid]["accepted"].push) != "function"){
-				unused_data[tabid]["accepted"] = [[scriptname,"Page is whitelisted in preferences"]];
+				unused_data[tabid]["accepted"] = [[url,"Page is whitelisted in preferences"]];
 			} else{
-				unused_data[tabid]["accepted"].push([scriptname,"Page is whitelisted in preferences"]);
+				unused_data[tabid]["accepted"].push([url,"Page is whitelisted in preferences"]);
 			}				
 			resolve("\n/*\n LibreJS: Script whitelisted by user (From a URL found in comma seperated whitelist)\n*/\n"+response);
 			if(index != -1){
@@ -967,7 +968,7 @@ function get_script(response,url,tabid,wl,index=-1){
 		dbg_print("amt. blocked on page:"+badge_str);
 		if(badge_str > 0 || verdict == false){
 			webex.browserAction.setBadgeText({
-				text: "GRR",
+				text: "!",
 				tabId: tabid
 			});
 			webex.browserAction.setBadgeBackgroundColor({
@@ -976,7 +977,7 @@ function get_script(response,url,tabid,wl,index=-1){
 			});			
 		} else{
 			webex.browserAction.setBadgeText({
-				text: "OK",
+				text: "✓",
 				tabId: tabid
 			});
 			webex.browserAction.setBadgeBackgroundColor({
@@ -986,9 +987,9 @@ function get_script(response,url,tabid,wl,index=-1){
 		}
 
 		if(verdict == true){
-			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"accepted":[scriptname+" ("+src_hash+")",edited[2]]});
+			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"accepted":[url,edited[2]]});
 		} else{
-			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"blocked":[scriptname+" ("+src_hash+")",edited[2]]});
+			popup_res = add_popup_entry(tabid,src_hash,{"url":domain,"blocked":[url,edited[2]]});
 		}
 
 		popup_res.then(function(list_verdict){

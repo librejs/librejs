@@ -1,5 +1,25 @@
-//TODO: there is a known bug involving "forget preference" not working correctly.
+ /**
+ * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
+ * *
+ * Copyright (C) 2017, 2018 NateN1222 <nathannichols454@gmail.com>
+ * Copyright (C) 2018 Ruben Rodriguez <ruben@gnu.org>
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see  <http://www.gnu.org/licenses/>.
+ *
+ */
 
+//TODO: there is a known bug involving "forget preference" not working correctly.
 
 /**
 *	
@@ -58,9 +78,9 @@ function new_debug_button(name_text,callback){
 */
 function write_elements(data,name,color){
 	var url = data["url"];
-	var button_html = '<div style="float:right; position: relative;"><input id="temp" type="button" value="blacklist"></input></div><br>';
-	var button_html_2 = '<div style="float:right; position: relative;"><input id="temp2" type="button" value="whitelist"></input></div><br>';
-	var button_html_3 = '<div style="float:right; position: relative;"><input id="temp3" type="button" value="forget preference"></input></div><br>';
+	var button_html = '<div style="float:left;"><input id="temp" type="button" value="blacklist"></input></div>';
+	var button_html_2 = '<div style="float:left;"><input id="temp2" type="button" value="whitelist"></input></div>';
+	var button_html_3 = '<div style="float:left;"><input id="temp3" type="button" value="forget preference"></input></div>';
 	var heading = document.getElementById(name).getElementsByTagName("h2")[0];
 	var list = document.getElementById(name).getElementsByTagName("ul")[0];
 	if(typeof(data[name]) == "undefined" || data[name].length == 0){
@@ -72,7 +92,7 @@ function write_elements(data,name,color){
 	}
 	// Iterate over data[name] and generate list
 	for(var i = 0; i < data[name].length; i++){
-		list.innerHTML += "<li><b>"+data[name][i][0]+ ":</b><br>" + data[name][i][1]+"\n"+button_html+"<br><br>\n"+button_html_2+"<br><br>\n"+button_html_3+"</li>";
+		list.innerHTML += "<li><a href='"+data[name][i][0]+"'><b>"+data[name][i][0]+ "</a>:</b><br>" + data[name][i][1]+"<br>"+button_html+"\n"+button_html_2+"\n"+button_html_3+"</li>";
 		document.getElementById("temp").id = name+"_"+i;
 		document.getElementById("temp2").id = name+"_2_"+i;
 		document.getElementById("temp3").id = name+"_3_"+i;
