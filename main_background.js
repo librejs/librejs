@@ -933,6 +933,7 @@ function get_script(response,url,tabid,wl,index=-1){
 		if(unused_data[tabid] === undefined){
 			unused_data[tabid] = {"url":url,"accepted":[],"blocked":[]};
 		}
+		var edited;
 		var tok_index = url.split("/").length;		
 		var scriptname = url.split("/")[tok_index-1];
 		if(wl == true){
@@ -948,10 +949,11 @@ function get_script(response,url,tabid,wl,index=-1){
 			} else{
 				resolve("\n/*\n LibreJS: Script whitelisted by user (From a URL found in comma seperated whitelist)\n*/\n"+response);
 			}
+		edited = [true,response,"Page is whitelisted in preferences"];
+		}else{
+			edited = license_read(response,scriptname);
 		}
-	
 		var src_hash = hash(response);
-		var edited = license_read(response,scriptname);
 		var verdict = edited[0];
 		var popup_res;
 		var domain = get_domain(url);
