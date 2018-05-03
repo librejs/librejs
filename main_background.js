@@ -1068,9 +1068,10 @@ function read_script(a){
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
 	var encoder = new TextEncoder();
+	var str = "";
 
-	filter.ondata = event => {
-		var str = decoder.decode(event.data, {stream: true});
+	filter.onstop = event => {
+		console.log("read_script "+a.url);
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
 			var edit_script;
@@ -1086,6 +1087,9 @@ function read_script(a){
 			});
 		});
 	}
+        filter.ondata = event => {
+                str += decoder.decode(event.data, {stream: true});
+        }
 	return {};
 }
 
