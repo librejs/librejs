@@ -1269,10 +1269,14 @@ function read_document(a){
 	}
 	filter.onstop = event => {
 		var test = new ArrayBuffer();
-
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
 			var edit_page;
+                        if(! str.includes("<html")){
+                                dbg_print("not html");
+                                filter.write(encoder.encode(str));
+                                filter.disconnect();
+			}
 			if(whitelisted == true){
 				dbg_print("WHITELISTED");
 				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
