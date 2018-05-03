@@ -817,8 +817,8 @@ function evaluate(script,name){
 	} else{
 		return [flag,reason];
 	}
-	
-	var final = full_evaluate(temp);
+
+	var final = full_evaluate(script);
 //	final[1] = final[1] + "<br>";
 	return final;
 }
