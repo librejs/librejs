@@ -1255,16 +1255,11 @@ function edit_html(html,url,tabid,wl){
 * 
 */
 function read_document(a){
-
 	var GA = test_GA(a);
 	if(GA != false){
 		return GA;
 	}
-
-	if(unused_data[a["tabId"]] !== undefined && unused_data[a["tabId"]]["url"] != get_domain(a["url"])){
-		delete unused_data[a["tabId"]];
-		dbg_print("Page Changed!!!");
-	}
+	delete unused_data[a["tabId"]];
 	var str = "";
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
