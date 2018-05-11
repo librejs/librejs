@@ -860,6 +860,13 @@ function license_read(script_src, name){
 	var nontrivial_status;
 	var parts_denied = false;
 	var parts_accepted = false;
+	var license = legacy_license_lib.check(script_src);
+	if(license != false){
+		return [true,script_src,"Licensed under: "+license];
+	}
+	if (default_whitelist[hash(script_src)]){
+		return [true,script_src,"Common script known to be free software."];
+	}
 	while(true){ // TODO: refactor me
 		// TODO: support multiline comments
 		var matches = /\/\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
