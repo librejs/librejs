@@ -993,16 +993,7 @@ function get_script(response,url,tabid,wl,index=-1){
 			webex.browserAction.setBadgeBackgroundColor({
 				color: "red",
 				tabId: tabid
-			});			
-		} else{
-			webex.browserAction.setBadgeText({
-				text: "✓",
-				tabId: tabid
 			});
-			webex.browserAction.setBadgeBackgroundColor({
-				color: "green",
-				tabId: tabid
-			});	
 		}
 
 		if(verdict == true){
@@ -1276,7 +1267,6 @@ function read_document(a){
 	if(GA != false){
 		return GA;
 	}
-	delete unused_data[a["tabId"]];
 	var str = "";
 	var filter = webex.webRequest.filterResponseData(a.requestId);
 	var decoder = new TextDecoder("utf-8");
@@ -1285,6 +1275,15 @@ function read_document(a){
 		dbg_print("%c Error in getting document","color:red");
 	}
 	filter.onstop = event => {
+		delete unused_data[a["tabId"]];
+		webex.browserAction.setBadgeText({
+			text: "✓",
+			tabId: a["tabId"]
+		});
+		webex.browserAction.setBadgeBackgroundColor({
+			color: "green",
+			tabId: a["tabId"]
+		});
 		var test = new ArrayBuffer();
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
