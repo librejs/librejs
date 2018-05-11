@@ -875,7 +875,10 @@ function license_read(script_src, name){
 			return [true,edited_src,reason_text];
 		}
 		if(matches == null){
-			nontrivial_status = evaluate(unedited_src,name);
+			if (external)
+				return [false,edited_src,"External script with no known license."];
+			else
+				nontrivial_status = evaluate(unedited_src,name);
 			if(nontrivial_status[0] == true){
 				parts_accepted = true;
 				edited_src += unedited_src;
@@ -903,7 +906,10 @@ function license_read(script_src, name){
 		// sponge
 		console.log("before:");
 		console.log(before);
-		nontrivial_status = evaluate(before,name);
+		if (external)
+			nontrivial_status = [true, "External script with no known license"]
+		else
+			nontrivial_status = evaluate(before,name);
 		if(nontrivial_status[0] == true){
 			parts_accepted = true;
 			edited_src += before;
