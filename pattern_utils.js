@@ -33,7 +33,7 @@ exports.patternUtils = {
 	    return str.replace(regex, '');
     },
     removeWhitespace: function (str) {
-	    return str.replace(/\s+/gmi, '');
+	    return str.replace(/\/\//gmi, '').replace(/\*/gmi, '').replace(/\s+/gmi, '');
     },
     replaceTokens: function (str) {
 	    var regex = /<.*?>/gi;
