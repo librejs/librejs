@@ -1284,10 +1284,12 @@ function read_document(a){
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
 			var edit_page;
-                        if(! str.includes("<html")){
-                                dbg_print("not html");
-                                filter.write(encoder.encode(str));
-                                filter.disconnect();
+			// TODO Fix this ugly HACK!
+			if(! str.includes("<html")){
+				dbg_print("not html");
+				filter.write(encoder.encode(str));
+				filter.disconnect();
+				return {};
 			}
 			if(whitelisted == true){
 				dbg_print("WHITELISTED");
