@@ -31,6 +31,18 @@
 *
 *	(Use the variable "webex" for all API calls after calling this)
 */
+
+var PRINT_DEBUG = false;
+function dbg_print(a,b){
+	if(PRINT_DEBUG == true){
+		if(b === undefined){
+			console.log(a);
+		} else{
+			console.log(a,b);
+		}
+	}
+}
+
 var webex;
 function set_webex(){
 	if(typeof(browser) == "undefined"){
@@ -183,8 +195,8 @@ function generate_HTML(blocked_data){
 	for(var i = 0; i < to_clr.length; i++){
 		to_clr[i].innerHTML = "";
 	}
-	console.log("REGEN HTML:");
-	console.log(blocked_data);
+	dbg_print("REGEN HTML:");
+	dbg_print(blocked_data);
 	write_elements(blocked_data,"accepted","green");
 	write_elements(blocked_data,"whitelisted","green");
 	write_elements(blocked_data,"blocked","red");
