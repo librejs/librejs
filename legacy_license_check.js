@@ -40,7 +40,7 @@ var stripLicenseToRegexp = function (license) {
 		item = license.licenseFragments[i];
 		item.regex = match_utils.removeNonalpha(item.text);
 		item.regex = new RegExp(
-			match_utils.replaceTokens(item.regex), 'g'); 
+			match_utils.replaceTokens(item.regex), '');
 	}
 	return license;
 };
