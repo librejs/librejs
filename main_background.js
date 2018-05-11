@@ -35,9 +35,11 @@ console.log("main_background.js");
 */
 var DEBUG = false; // debug the JS evaluation 
 var PRINT_DEBUG = false; // Everything else 
+var time = Date.now();
 
 function dbg_print(a,b){
 	if(PRINT_DEBUG == true){
+		console.log("Time spent so far: " + (Date.now() - time)/1000 + " seconds");
 		if(b === undefined){
 			console.log(a);
 		} else{
@@ -1271,6 +1273,7 @@ function read_document(a){
 		dbg_print("%c Error in getting document","color:red");
 	}
 	filter.onstop = event => {
+		time = Date.now();
 		delete unused_data[a["tabId"]];
 		webex.browserAction.setBadgeText({
 			text: "✓",
