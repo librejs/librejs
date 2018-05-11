@@ -1082,13 +1082,7 @@ function read_script(a){
 		console.log("read_script "+a.url);
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
-			var edit_script;
-			if(whitelisted == true){
-				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
-				edit_script = get_script(str,a.url,a["tabId"],true);
-			} else{
-				edit_script = get_script(str,a.url,a["tabId"],false);
-			}
+			var edit_script = get_script(str,a.url,a["tabId"],whitelisted,-1);
 			edit_script.then(function(edited){
 				filter.write(encoder.encode(edited));
 				filter.disconnect();
