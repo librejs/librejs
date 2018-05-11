@@ -1187,8 +1187,12 @@ function edit_html(html,url,tabid,wl){
 				break;
 			}
 		}
-		if(read_metadata(meta_element) || legacy_license_lib.check(first_script_src)){
+		var license = legacy_license_lib.check(first_script_src);
+		if(read_metadata(meta_element) || license != false ){
 			console.log("Valid license for intrinsic events found");
+			add_popup_entry(tabid,url,{"url":url,"accepted":[url,"Global license for the page: "+license]});
+			// Do not process inline scripts
+			scripts="";
 		}else{
 			// Deal with intrinsic events
 			var has_intrinsic_events = [];
