@@ -898,14 +898,14 @@ function license_read(script_src, name){
 			
 		}
 		// sponge
-		console.log("undedited_src:");
-		console.log(unedited_src);
-		console.log(matches);
-		console.log("chopping at " + matches["index"] + ".");
+		dbg_print("undedited_src:");
+		dbg_print(unedited_src);
+		dbg_print(matches);
+		dbg_print("chopping at " + matches["index"] + ".");
 		var before = unedited_src.substring(0,matches["index"]);
 		// sponge
-		console.log("before:");
-		console.log(before);
+		dbg_print("before:");
+		dbg_print(before);
 		if (external)
 			nontrivial_status = [true, "External script with no known license"]
 		else
@@ -1079,7 +1079,7 @@ function read_script(a){
 	var str = "";
 
 	filter.onstop = event => {
-		console.log("read_script "+a.url);
+		dbg_print("read_script "+a.url);
 		var res = test_url_whitelisted(a.url);
 		res.then(function(whitelisted){
 			var edit_script = get_script(str,a.url,a["tabId"],whitelisted,-1);
