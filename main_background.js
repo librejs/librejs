@@ -1230,24 +1230,22 @@ function edit_html(html,url,tabid,wl){
 		dbg_print("Analyzing "+total_scripts+" inline scripts...");
 
 		for(var i = 0; i < scripts.length; i++){
-			if(scripts[i].src == ""){
-				var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
-				edit_script.then(function(edited){
-					var edited_source = edited[0];
-					var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
+			if (scripts[i].src == ""){
+				if (scripts[i].type=="" || scripts[i].type=="text/javascript"){
+					var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
+					edit_script.then(function(edited){
+						var edited_source = edited[0];
+						var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
+						html_doc.scripts[edited[1]].innerHTML = edited_source;
 
-					html_doc.scripts[edited[1]].innerHTML = edited_source;
-			
-					amt_scripts++;
-
-					if(amt_scripts >= total_scripts){
-						resolve(remove_noscripts(html_doc));					
-					}		
-
-				});
+					});
+				}
+				amt_scripts++;
+				if(amt_scripts >= total_scripts){
+				resolve(remove_noscripts(html_doc));
+				}
 			}
 		}
-
 		if(total_scripts == 0){
 			dbg_print("Nothing to analyze.");
 			resolve(remove_noscripts(html_doc));
