@@ -74,12 +74,12 @@ var search_table = function(stripped_comment){
 		max_i = data.licenses[license].licenseFragments.length;
 		for (i = 0; i < max_i; i++) {
 		    if (frag[i].regex.test(stripped)) {
-				console.log(data.licenses[license].licenseName);
-		       	return true;
+			//console.log(data.licenses[license].licenseName);
+			return data.licenses[license].licenseName;
 		    }
 		}
 	}	
-	console.log("No license found.");
+	console.log("No global license found.");
 	return false;
 
 }
