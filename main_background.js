@@ -869,7 +869,11 @@ function license_read(script_src, name){
 	}
 	while(true){ // TODO: refactor me
 		// TODO: support multiline comments
-		var matches = /\/\/\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+		var matches = /\/[\/\*]\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
+		var empty = /[^\s]/gm.exec(unedited_src);
+		if(empty == null){
+			return [true,edited_src,reason_text];
+		}
 		if(matches == null){
 			nontrivial_status = evaluate(unedited_src,name);
 			if(nontrivial_status[0] == true){
