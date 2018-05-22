@@ -1189,7 +1189,10 @@ function edit_html(html,url,tabid,wl){
 				break;
 			}
 		}
-		var license = legacy_license_lib.check(first_script_src);
+
+		var license = false;
+		if (first_script_src != "")
+			license = legacy_license_lib.check(first_script_src);
 		if(read_metadata(meta_element) || license != false ){
 			console.log("Valid license for intrinsic events found");
 			add_popup_entry(tabid,url,{"url":url,"accepted":[url,"Global license for the page: "+license]});
