@@ -25,6 +25,7 @@ var acorn = require('acorn/dist/acorn_loose');
 var jssha = require('jssha');
 var walk = require("acorn/dist/walk");
 var legacy_license_lib = require("./legacy_license_check.js");
+var {ResponseProcessor} = require("./bg/ResponseProcessor");
 
 console.log("main_background.js");
 /**
@@ -853,7 +854,7 @@ function license_valid(matches){
 *		reason text		
 *	]
 */
-function license_read(script_src, name){
+function license_read(script_src, name, external = false){
 	
 	var reason_text = "";
 
@@ -970,7 +971,7 @@ function get_script(response,url,tabid,wl,index=-1){
 			}
 		edited = [true,response,"Page is whitelisted in preferences"];
 		}else{
-			edited = license_read(response,scriptname);
+			edited = license_read(response,scriptname,index == -2);
 		}
 		var src_hash = hash(response);
 		var verdict = edited[0];
@@ -1066,35 +1067,28 @@ function block_ga(a){
 	else return {};
 }
 
+
+
 /**
-*	This is a callback trigged from requests caused by script tags with the src="" attribute.
+*	This listener gets called as soon as we've got all the HTTP headers, can guess
+* content type and encoding, and therefore correctly parse HTML documents and
+* and external script inclusion in search of non-free JavaScript
 */
-function read_script(a){
-	var GA = test_GA(a);
-	if(GA !== false){
-		return GA;
-	}
 
-	var filter = webex.webRequest.filterResponseData(a.requestId);
-	var decoder = new TextDecoder("utf-8");
-	var encoder = new TextEncoder();
-	var str = "";
+async function responseHandler(response) {
+	let {url, type} = response.request;
+	let whitelisted = await test_url_whitelisted(url);
+	let handle_it = type === "script" ? handle_script : handle_html;
+	return await handle_it(response, whitelisted);
+}
 
-	filter.onstop = event => {
-		dbg_print("read_script "+a.url);
-		var res = test_url_whitelisted(a.url);
-		res.then(function(whitelisted){
-			var edit_script = get_script(str,a.url,a["tabId"],whitelisted,-1);
-			edit_script.then(function(edited){
-				filter.write(encoder.encode(edited));
-				filter.disconnect();
-			});
-		});
-	}
-        filter.ondata = event => {
-                str += decoder.decode(event.data, {stream: true});
-        }
-	return {};
+/**
+* Here we handle external script requests
+*/
+async function handle_script(response, whitelisted){
+	let {text, request} = response;
+	let {url, tabId} = request;
+  return await get_script(text, url, tabId, whitelisted, -2);
 }
 
 /**
@@ -1260,61 +1254,21 @@ function edit_html(html,url,tabid,wl){
 }
 
 /**
-* Callback for main frame requests
-* 
+* Here we handle html document responses
 */
-function read_document(a){
-	var GA = test_GA(a);
-	if(GA != false){
-		return GA;
-	}
-	var str = "";
-	var filter = webex.webRequest.filterResponseData(a.requestId);
-	var decoder = new TextDecoder("utf-8");
-	var encoder = new TextEncoder();
-	filter.onerror = event => {
-		dbg_print("%c Error in getting document","color:red");
-	}
-	filter.onstop = event => {
-		time = Date.now();
-		delete unused_data[a["tabId"]];
-		webex.browserAction.setBadgeText({
-			text: "✓",
-			tabId: a["tabId"]
-		});
-		webex.browserAction.setBadgeBackgroundColor({
-			color: "green",
-			tabId: a["tabId"]
-		});
-		var test = new ArrayBuffer();
-		var res = test_url_whitelisted(a.url);
-		res.then(function(whitelisted){
-			var edit_page;
-			// TODO Fix this ugly HACK!
-			if(! str.includes("<html")){
-				dbg_print("not html");
-				filter.write(encoder.encode(str));
-				filter.disconnect();
-				return {};
-			}
-			if(whitelisted == true){
-				dbg_print("WHITELISTED");
-				// Doesn't matter if this is accepted or blocked, it will still be whitelisted
-				filter.write(encoder.encode(str));
-				filter.disconnect();
-			} else{
-				edit_page = edit_html(str,a.url,a["tabId"],false);
-				edit_page.then(function(edited){
-					filter.write(encoder.encode(edited));
-					filter.disconnect();
-				});
-			}
-		});
-	}
-	filter.ondata = event => {
-		str += decoder.decode(event.data, {stream: true});
-	}
-	return {};
+async function handle_html(response, whitelisted) {
+	let {text, request} = response;
+	let {url, tabId} = request;
+	delete unused_data[tabId];
+	browser.browserAction.setBadgeText({
+		text: "✓",
+		tabId
+	});
+	browser.browserAction.setBadgeBackgroundColor({
+		color: "green",
+		tabId
+	});
+	return await edit_html(text, url, tabId, false);
 }
 
 /**
@@ -1329,32 +1283,20 @@ function init_addon(){
 	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
 
 	// Prevents Google Analytics from being loaded from Google servers
-	var all_types = [
+	let all_types = [
 		"beacon", "csp_report", "font", "image", "imageset", "main_frame", "media",
 		"object", "object_subrequest", "ping", "script", "stylesheet", "sub_frame",
 		"web_manifest", "websocket", "xbl", "xml_dtd", "xmlhttprequest", "xslt", 
 		"other"
-	]
-	// Analyzes remote scripts
+	];
 	webex.webRequest.onBeforeRequest.addListener(
 		block_ga,
-		{urls:["<all_urls>"], types:all_types},
+		{urls: ["<all_urls>"], types: all_types},
 		["blocking"]
 	);
-
-	// Analyzes remote scripts
-	webex.webRequest.onBeforeRequest.addListener(
-		read_script,
-		{urls:["<all_urls>"], types:["script"]},
-		["blocking"]
-	);
-
-	// Analyzes the scripts inside of HTML
-	webex.webRequest.onBeforeRequest.addListener(
-		read_document,
-		{urls:["<all_urls>"], types:["main_frame"]},
-		["blocking"]
-	);
+	
+	// Analyzes all the html documents and external scripts as they're loaded
+	ResponseProcessor.install(responseHandler);
 
 	legacy_license_lib.init();
 }
