@@ -26,6 +26,7 @@ var jssha = require('jssha');
 var walk = require("acorn/dist/walk");
 var legacy_license_lib = require("./legacy_license_check.js");
 var {ResponseProcessor} = require("./bg/ResponseProcessor");
+var {Storage, ListStore} = require("./bg/Storage");
 
 console.log("main_background.js");
 /**
@@ -502,6 +503,7 @@ function connected(p) {
 		return;		
 	}
 	p.onMessage.addListener(function(m) {
+		console.debug("LibreJS BG: received message", m);
 		/**
 		*	Updates the entry of the current URL in storage
 		*/
@@ -1271,12 +1273,14 @@ async function handle_html(response, whitelisted) {
 	return await edit_html(text, url, tabId, false);
 }
 
+var pageWhitelist = new ListStore("pref_whitelist", Storage.CSV);
+
 /**
 *	Initializes various add-on functions
 *	only meant to be called once when the script starts
 */
-function init_addon(){
-
+async function init_addon(){
+	await pageWhitelist.load();
 	set_webex();
 	webex.runtime.onConnect.addListener(connected);
 	webex.storage.onChanged.addListener(options_listener);
@@ -1352,45 +1356,15 @@ function inject_contact_finder(tab_id){
 /**
 *	Adds given domain to the whitelist in options
 */
-function add_csv_whitelist(domain){
-	function storage_got(items){
-		if(items["pref_whitelist"] == ""){
-			items["pref_whitelist"] = domain + "*";
-		} else if(items["pref_whitelist"] == "undefined"){
-			items["pref_whitelist"] = domain + "*";		
-		} else{
-			items["pref_whitelist"] += "," + domain + "*";		
-		}
-		dbg_print("New CSV whitelist:");
-		dbg_print(items["pref_whitelist"]);
-		webex.storage.local.set({"pref_whitelist":items["pref_whitelist"]});
-	}
-	webex.storage.local.get(storage_got);	
+async function add_csv_whitelist(domain){
+	await pageWhitelist.store(`${domain}*`);
 }
 
 /**
 *	removes given domain from the whitelist in options
 */
-function remove_csv_whitelist(domain){
-	function storage_got(items){
-		if(items["pref_whitelist"] != ""){
-			domain = domain + "\\*";
-			domain.replace(/\./g,"\.");
-			// remove domain
-			dbg_print(new RegExp(domain,"g"));
-			items["pref_whitelist"] = items["pref_whitelist"].replace(new RegExp(domain,"g"),"")
-			// if an entry was deleted, it will leave an extra comma
-			items["pref_whitelist"] = items["pref_whitelist"].replace(/,+/g,",");
-			// remove trailing comma if the last one was deleted
-			if(items["pref_whitelist"].charAt(items["pref_whitelist"].length-1) == ","){
-				items["pref_whitelist"] = items["pref_whitelist"].substr(0,items["pref_whitelist"].length-2);
-			}
-		}
-		dbg_print("New CSV whitelist:");
-		dbg_print(items["pref_whitelist"]);
-		webex.storage.local.set({"pref_whitelist":items["pref_whitelist"]});
-	}
-	webex.storage.local.get(storage_got);	
+async function remove_csv_whitelist(domain) {
+	return pageWhitelist.remove(`${domain}*`);
 }
 
 init_addon();
