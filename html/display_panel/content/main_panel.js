@@ -58,7 +58,8 @@ var myPort = webex.runtime.connect({name:"port-from-cs"});
 var current_blocked_data;
 
 
-
+// Display the actual extension version Number
+document.querySelector("#version").textContent = browser.runtime.getManifest().version;
 
 /*
 *	Makes a button appear that calls a function when you press it.
