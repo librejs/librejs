@@ -1175,7 +1175,7 @@ function edit_html(html,url,tabid,wl){
 		var scripts = html_doc.scripts;
 		
 		var meta_element = html_doc.getElementById("LibreJS-info");
-		var first_scipt_src = "";
+		var first_script_src = "";
 		
 		// get the potential inline source that can contain a license
 		for(var i = 0; i < scripts.length; i++){
