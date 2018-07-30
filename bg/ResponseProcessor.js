@@ -52,6 +52,13 @@ class ResponseProcessor {
   }
 }
 
+Object.assign(ResponseProcessor, {
+  // control flow values to be returned by handler.pre() callbacks
+	ACCEPT: {},
+	REJECT: {cancel: true},
+	CONTINUE: null
+});
+
 class ResponseTextFilter {
   constructor(request) {
     this.request = request;
@@ -64,9 +71,16 @@ class ResponseTextFilter {
   }
 
   process(handler) {
-    if (!this.canProcess) return {};
-    let metaData = this.metaData;
-    let {requestId, responseHeaders} = this.request;
+    if (!this.canProcess) return ResponseProcessor.ACCEPT;
+    let {metaData, request} = this;
+    if (typeof handler.pre === "function") {
+      let res = handler.pre({request, metaData});
+      if (res) return res;
+      if (handler.post) handler = handler.post;
+      if (typeof handler !== "function") ResponseProcessor.ACCEPT;
+    }
+    
+    let {requestId, responseHeaders} = request;
     let filter = browser.webRequest.filterResponseData(requestId);
     let buffer = [];
 
@@ -83,7 +97,7 @@ class ResponseTextFilter {
       let editedText = null;
       try {
         let response = {
-          request: this.request,
+          request,
           metaData,
           text,
         };
@@ -103,7 +117,7 @@ class ResponseTextFilter {
       filter.disconnect();
     }
 
-    return metaData.forceUTF8() ? {responseHeaders} : {};
+    return metaData.forceUTF8() ? {responseHeaders} : ResponseProcessor.ACCEPT;;
   }
 }
 

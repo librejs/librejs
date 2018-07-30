@@ -58,14 +58,35 @@ class ListStore {
     this.items = new Set();
   }
   
+  static hashItem(hash) {
+    return hash.startsWith("(") ? hash : `(${hash})`;
+  }
+  static urlItem(url) {
+    let queryPos = url.indexOf("?");
+    return queryPos === -1 ? url : url.substring(0, queryPos);
+  }
+  static siteItem(url) {
+    if (url.endsWith("/*")) return url;
+    try {
+      return `${new URL(url).origin}/*`;
+    } catch (e) {
+      return `${url}/*`;
+    }
+  }
+  
   async save() {
     return await this.storage.save(this.key, this.items);
   }
   
   async load() {
-    return await this.storage.load(this.key);
+    try {
+      this.items = await this.storage.load(this.key);
+    } catch (e) {
+      console.error(e);
+    }
+    return this.items;
   }
-
+  
   async store(item) {
     let size = this.items.size;
     return (size !== this.items.add(item).size) && await this.save();
@@ -73,6 +94,10 @@ class ListStore {
   
   async remove(item) {
     return this.items.delete(item) && await this.save();
+  }
+  
+  contains(item) {
+    return this.items.has(item);
   }
 }
 
