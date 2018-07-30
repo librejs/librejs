@@ -73,8 +73,9 @@ class ResponseTextFilter {
   process(handler) {
     if (!this.canProcess) return ResponseProcessor.ACCEPT;
     let {metaData, request} = this;
+    let response = {request, metaData}; // we keep it around allowing callbacks to store state
     if (typeof handler.pre === "function") {
-      let res = handler.pre({request, metaData});
+      let res = handler.pre(response);
       if (res) return res;
       if (handler.post) handler = handler.post;
       if (typeof handler !== "function") ResponseProcessor.ACCEPT;
@@ -91,22 +92,17 @@ class ResponseTextFilter {
     filter.onstop = async event => {
       let decoder = metaData.createDecoder();
       let params = {stream: true};
-      let text = this.text = buffer.map(
+      response.text = buffer.map(
         chunk => decoder.decode(chunk, params))
         .join('');
       let editedText = null;
       try {
-        let response = {
-          request,
-          metaData,
-          text,
-        };
         editedText = await handler(response);
       } catch(e) {
         console.error(e);
       }
       if (metaData.forcedUTF8 ||
-        editedText !== null && text !== editedText) {
+        editedText !== null && response.text !== editedText) {
         // if we changed the charset, the text or both, let's re-encode
         filter.write(new TextEncoder().encode(editedText));
       } else {
