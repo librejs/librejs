@@ -350,127 +350,72 @@ function update_popup(tab_id,blocked_info,update=false){
 *
 *	Sends a message to the content script that adds a popup entry for a tab.
 *
-*	var example_blocked_info = {
-*		"accepted"or "blocked": ["name","reason"],
-*		"url": "example.com"
+*	The action argument is an object with two properties: one named either 
+* "accepted","blocked", "whitelisted" or "blacklisted", whose value is the array 
+* [scriptName, reason], and another named "url". Example:
+* action = {
+*		"accepted": ["jquery.js (someHash)","Whitelisted by user"],
+*		"url": "https://example.com/js/jquery.js"
 *	}
 *
-*	Returns true/false based on if script should be accepted/denied respectively
+*	Returns either "wl" (whitelisted), "bl" (blacklisted) or "none".
 *
 *	NOTE: This WILL break if you provide inconsistent URLs to it.
 *	Make sure it will use the right URL when refering to a certain script.
 *
 */
-function add_popup_entry(tab_id,src_hash,blocked_info,update=false){
-	return new Promise((resolve, reject) => {
-		var new_blocked_data;
-
-		// Make sure the entry in unused_data exists 
-
-		var url = blocked_info["url"];		
-		if(url === undefined){
-			console.error("No url passed to update_popup");
-			return 1;
+async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
+	if(!unused_data[tabId]) {
+		unused_data[tabId] = createReport({url: (await browser.tabs.get(tabId)).url});
+	}
+	let type, actionValue;
+	for (type of ["accepted", "blocked", "whitelisted", "blacklisted"]) {
+		if (type in action) {
+			actionValue = action[type];
+			break;
 		}
+	}
+	if (!actionValue) {
+		console.debug("Something wrong with action", action);
+		return "";
+	}
 
-		if(unused_data[tab_id] === undefined){
-			unused_data[tab_id] = createReport({url});
+
+	function getStatus(scriptName) {
+		let match = scriptName.match(/\(([^)]+)\)(?=[^()]*$)/);
+		if (!match) return type;
+		 
+		let [hashItem, srcHash] = match; // (hash), hash
+
+		return (blacklist.contains(hashItem)) ? "blacklisted"
+			: (default_whitelist[srcHash] || whitelist.contains(hashItem)) ? "whitelisted"
+			: type;
+	}
+	// Search unused data for the given entry
+	function isNew(entries, item) {
+		for (let e of entries) {
+			if (e[0] === item) return false;
 		}
-		
-		var type = "";
+		return true;
+	}
 
-		if(blocked_info["accepted"] !== undefined){
-			type = "accepted";
+	let entryType, res;
+	let scriptName = actionValue[0];
+	try {
+		entryType = getStatus(scriptName);
+		res = entryType.substring(0, 2);
+		let entries = unused_data[tabId][entryType];
+		if(isNew(entries, scriptName)){
+			dbg_print(unused_data);
+			dbg_print(unused_data[tabId]);
+			dbg_print(entryType);
+			entries.push(actionValue);
 		}
-		if(blocked_info["blocked"] !== undefined){
-			type = "blocked";
-		}
-
-		function get_sto(items){
-			function get_status(script_name,src_hash){
-				var temp = script_name.match(/\(.*?\)/g);
-				if(temp == null){
-					return "none"
-				}
-				var src_hash = temp[temp.length-1].substr(1,temp[0].length-2);
-
-				for(var i in items){
-					var res = i.match(/\(.*?\)/g);
-					if(res != null){
-						var test_hash = res[res.length-1].substr(1,res[0].length-2);
-						if(test_hash == src_hash){
-							return items[i];
-						}		
-					}
-				}
-
-				if(default_whitelist[src_hash] !== undefined){
-					//console.log("Found script in default whitelist: "+default_whitelist[src_hash]);				
-					return "whitelist";
-				} else{
-					//console.log("script " + script_name + " not in default whitelist.");
-				}
-
-				return "none";
-			}
-			function is_bl(script_name){
-				if(get_status(script_name) == "blacklist"){
-					return true;			
-				}
-				return false;
-			}
-			function is_wl(script_name){
-				if(get_status(script_name) == "whitelist"){
-					return true;			
-				}
-				return false;
-			}
-			
-
-			// Search unused data for the given entry
-			function not_duplicate(entry,key){
-				var flag = true;
-				for(var i = 0; i < unused_data[tab_id][entry].length; i++){
-					if(unused_data[tab_id][entry][i][0] == key[0]){
-						flag = false;
-					}					
-				}
-				return flag;			
-			}
-			var type_key = "";
-			var res = "";
-			try {
-				if(is_bl(blocked_info[type][0])){
-					type_key = "blacklisted";
-					res = "bl";
-					//console.log("Script " + blocked_info[type][0] + " is blacklisted");
-				}
-				else if(is_wl(blocked_info[type][0])){
-					type_key = "whitelisted";
-					res = "wl";
-					//console.log("Script " + blocked_info[type][0] + " is whitelisted");
-				} else{
-					type_key = type;
-					res = "none";
-					//console.log("Script " + blocked_info[type][0] + " isn't whitelisted or blacklisted");
-				}
-			
-				if(not_duplicate(type_key,blocked_info[type])){
-					dbg_print(unused_data);
-					dbg_print(unused_data[tab_id]);
-					dbg_print(type_key);
-					unused_data[tab_id][type_key].push(blocked_info[type]);
-					resolve(res);
-				}
-			} catch (e) {
-				console.error(e, "blocked_info %o, type %s, type_key %s", blocked_info, type, type_key);
-			}
-			resolve(res);
-		}
-		webex.storage.local.get(get_sto);
-
-		return 0;
-	});
+	} catch (e) {
+		console.error(e, "action %o, type %s, entryType %s", action, type, entryType);
+		res = "none";
+	}
+	return res;
 }
 
 
@@ -517,15 +462,19 @@ function connected(p) {
 				current_url = tabs[0]["url"];
 				var domain = get_domain(current_url);
 				var scriptkey = m[val][0];
-				if(val == "forget"){
-					console.log("KEY:");
-					console.log(scriptkey);					
-					// TODO: This should produce a "Refresh the page for this change to take effect" message
-					var prom = webex.storage.local.remove(scriptkey);
-				} else{
-					var newitem = {};
-					newitem[scriptkey] = val;
-					webex.storage.local.set(newitem);			
+				switch(val) {
+					case "forget":
+						whitelist.remove(scriptkey);
+						blacklist.remove(scriptkey);
+						break;
+					case "whitelist":
+						blacklist.remove(scriptkey);
+						whitelist.store(scriptkey);
+						break;
+					case "blacklist":
+						whitelist.remove(scriptkey);
+						blacklist.store(scriptkey);
+					break;
 				}
 			}
 			var querying = webex.tabs.query({active: true,currentWindow: true},geturl);			
@@ -946,7 +895,10 @@ async function get_script(response, url, tabId, whitelisted = false, index = -1)
 	let scriptName = url.split("/").pop();
 	if (whitelisted) {
 		// Accept without reading script, it was explicitly whitelisted
-		report.accepted.push([url, "Page is whitelisted in preferences"]);
+		let reason = response.whitelistedSite 
+			? "Site ${response.whitelistedSite} whitelisted by user" 
+			: "Page whitelisted by user";
+			addReportEntry(tabId, url, {"whitelisted": [url, reason], url});
 		return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
 	}
 	let [verdict, editedSource, reason] = license_read(response, scriptName, index === -2);
@@ -964,7 +916,7 @@ async function get_script(response, url, tabId, whitelisted = false, index = -1)
 			tabId
 		});
 	}
-	let listVerdict = await add_popup_entry(tabId, sourceHash, {"url":domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
+	let listVerdict = await addReportEntry(tabId, sourceHash, {"url": domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
 	switch(listVerdict) {
 		case "wl": case "bl":
 			let verdictText = listVerdict === "wl" ? "whitelisted" : "blacklisted";
@@ -1022,16 +974,18 @@ var ResponseHandler = {
 	*/
 	pre(response) {
 		let {request} = response;
-		let {url, documentUrl, type, tabId} = request;
+		let {url, type, tabId} = request;
 		
 		let site = ListStore.siteItem(url);
 		
 		let blacklistedSite = blacklist.contains(site);
 		let blacklisted = blacklistedSite || blacklist.contains(url);
+		let topUrl = request.frameAncestors && request.frameAncestors.pop() || request.documentUrl;
 		if (blacklisted) {
 			if (type === "script") {
 				// abort the request before the response gets fetched
-				add_popup_entry(tabId, url, {url, "blocked": [url, "Blacklisted by user"]});
+				addReportEntry(tabId, url, {url: topUrl, 
+					"blacklisted": [url, blacklistedSite ? `User blacklisted ${site}` : "Blacklisted by user"]});
 				return ResponseProcessor.REJECT;
 			} 
 			// use CSP to restrict JavaScript execution in the page
@@ -1039,12 +993,16 @@ var ResponseHandler = {
 				name: `Content-security-policy`,
 				value: `script-src '${blacklistedSite ? 'self' : 'none'}';`
 			});
-		} else if (
-				response.whitelisted = (whitelist.contains(site) || whitelist.contains(url)) &&
-				type === "script") {
-			// accept the script and stop processing
-			add_popup_entry(tabId, url, {url, "accepted": [url, "Whitelisted by user"]});
-			return ResponseProcessor.ACCEPT;
+		} else {
+			let whitelistedSite = whitelist.contains(site);
+			if (whitelistedSite) response.whitelistedSite = site;
+			if ((response.whitelisted = (whitelistedSite || whitelist.contains(url)))
+					&& type === "script") {
+				// accept the script and stop processing
+				addReportEntry(tabId, url, {url: topUrl, 
+					"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
+				return ResponseProcessor.ACCEPT;
+			}
 		}
 		// it's a page (it's too early to report) or an unknown script:
 		//  let's keep processing
@@ -1168,7 +1126,7 @@ function edit_html(html,url,tabid,wl){
 			license = legacy_license_lib.check(first_script_src);
 		if(read_metadata(meta_element) || license != false ){
 			console.log("Valid license for intrinsic events found");
-			add_popup_entry(tabid,url,{"url":url,"accepted":[url,"Global license for the page: "+license]});
+			addReportEntry(tabid, url, {url, "accepted":[url, `Global license for the page: ${license}`]});
 			// Do not process inline scripts
 			scripts="";
 		}else{
@@ -1237,8 +1195,8 @@ function edit_html(html,url,tabid,wl){
 */
 async function handle_html(response, whitelisted) {
 	let {text, request} = response;
-	let {url, tabId} = request;
-	delete unused_data[tabId];
+	let {url, tabId, type} = request;
+	if (type === "main_frame") delete unused_data[tabId];
 	browser.browserAction.setBadgeText({
 		text: "✓",
 		tabId
@@ -1247,7 +1205,7 @@ async function handle_html(response, whitelisted) {
 		color: "green",
 		tabId
 	});
-	return await edit_html(text, url, tabId, false);
+	return await edit_html(text, url, tabId, whitelisted);
 }
 
 var whitelist = new ListStore("pref_whitelist", Storage.CSV);
