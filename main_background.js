@@ -27,6 +27,7 @@ var walk = require("acorn/dist/walk");
 var legacy_license_lib = require("./legacy_license_check.js");
 var {ResponseProcessor} = require("./bg/ResponseProcessor");
 var {Storage, ListStore} = require("./bg/Storage");
+var {ListManager} = require("./bg/ListManager");
 
 console.log("main_background.js");
 /**
@@ -110,15 +111,6 @@ var reserved_objects = [
 	"eval"
 ];
 
-
-// Default whitelist, comes from the script in hash_script
-var wl_data = require("./hash_script/whitelist").whitelist.jquery;
-var default_whitelist = {};
-for(var i = 0; i < wl_data.length; i++){
-	default_whitelist[wl_data[i].hash] = true;
-}
-
-
 /**
 *	
 *	Sets global variable "webex" to either "chrome" or "browser" for
@@ -186,6 +178,7 @@ function createReport(initializer = null) {
 		"blocked": [],
 		"blacklisted": [],
 		"whitelisted": [],
+		"unknown": [],
 		url: "",
 	};
 	return initializer ? Object.assign(template, initializer) : template;
@@ -251,97 +244,24 @@ function debug_print_local(){
 *	Make sure it will use the right URL when refering to a certain script.
 * 
 */
-function update_popup(tab_id,blocked_info,update=false){
-	var new_blocked_data;
-	function get_sto(items){
-		//************************************************************************//
-		// Move scripts that are accepted/blocked but whitelisted to "whitelisted" category
-		// (Ideally, they just would not be tested in the first place because that would be faster)
-		var url = blocked_info["url"];	
-		if(url === undefined){
-			console.error("No url passed to update_popup");
-			return 1;
+function updateReport(tabId, oldReport, updateUI = false){
+	let {url} = oldReport;
+	let newReport = createReport({url});
+	for (let property of Object.keys(oldReport)) {
+		if (property === "url") continue;
+		let entries = oldReport[property];
+		let defValue = property === "accepted" || property === "blocked" ? property : "unknown";
+		for (let script of entries) {
+			let status = listManager.getStatus(script[0],  defValue);
+			if (Array.isArray(newReport[status])) newReport[status].push(script);
 		}
-
-		function get_status(script_name){
-			var temp = script_name.match(/\(.*?\)/g);
-			if(temp == null){
-				return "none"
-			}
-			var src_hash = temp[temp.length-1].substr(1,temp[0].length-2);
-
-			for(var i in items){
-				var res = i.match(/\(.*?\)/g);
-				if(res != null){
-					var test_hash = res[res.length-1].substr(1,res[0].length-2);
-					if(test_hash == src_hash){
-						return items[i];
-					}		
-				}
-			}
-
-			if(default_whitelist[src_hash] !== undefined){
-				//console.log("Found script in default whitelist: "+default_whitelist[src_hash]);				
-				return "whitelist";
-			} else{
-				//console.log("script " + script_name + " not in default whitelist.");
-				return "none";
-			}
-		}
-		function is_bl(script_name){
-			if(get_status(script_name) == "blacklist"){
-				return true;			
-			}
-			else return false;
-		}
-		function is_wl(script_name){
-			if(get_status(script_name) == "whitelist"){
-				return true;			
-			}
-			else return false;
-		}
-		new_blocked_data = createReport({url});
-		for(var type in blocked_info){
-			for(var script_arr in blocked_info[type]){
-				if(is_bl(blocked_info[type][script_arr][0])){
-					new_blocked_data["blacklisted"].push(blocked_info[type][script_arr]);
-					//console.log("Script " + blocked_info[type][script_arr][0] + " is blacklisted");
-					continue;
-				}
-				if(is_wl(blocked_info[type][script_arr][0])){
-					new_blocked_data["whitelisted"].push(blocked_info[type][script_arr]);
-					//console.log("Script " + blocked_info[type][script_arr][0] + " is whitelisted");
-					continue;
-				}
-				if(type == "url"){
-					continue;
-				}
-				// either "blocked" or "accepted"
-				new_blocked_data[type].push(blocked_info[type][script_arr]);
-				//console.log("Script " + blocked_info[type][script_arr][0] + " isn't whitelisted or blacklisted");			
-			}
-		}		
-		dbg_print(new_blocked_data);
-		//***********************************************************************************************//
-		// store the blocked info until it is opened and needed
-		if(update == false && active_connections[tab_id] === undefined){
-			dbg_print("[TABID:"+tab_id+"]"+"Storing blocked_info for when the browser action is opened or asks for it.");
-			if(tab_id == undefined){
-				dbg_print("UNDEFINED TAB_ID");
-			}
-			unused_data[tab_id] = new_blocked_data; 
-		} else{
-			if(tab_id == undefined){
-				dbg_print("UNDEFINED TAB_ID");
-			}
-			unused_data[tab_id] = new_blocked_data; 
-			dbg_print("[TABID:"+tab_id+"]"+"Sending blocked_info directly to browser action");
-			active_connections[tab_id].postMessage({"show_info":new_blocked_data});
-			delete active_connections[tab_id];
-		}
-		return 0;
 	}
-	webex.storage.local.get(get_sto);
+	unused_data[tabId] = newReport;
+	dbg_print(newReport);
+	if (updateUI && active_connections[tabId]) {
+		dbg_print(`[TABID: ${tabId}] Sending script blocking report directly to browser action.`);
+		active_connections[tabId].postMessage({show_info: newReport});
+	}
 }
 
 /**
@@ -351,14 +271,14 @@ function update_popup(tab_id,blocked_info,update=false){
 *	Sends a message to the content script that adds a popup entry for a tab.
 *
 *	The action argument is an object with two properties: one named either 
-* "accepted","blocked", "whitelisted" or "blacklisted", whose value is the array 
-* [scriptName, reason], and another named "url". Example:
+* "accepted","blocked", "whitelisted", "blacklisted" or "unknown", whose value 
+* is the array [scriptName, reason], and another named "url". Example:
 * action = {
 *		"accepted": ["jquery.js (someHash)","Whitelisted by user"],
 *		"url": "https://example.com/js/jquery.js"
 *	}
 *
-*	Returns either "wl" (whitelisted), "bl" (blacklisted) or "none".
+*	Returns either "wl" (whitelisted), "bl" (blacklisted) or "unknown".
 *
 *	NOTE: This WILL break if you provide inconsistent URLs to it.
 *	Make sure it will use the right URL when refering to a certain script.
@@ -380,17 +300,6 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 		return "";
 	}
 
-
-	function getStatus(scriptName) {
-		let match = scriptName.match(/\(([^)]+)\)(?=[^()]*$)/);
-		if (!match) return type;
-		 
-		let [hashItem, srcHash] = match; // (hash), hash
-
-		return (blacklist.contains(hashItem)) ? "blacklisted"
-			: (default_whitelist[srcHash] || whitelist.contains(hashItem)) ? "whitelisted"
-			: type;
-	}
 	// Search unused data for the given entry
 	function isNew(entries, item) {
 		for (let e of entries) {
@@ -402,7 +311,7 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 	let entryType, res;
 	let scriptName = actionValue[0];
 	try {
-		entryType = getStatus(scriptName);
+		entryType = listManager.getStatus(scriptName, type);
 		res = entryType.substring(0, 2);
 		let entries = unused_data[tabId][entryType];
 		if(isNew(entries, scriptName)){
@@ -412,8 +321,8 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 			entries.push(actionValue);
 		}
 	} catch (e) {
-		console.error(e, "action %o, type %s, entryType %s", action, type, entryType);
-		res = "none";
+		console.error("action %o, type %s, entryType %s", action, type, entryType, e);
+		res = "unknown";
 	}
 	return res;
 }
@@ -447,52 +356,19 @@ function connected(p) {
 		webex.storage.local.get(cb);
 		return;		
 	}
-	p.onMessage.addListener(function(m) {
+	p.onMessage.addListener(async function(m) {
 		console.debug("LibreJS BG: received message", m);
-		/**
-		*	Updates the entry of the current URL in storage
-		*/
-		function set_script(script,val){
-			if(val != "whitelist" && val != "forget" && val != "blacklist"){
-				console.error("Key must be either 'whitelist', 'blacklist' or 'forget'");
-			}
-			// (Remember that we do not trust the names of scripts.)
-			var current_url = "";
-			function geturl(tabs) {
-				current_url = tabs[0]["url"];
-				var domain = get_domain(current_url);
-				var scriptkey = m[val][0];
-				switch(val) {
-					case "forget":
-						whitelist.remove(scriptkey);
-						blacklist.remove(scriptkey);
-						break;
-					case "whitelist":
-						blacklist.remove(scriptkey);
-						whitelist.store(scriptkey);
-						break;
-					case "blacklist":
-						whitelist.remove(scriptkey);
-						blacklist.store(scriptkey);
-					break;
-				}
-			}
-			var querying = webex.tabs.query({active: true,currentWindow: true},geturl);			
-		}
+	
 		var update = false;
 		var contact_finder = false;
-		if(m["whitelist"] !== undefined){
-			set_script(m["whitelist"][0],"whitelist");
-			update = true;
+		
+		for (let action of ["whitelist", "blacklist", "forget"]) {
+			if (m[action]) {
+				await listManager[action](m[action][0]);
+				update = true;
+			}
 		}
-		if(m["blacklist"] !== undefined){
-			set_script(m["blacklist"][0],"blacklist");
-			update = true;		
-		}
-		if(m["forget"] !== undefined){
-			set_script(m["forget"][0],"forget");
-			update = true;		
-		}
+		
 		// 
 		if(m["open_popup_tab"] !== undefined){
 			open_popup_tab(m["open_popup_tab"]);
@@ -513,42 +389,42 @@ function connected(p) {
 			debug_delete_local();
 		}
 		// Add this domain to the whitelist
-		if(m["allow_all"] !== undefined){
-			var domain = get_domain(m["allow_all"]["url"]);
-			add_csv_whitelist(domain);
+		if(m.allow_all){
+			await listManager.whitelist(ListStore.siteItem(m.allow_all.url));
+			update = true;
 		}
-		// Remote this domain from the whitelist
-		if(m["block_all"] !== undefined){
-			var domain = get_domain(m["block_all"]["url"]);
-			remove_csv_whitelist(domain);
+		// Remove this domain from the whitelist
+		if(m.block_all){
+			await listManager.forget(ListStore.siteItem(m.block_all.url));
+			update = true;
 		}
-		function logTabs(tabs) {
-			if(contact_finder){
-				dbg_print("[TABID:"+tab_id+"] Injecting contact finder");
-				//inject_contact_finder(tabs[0]["id"]);
-			}
-			if(update){
-				dbg_print("%c updating tab "+tabs[0]["id"],"color: red;");
-				update_popup(tabs[0]["id"],unused_data[tabs[0]["id"]],true);
-				active_connections[tabs[0]["id"]] = p;
-			}
-			for(var i = 0; i < tabs.length; i++) {
-				var tab = tabs[i];
-				var tab_id = tab["id"];
-				if(unused_data[tab_id] !== undefined){
+		
+		let tabs = await browser.tabs.query({active: true, currentWindow: true});
+		
+		if(contact_finder){
+			let tab = tabs.pop();
+			dbg_print(`[TABID:${tab.id}] Injecting contact finder`);
+			//inject_contact_finder(tabs[0]["id"]);
+		}
+		if(update){
+			let tab = tabs.pop();
+			dbg_print(`%c updating tab ${tab.id}`, "color: red;");
+			active_connections[tab.id] = p;
+			await updateReport(tab.id, unused_data[tab.id], true);
+		} else {
+			for(let tab of tabs) {
+				if(unused_data[tab.id]){
 					// If we have some data stored here for this tabID, send it
-					dbg_print("[TABID:"+tab_id+"]"+"Sending stored data associated with browser action");								
-					p.postMessage({"show_info":unused_data[tab_id]});
+					dbg_print(`[TABID: ${tab.id}] Sending stored data associated with browser action'`);								
+					p.postMessage({"show_info": unused_data[tab.id]});
 				} else{
 					// create a new entry
-					unused_data[tab_id] = createReport({"url": tab.url});
-					p.postMessage({"show_info":unused_data[tab_id]});							
-					dbg_print("[TABID:"+tab_id+"]"+"No data found, creating a new entry for this window.");	
+					let report = unused_data[tab.id] = createReport({"url": tab.url});
+					p.postMessage({show_info: report});							
+					dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);	
 				}
 			}
 		}
-		var querying = webex.tabs.query({active: true,currentWindow: true},logTabs);
-		
 	});
 }
 
@@ -568,15 +444,6 @@ function delete_removed_tab_info(tab_id, remove_info){
 	}
 }
 
-/**
-*	Check whitelisted by hash
-*
-*/
-function blocked_status(hash) {
-	let hashItem = ListStore.hashItem(hash);
-	return whitelist.contains(hashItem) ? 
-		"whitelisted" : blacklist.contains(hashItem) ? "blacklisted" : "none";
-}
 /* *********************************************************************************************** */
 
 var fname_data = require("./fname_data.json").fname_data;
@@ -805,7 +672,7 @@ function license_read(script_src, name, external = false){
 	if(license != false){
 		return [true,script_src,"Licensed under: "+license];
 	}
-	if (default_whitelist[hash(script_src)]){
+	if (listManager.builtInHashes.has(hash(script_src))){
 		return [true,script_src,"Common script known to be free software."];
 	}
 	while(true){ // TODO: refactor me
@@ -976,6 +843,7 @@ var ResponseHandler = {
 		let {request} = response;
 		let {url, type, tabId} = request;
 		
+		url = ListStore.urlItem(url);
 		let site = ListStore.siteItem(url);
 		
 		let blacklistedSite = blacklist.contains(site);
@@ -1210,6 +1078,12 @@ async function handle_html(response, whitelisted) {
 
 var whitelist = new ListStore("pref_whitelist", Storage.CSV);
 var blacklist = new ListStore("pref_blacklist", Storage.CSV);
+var listManager = new ListManager(whitelist, blacklist,
+		// built-in whitelist of script hashes, e.g. jQuery
+		Object.values(require("./hash_script/whitelist").whitelist)
+			.reduce((a, b) => a.concat(b)) // as a flat array
+			.map(script => script.hash)
+	);
 
 /**
 *	Initializes various add-on functions
