@@ -1011,7 +1011,7 @@ function edit_html(html,url,tabid,wl){
 			// "i" is an index in html_doc.all
 			// "j" is an index in intrinsic_events
 			function edit_event(src,i,j,name){
-				var edited = get_script(src,name);
+				var edited = get_script(src, name, tabid);
 				edited.then(function(){
 					html_doc.all[i].attributes[intrinsic_events[j]].value = edited[0];
 				});
