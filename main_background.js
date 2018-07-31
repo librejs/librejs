@@ -1064,15 +1064,17 @@ function edit_html(html,url,tabid,wl){
 async function handle_html(response, whitelisted) {
 	let {text, request} = response;
 	let {url, tabId, type} = request;
-	if (type === "main_frame") delete unused_data[tabId];
-	browser.browserAction.setBadgeText({
-		text: "✓",
-		tabId
-	});
-	browser.browserAction.setBadgeBackgroundColor({
-		color: "green",
-		tabId
-	});
+	if (type === "main_frame") { 
+		delete unused_data[tabId];
+		browser.browserAction.setBadgeText({
+			text: "✓",
+			tabId
+		});
+		browser.browserAction.setBadgeBackgroundColor({
+			color: "green",
+			tabId
+		});
+	}
 	return await edit_html(text, url, tabId, whitelisted);
 }
 
