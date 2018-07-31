@@ -24,7 +24,7 @@
   only the "interesting" HTML and script requests and leaving the other alone
 */
 
-let {ResponseMetaData} = require("./ResponseMetaData.js");
+let {ResponseMetaData} = require("./ResponseMetaData");
 
 let listeners = new WeakMap();
 let webRequestEvent = browser.webRequest.onHeadersReceived;
