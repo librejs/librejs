@@ -68,17 +68,18 @@ ul {
     padding:0;
     list-style:none;
 }
-ul.blocked-js li, ul.accepted-js li, ul.dryrun-js li {
+#info li {
     padding:5px;
     border-bottom:2px solid #CCC;
     margin:0;
+    overflow: hidden;
 }
 
-ul ul {
+#info ul ul {
     margin:10px;
     list-style:disc;
 }
-ul.blocked-js ul li, ul.accepted-js ul li, ul.dryrun-js ul li {
+#info ul ul li {
     padding:5px;
     border-bottom:0;
 }
@@ -86,63 +87,48 @@ ul.blocked-js ul li, ul.accepted-js ul li, ul.dryrun-js ul li {
     clear:both;
 }
 
-/* 
-   Pure JS button styles below taken from:
-   http://webdesignerwall.com/tutorials/css3-gradient-buttons
-   */
-.button {
-    display: inline-block;
-    outline: none;
-    cursor: pointer;
-    text-align: center;
-    text-decoration: none;
-    font-size: 1 em;
-    border-radius: .5em;
-    float:right;
-    padding:10px;
+#info .type-name {
+  text-transform: uppercase;
+  font-weight: bold;
 }
-.small.button {
-    font-size:11px;
-    padding:.5em .5em;
-    margin-top:10px;
+
+#info .accepted-js .type-name {
+  color: #080;
 }
-.button:hover {
-    text-decoration: none;
+
+#info .blocked-js .type-name {
+  color: #800;
 }
-.button:active {
-    position: relative;
-    top: 1px;
+
+#info .unknown-js .type-name {
+  color: #008;
 }
-.orange {
-    color: #fef4e9;
-    border: solid 1px #da7c0c;
-    background: #f78d1d;
-    background: -webkit-gradient(linear, left top, left bottom, from(#faa51a), to(#f47a20));
-    background: -moz-linear-gradient(top,  #faa51a,  #f47a20);
+
+#info .unknown-js .reason {
+  display: none;
 }
-.orange:hover {
-    background: #f47c20;
-    background: -webkit-gradient(linear, left top, left bottom, from(#f88e11), to(#f06015));
-    background: -moz-linear-gradient(top,  #f88e11,  #f06015);
+
+.by-site button.forget, button.forget[name="*"] {
+  display: none;
 }
-.orange:active {
-    color: #fcd3a5;
-    background: -webkit-gradient(linear, left top, left bottom, from(#f47a20), to(#faa51a));
-    background: -moz-linear-gradient(top,  #f47a20,  #faa51a);
+
+.by-site button.forget[name="*"], #site .forget[name="*"] {
+  display: initial;
 }
-.white {
-    background: -moz-linear-gradient(center top , #FFFFFF, #EDEDED) repeat scroll 0 0 transparent;
-    border: 1px solid #B7B7B7;
-    /*    color: #606060;*/
-    color:#9d0d0d;
+
+
+button.whitelist {
+  color: #080;
 }
-.white:hover {
-    background: -moz-linear-gradient(center top , #FFFFFF, #DCDCDC) repeat scroll 0 0 transparent;
+button.blacklist {
+  color: #800;
 }
-.white:active {
-    background: -moz-linear-gradient(center top , #EDEDED, #FFFFFF) repeat scroll 0 0 transparent;
-/*color: #999999;*/
-    
+button.forget {
+  color: #008;
+}
+
+button:disabled {
+  color: #888 !important;
 }
 
 span.accepted, span.blocked {
@@ -151,9 +137,7 @@ span.accepted, span.blocked {
     font-variant:small-caps;
     font-weight:bold;
 }
-ul.blocked-js li {
-    overflow:hidden;
-}
+
 span.blocked {
     color:#8e0000;
 }
@@ -172,4 +156,18 @@ span.blocked {
     margin-top: 8px;
     font-size: 14px;
     list-style-type: disc;
+}
+
+
+.empty #site, .unknown-js.empty {
+  display: none;
+}
+
+.tab #must-reload, .tab #buttons, .empty #buttons {
+  display: none;
+}
+
+#buttons button {
+  width: 100%;
+  text-align: center;
 }

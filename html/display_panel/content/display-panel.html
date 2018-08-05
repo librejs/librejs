@@ -41,35 +41,61 @@
                    <h1 class="libre">LibreJS</h1>
                 </a>
             </div>
-            <div>
-                <a target="_blank" href="https://www.gnu.org/software/librejs/"
-                   id="librejs-web-link">gnu.org/software/librejs</a>
-            </div>
-            <div>
-                <strong>LibreJS <span id="version"></span></strong>
-            </div>
         </div>
         <div id="buttons" class="title-area">
-            <table id="buttons_table">
-            </table>
+          <div>
+              <a target="_blank" href="https://www.gnu.org/software/librejs/"
+                 id="librejs-web-link">gnu.org/software/librejs</a>
+          </div>
+          <div>
+              <strong>LibreJS <span id="version"></span></strong>
+          </div>
+          <button id="complain">Complain to site owner</button>
+         	<button id="report-tab">Show this report in a new tab</button>
         </div>
     </div>
     <div id="info">
-        <div id="whitelisted">
-            <h2 class="blocked-js"></h2>
-            <ul class="blocked-js"></ul>
+        <div id="site">
+          <h2 class="site">This whole site <span></span></h2>
+          <div class="buttons">
+            <button class="whitelist" name="*">Whitelist</button>
+            <button class="blacklist" name="*">Blacklist</button>
+            <button class="forget" name="*">Forget</button>
+          </div>
         </div>
-        <div id="accepted">
-            <h2 class="blocked-js"></h2>
-            <ul class="blocked-js"></ul>
+        <div id="unknown" class="unknown-js">
+          <h2></h2>
+          <p id="must-reload">
+            LibreJS will decide whether blocking these scripts next time this page is loaded. <button id="reload">Reload it now</button>
+          </p>
+          <ul>
+            <li id="li-template">
+                <a class="script-url" href="#"></a>:
+                <p class="reason"></p>
+                <div class="buttons">
+                  <button class="whitelist">Whitelist</button>
+                  <button class="blacklist">Blacklist</button>
+                  <button class="forget">Forget</button>
+                  <button class="forget" name="*">Forget <span class="domain"></span></button>
+                </div>
+              </li>
+          </ul>
         </div>
-        <div id="blocked">
-            <h2 class="blocked-js"></h2>
-            <ul class="blocked-js"></ul>
+        <div id="whitelisted" class="accepted-js">
+            <h2></h2>
+            <ul></ul>
         </div>
-        <div id="blacklisted">
-            <h2 class="blocked-js"></h2>
-            <ul class="blocked-js"></ul>
+        <div id="accepted" class="accepted-js">
+            <h2></h2>
+            <ul></ul>
+        </div>
+        <div id="blocked" class="blocked-js">
+            <h2></h2>
+            <ul></ul>
+        </div>
+        <div id="blacklisted" class="blocked-js">
+            <h2></h2>
+            <ul></ul>
         </div>
     </div>
 </body>

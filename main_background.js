@@ -181,7 +181,12 @@ function createReport(initializer = null) {
 		"unknown": [],
 		url: "",
 	};
-	return initializer ? Object.assign(template, initializer) : template;
+	if (initializer) {
+		template = Object.assign(template, initializer);
+	}
+	template.site = ListStore.siteItem(template.url);
+	template.siteStatus = listManager.getStatus(template.site);
+	return template;
 }
 
 /**
@@ -189,18 +194,11 @@ function createReport(initializer = null) {
 *	by opening a new tab with whatever HTML is in the popup
 *	at the moment.
 */
-function open_popup_tab(data){
-	dbg_print(data);
-	function gotPopup(popupURL){
-		var creating = webex.tabs.create({"url":popupURL},function(a){
-			dbg_print("[TABID:"+a["id"]+"] creating unused data entry from parent window's content");
-			unused_data[a["id"]] = createReport(data);
-		});
-	}
-
-	var gettingPopup = webex.browserAction.getPopup({},gotPopup);
+async function openReportInTab(data) {
+	let popupURL = await browser.browserAction.getPopup({});
+	let tab = await browser.tabs.create({url: `${popupURL}#fromTab=${data.tabId}`});
+	unused_data[tab.id] = createReport(data);
 }
-
 
 /**
 *
@@ -246,10 +244,10 @@ function debug_print_local(){
 */
 function updateReport(tabId, oldReport, updateUI = false){
 	let {url} = oldReport;
-	let newReport = createReport({url});
+	let newReport = createReport({url, tabId});
 	for (let property of Object.keys(oldReport)) {
-		if (property === "url") continue;
 		let entries = oldReport[property];
+		if (!Array.isArray(entries)) continue;
 		let defValue = property === "accepted" || property === "blocked" ? property : "unknown";
 		for (let script of entries) {
 			let status = listManager.getStatus(script[0],  defValue);
@@ -278,7 +276,7 @@ function updateReport(tabId, oldReport, updateUI = false){
 *		"url": "https://example.com/js/jquery.js"
 *	}
 *
-*	Returns either "wl" (whitelisted), "bl" (blacklisted) or "unknown".
+*	Returns either "whitelisted, "blacklisted", "blocked", "accepted" or "unknown"
 *
 *	NOTE: This WILL break if you provide inconsistent URLs to it.
 *	Make sure it will use the right URL when refering to a certain script.
@@ -308,11 +306,10 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 		return true;
 	}
 
-	let entryType, res;
+	let entryType;
 	let scriptName = actionValue[0];
 	try {
 		entryType = listManager.getStatus(scriptName, type);
-		res = entryType.substring(0, 2);
 		let entries = unused_data[tabId][entryType];
 		if(isNew(entries, scriptName)){
 			dbg_print(unused_data);
@@ -322,9 +319,18 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 		}
 	} catch (e) {
 		console.error("action %o, type %s, entryType %s", action, type, entryType, e);
-		res = "unknown";
+		entryType = "unknown";
 	}
-	return res;
+	
+	if (active_connections[tabId]) {
+		try {
+			active_connections[tabId].postMessage({show_info: unused_data[tabId]});
+		} catch(e) {
+			console.error(e);
+		}
+	}
+	
+	return entryType;
 }
 
 
@@ -364,14 +370,15 @@ function connected(p) {
 		
 		for (let action of ["whitelist", "blacklist", "forget"]) {
 			if (m[action]) {
-				await listManager[action](m[action][0]);
+				let [key] = m[action];
+				if (m.site) key = ListStore.siteItem(key); 
+				await listManager[action](key);
 				update = true;
 			}
 		}
 		
-		// 
-		if(m["open_popup_tab"] !== undefined){
-			open_popup_tab(m["open_popup_tab"]);
+		if(m.report_tab){
+			openReportInTab(m.report_tab);
 		}
 		// a debug feature
 		if(m["printlocalstorage"] !== undefined){
@@ -388,17 +395,7 @@ function connected(p) {
 			console.log("Delete local storage");
 			debug_delete_local();
 		}
-		// Add this domain to the whitelist
-		if(m.allow_all){
-			await listManager.whitelist(ListStore.siteItem(m.allow_all.url));
-			update = true;
-		}
-		// Remove this domain from the whitelist
-		if(m.block_all){
-			await listManager.forget(ListStore.siteItem(m.block_all.url));
-			update = true;
-		}
-		
+	
 		let tabs = await browser.tabs.query({active: true, currentWindow: true});
 		
 		if(contact_finder){
@@ -406,11 +403,11 @@ function connected(p) {
 			dbg_print(`[TABID:${tab.id}] Injecting contact finder`);
 			//inject_contact_finder(tabs[0]["id"]);
 		}
-		if(update){
-			let tab = tabs.pop();
-			dbg_print(`%c updating tab ${tab.id}`, "color: red;");
-			active_connections[tab.id] = p;
-			await updateReport(tab.id, unused_data[tab.id], true);
+		if (update || m.update && unused_data[m.tabId]) {
+			let tabId = "tabId" in m ?  m.tabId : tabs.pop().id;
+			dbg_print(`%c updating tab ${tabId}`, "color: red;");
+			active_connections[tabId] = p;
+			await updateReport(tabId, unused_data[tabId], true);
 		} else {
 			for(let tab of tabs) {
 				if(unused_data[tab.id]){
@@ -419,7 +416,7 @@ function connected(p) {
 					p.postMessage({"show_info": unused_data[tab.id]});
 				} else{
 					// create a new entry
-					let report = unused_data[tab.id] = createReport({"url": tab.url});
+					let report = unused_data[tab.id] = createReport({"url": tab.url, tabId: tab.id});
 					p.postMessage({show_info: report});							
 					dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);	
 				}
@@ -757,14 +754,15 @@ async function get_script(response, url, tabId, whitelisted = false, index = -1)
 	function result(scriptSource) {
 		return index === -1 ? scriptSource : [scriptSource, index];
 	}
-	let report = unused_data[tabId] || (unused_data[tabId] = createReport({url}));
+	let report = unused_data[tabId] || (unused_data[tabId] = createReport({url, tabId}));
 
 	let scriptName = url.split("/").pop();
 	if (whitelisted) {
+		let site = ListStore.siteItem(url); 
 		// Accept without reading script, it was explicitly whitelisted
-		let reason = response.whitelistedSite 
-			? "Site ${response.whitelistedSite} whitelisted by user" 
-			: "Page whitelisted by user";
+		let reason = whitelist.contains(site)
+			? `All ${site} whitelisted by user` 
+			: "Address whitelisted by user";
 			addReportEntry(tabId, url, {"whitelisted": [url, reason], url});
 		return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
 	}
@@ -783,13 +781,14 @@ async function get_script(response, url, tabId, whitelisted = false, index = -1)
 			tabId
 		});
 	}
-	let listVerdict = await addReportEntry(tabId, sourceHash, {"url": domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
-	switch(listVerdict) {
-		case "wl": case "bl":
-			let verdictText = listVerdict === "wl" ? "whitelisted" : "blacklisted";
-			return result(`/* LibreJS: script ${verdictText} by user. */\n${response}`);
+	let category = await addReportEntry(tabId, sourceHash, {"url": domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
+	let scriptSource = verdict ? response : editedSource;
+	switch(category) {
+		case "blacklisted":
+		case "whitelisted": 
+			return result(`/* LibreJS: script ${category} by user. */\n${scriptSource}`);
 		default:
-			return result(`/* LibreJS: script aknowledged. */\n${editedSource}`);		
+			return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);		
 	}
 }
 
@@ -849,6 +848,7 @@ var ResponseHandler = {
 		let blacklistedSite = blacklist.contains(site);
 		let blacklisted = blacklistedSite || blacklist.contains(url);
 		let topUrl = request.frameAncestors && request.frameAncestors.pop() || request.documentUrl;
+		
 		if (blacklisted) {
 			if (type === "script") {
 				// abort the request before the response gets fetched
@@ -863,7 +863,6 @@ var ResponseHandler = {
 			});
 		} else {
 			let whitelistedSite = whitelist.contains(site);
-			if (whitelistedSite) response.whitelistedSite = site;
 			if ((response.whitelisted = (whitelistedSite || whitelist.contains(url)))
 					&& type === "script") {
 				// accept the script and stop processing
@@ -872,6 +871,7 @@ var ResponseHandler = {
 				return ResponseProcessor.ACCEPT;
 			}
 		}
+		
 		// it's a page (it's too early to report) or an unknown script:
 		//  let's keep processing
 		return ResponseProcessor.CONTINUE;
@@ -893,7 +893,8 @@ var ResponseHandler = {
 async function handle_script(response, whitelisted){
 	let {text, request} = response;
 	let {url, tabId} = request;
-  return await get_script(text, url, tabId, whitelisted, -2);
+  let edited = await get_script(text, url, tabId, whitelisted, -2);
+	return Array.isArray(edited) ? edited[0] : edited;
 }
 
 /**
@@ -1126,20 +1127,6 @@ function inject_contact_finder(tab_id){
 	  dbg_print("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
 	}
 	var executing = webex.tabs.executeScript(tab_id, {file: "/contact_finder.js"}, executed);
-}
-
-/**
-*	Adds given domain to the whitelist in options
-*/
-async function add_csv_whitelist(domain){
-	return await whitelist.store(`${domain}*`);
-}
-
-/**
-*	removes given domain from the whitelist in options
-*/
-async function remove_csv_whitelist(domain) {
-	return whitelist.remove(`${domain}*`);
 }
 
 init_addon();
