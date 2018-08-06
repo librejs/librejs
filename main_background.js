@@ -362,8 +362,6 @@ function connected(p) {
 		return;		
 	}
 	p.onMessage.addListener(async function(m) {
-		console.debug("LibreJS BG: received message", m);
-	
 		var update = false;
 		var contact_finder = false;
 		

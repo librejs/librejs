@@ -126,8 +126,7 @@ function createList(data, group){
 *	};
 *
 */
-function refreshUI(report){
-  console.debug("refreshUI", report);
+function refreshUI(report) {
   currentReport = report;
 
   document.querySelector("#site").className = report.siteStatus || "";
