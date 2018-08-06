@@ -750,11 +750,11 @@ function license_read(script_src, name, external = false){
 *	Asynchronous function, returns the final edited script as a string, 
 * or an array containing it and the index, if the latter !== -1
 */
-async function get_script(response, url, tabId, whitelisted = false, index = -1) {
+async function get_script(response, url, tabId = -1, whitelisted = false, index = -1) {
 	function result(scriptSource) {
 		return index === -1 ? scriptSource : [scriptSource, index];
 	}
-	let report = unused_data[tabId] || (unused_data[tabId] = createReport({url, tabId}));
+	
 
 	let scriptName = url.split("/").pop();
 	if (whitelisted) {
@@ -767,8 +767,14 @@ async function get_script(response, url, tabId, whitelisted = false, index = -1)
 		return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
 	}
 	let [verdict, editedSource, reason] = license_read(response, scriptName, index === -2);
+	
+	if (tabId < 0) {
+		return result(verdict ? response : editedSource);
+	}
+	
 	let sourceHash = hash(response);
  	let domain = get_domain(url);
+	let report = unused_data[tabId] || (unused_data[tabId] = createReport({url, tabId}));
 	let blockedCount = report.blocked.length + report.blacklisted.length;
 	dbg_print(`amt. blocked on page: ${blockedCount}`);
 	if (blockedCount > 0 || !verdict) {
@@ -1012,7 +1018,7 @@ function edit_html(html,url,tabid,wl){
 			// "i" is an index in html_doc.all
 			// "j" is an index in intrinsic_events
 			function edit_event(src,i,j,name){
-				var edited = get_script(src, name, tabid);
+				var edited = get_script(src, name);
 				edited.then(function(){
 					html_doc.all[i].attributes[intrinsic_events[j]].value = edited[0];
 				});
