@@ -758,14 +758,17 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 
 	let scriptName = url.split("/").pop();
 	if (whitelisted) {
-		let site = ListStore.siteItem(url); 
-		// Accept without reading script, it was explicitly whitelisted
-		let reason = whitelist.contains(site)
-			? `All ${site} whitelisted by user` 
-			: "Address whitelisted by user";
+		if (tabId !== -1) {
+			let site = ListStore.siteItem(url); 
+			// Accept without reading script, it was explicitly whitelisted
+			let reason = whitelist.contains(site)
+				? `All ${site} whitelisted by user` 
+				: "Address whitelisted by user";
 			addReportEntry(tabId, url, {"whitelisted": [url, reason], url});
+		}
 		return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
 	}
+	
 	let [verdict, editedSource, reason] = license_read(response, scriptName, index === -2);
 	
 	if (tabId < 0) {
@@ -888,6 +891,7 @@ var ResponseHandler = {
 	*/
 	async post(response) {
 		let {url, type} = response.request;
+		url = ListStore.urlItem(url);
 		let handle_it = type === "script" ? handle_script : handle_html;
 		return await handle_it(response, response.whitelisted);
 	}
