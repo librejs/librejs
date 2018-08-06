@@ -326,7 +326,6 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 		try {
 			active_connections[tabId].postMessage({show_info: unused_data[tabId]});
 		} catch(e) {
-			console.error(e);
 		}
 	}
 	
@@ -890,8 +889,7 @@ var ResponseHandler = {
 	*	Here we do the heavylifting, analyzing unknown scripts
 	*/
 	async post(response) {
-		let {url, type} = response.request;
-		url = ListStore.urlItem(url);
+		let {type} = response.request;
 		let handle_it = type === "script" ? handle_script : handle_html;
 		return await handle_it(response, response.whitelisted);
 	}
@@ -903,6 +901,7 @@ var ResponseHandler = {
 async function handle_script(response, whitelisted){
 	let {text, request} = response;
 	let {url, tabId} = request;
+	url = ListStore.urlItem(url);
   let edited = await get_script(text, url, tabId, whitelisted, -2);
 	return Array.isArray(edited) ? edited[0] : edited;
 }
@@ -1075,6 +1074,7 @@ function edit_html(html,url,tabid,wl){
 async function handle_html(response, whitelisted) {
 	let {text, request} = response;
 	let {url, tabId, type} = request;
+	url = ListStore.urlItem(url);
 	if (type === "main_frame") { 
 		delete unused_data[tabId];
 		browser.browserAction.setBadgeText({
