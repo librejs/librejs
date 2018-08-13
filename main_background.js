@@ -111,26 +111,6 @@ var reserved_objects = [
 	"eval"
 ];
 
-/**
-*	
-*	Sets global variable "webex" to either "chrome" or "browser" for
-*	use on Chrome or a Firefox variant.
-*
-*	Change this to support a new browser that isn't Chrome or Firefox,
-*	given that it supports webExtensions.
-*
-*	(Use the variable "webex" for all API calls after calling this)
-*/
-var webex;
-function set_webex(){
-	if(typeof(browser) == "object"){
-		webex = browser;
-	}
-	if(typeof(chrome) == "object"){
-		webex = chrome;
-	}
-}
-
 // Generates JSON key for local storage
 function get_storage_key(script_name,src_hash){
 	return script_name;
@@ -154,7 +134,7 @@ function options_listener(changes, area){
 	function flushed(){
 		dbg_print("cache flushed");
 	}	
-	//var flushingCache = webex.webRequest.handlerBehaviorChanged(flushed);
+	//var flushingCache = browser.webRequest.handlerBehaviorChanged(flushed);
 	
 
 	dbg_print("Items updated in area" + area +": ");
@@ -206,7 +186,7 @@ async function openReportInTab(data) {
 *
 */
 function debug_delete_local(){
-	webex.storage.local.clear();
+	browser.storage.local.clear();
 	dbg_print("Local storage cleared");
 }
 
@@ -224,7 +204,7 @@ function debug_print_local(){
 	}
 	console.log("%c Variable 'activityReports': ", 'color: red;');
 	console.log(activityReports);
-	webex.storage.local.get(storage_got);
+	browser.storage.local.get(storage_got);
 }
 
 /**
@@ -362,7 +342,7 @@ function connected(p) {
 		function cb(items){
 			p.postMessage(items);
 		}
-		webex.storage.local.get(cb);
+		browser.storage.local.get(cb);
 		return;		
 	}
 	p.onMessage.addListener(async function(m) {
@@ -1118,10 +1098,9 @@ var listManager = new ListManager(whitelist, blacklist,
 */
 async function init_addon(){
 	await whitelist.load();
-	set_webex();
-	webex.runtime.onConnect.addListener(connected);
-	webex.storage.onChanged.addListener(options_listener);
-	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
+	browser.runtime.onConnect.addListener(connected);
+	browser.storage.onChanged.addListener(options_listener);
+	browser.tabs.onRemoved.addListener(delete_removed_tab_info);
 	browser.tabs.onUpdated.addListener(onTabUpdated);
 	browser.tabs.onActivated.addListener(onTabActivated);
 	// Prevents Google Analytics from being loaded from Google servers
@@ -1131,7 +1110,7 @@ async function init_addon(){
 		"web_manifest", "websocket", "xbl", "xml_dtd", "xmlhttprequest", "xslt", 
 		"other"
 	];
-	webex.webRequest.onBeforeRequest.addListener(
+	browser.webRequest.onBeforeRequest.addListener(
 		block_ga,
 		{urls: ["<all_urls>"], types: all_types},
 		["blocking"]
@@ -1151,7 +1130,7 @@ function inject_contact_finder(tab_id){
 	function executed(result) {
 	  dbg_print("[TABID:"+tab_id+"]"+"finished executing contact finder: " + result);
 	}
-	var executing = webex.tabs.executeScript(tab_id, {file: "/contact_finder.js"}, executed);
+	var executing = browser.tabs.executeScript(tab_id, {file: "/contact_finder.js"}, executed);
 }
 
 init_addon();

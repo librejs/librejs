@@ -289,45 +289,9 @@ function main(){
 	new_debug_button("Complain to website",handler);
 }
 
-// See main_background.js
-var webex;
-var myPort;
-function set_webex(){
-	if(typeof(browser) == "object"){
-		webex = browser;
-	}
-	if(typeof(chrome) == "object"){
-		webex = chrome;
-	}
-}
-set_webex();
-var myPort = webex.runtime.connect({name:"contact_finder"});
+var myPort = browser.runtime.connect({name:"contact_finder"});
 
 myPort.onMessage.addListener(function(m) {
 	prefs = m;
 	main();
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

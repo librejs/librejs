@@ -19,25 +19,7 @@
 * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/**
-*	
-*	Sets global variable "webex" to either "chrome" or "browser" for
-*	use on Chrome or a Firefox variant.
-*
-*	Change this to support a new browser that isn't Chrome or Firefox,
-*	given that it supports webExtensions.
-*
-*	(Use the variable "webex" for all API calls after calling this)
-*/
 var store;
-function set_webex(){
-	if(typeof(browser) == "undefined"){
-		webex = chrome;
-	} else{
-		webex = browser;
-	}
-}
-set_webex();
 
 function storage_got(items){
 	var inputs = document.getElementsByTagName("input");
@@ -67,7 +49,7 @@ function storage_got(items){
 
 
 }
-webex.storage.local.get(storage_got);
+browser.storage.local.get(storage_got);
 
 document.getElementById("save_changes").addEventListener("click", function(){
 	var inputs = document.getElementsByTagName("input");
@@ -91,7 +73,5 @@ document.getElementById("save_changes").addEventListener("click", function(){
 	}
 	console.log(data);
 
-	webex.storage.local.set(data);
+	browser.storage.local.set(data);
 });
-
-
