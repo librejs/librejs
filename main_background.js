@@ -255,6 +255,7 @@ function updateReport(tabId, oldReport, updateUI = false){
 		}
 	}
 	activityReports[tabId] = newReport;
+	browser.sessions.setTabValue(tabId, url, newReport);
 	dbg_print(newReport);
 	if (updateUI && activeMessagePorts[tabId]) {
 		dbg_print(`[TABID: ${tabId}] Sending script blocking report directly to browser action.`);
@@ -283,9 +284,10 @@ function updateReport(tabId, oldReport, updateUI = false){
 *
 */
 async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
-	if(!activityReports[tabId]) {
-		activityReports[tabId] = createReport({url: (await browser.tabs.get(tabId)).url});
-	}
+	let report = activityReports[tabId];
+	if (!report) report = activityReports[tabId] = 
+			createReport({url: (await browser.tabs.get(tabId)).url});
+			
 	let type, actionValue;
 	for (type of ["accepted", "blocked", "whitelisted", "blacklisted"]) {
 		if (type in action) {
@@ -310,7 +312,7 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 	let scriptName = actionValue[0];
 	try {
 		entryType = listManager.getStatus(scriptName, type);
-		let entries = activityReports[tabId][entryType];
+		let entries = report[entryType];
 		if(isNew(entries, scriptName)){
 			dbg_print(activityReports);
 			dbg_print(activityReports[tabId]);
@@ -324,10 +326,12 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 	
 	if (activeMessagePorts[tabId]) {
 		try {
-			activeMessagePorts[tabId].postMessage({show_info: activityReports[tabId]});
+			activeMessagePorts[tabId].postMessage({show_info: report});
 		} catch(e) {
 		}
 	}
+	
+	browser.sessions.setTabValue(tabId, report.url, report);
 	
 	return entryType;
 }
@@ -436,6 +440,27 @@ function delete_removed_tab_info(tab_id, remove_info){
 	if(activeMessagePorts[tab_id] !== undefined){
 		delete activeMessagePorts[tab_id];
 	}
+}
+
+/**
+*	Called when the tab gets updated / activated
+*
+*	Here we check if  new tab's url matches activityReports[tabId].url, and if 
+* it doesn't we use the session cached value (if any).
+*
+*/
+
+async function onTabUpdated(tabId, changedInfo, tab) {
+	let {url} = tab;
+	let report = activityReports[tabId];
+	if (!(report && report.url === url)) {
+		let cache = await browser.sessions.getTabValue(tabId, url);
+		updateBadge(tabId, activityReports[tabId] = cache);
+	}
+}
+
+async function onTabActivated({tabId}) {
+	await onTabUpdated(tabId, {}, await browser.tabs.get(tabId));
 }
 
 /* *********************************************************************************************** */
@@ -775,18 +800,7 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	let sourceHash = hash(response);
  	let domain = get_domain(url);
 	let report = activityReports[tabId] || (activityReports[tabId] = createReport({url, tabId}));
-	let blockedCount = report.blocked.length + report.blacklisted.length;
-	dbg_print(`amt. blocked on page: ${blockedCount}`);
-	if (blockedCount > 0 || !verdict) {
-		webex.browserAction.setBadgeText({
-			text: "!",
-			tabId
-		});
-		webex.browserAction.setBadgeBackgroundColor({
-			color: "red",
-			tabId
-		});
-	}
+	updateBadge(tabId, report, !verdict);
 	let category = await addReportEntry(tabId, sourceHash, {"url": domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
 	let scriptSource = verdict ? response : editedSource;
 	switch(category) {
@@ -796,6 +810,15 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 		default:
 			return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);		
 	}
+}
+
+
+function updateBadge(tabId, report = null, forceRed = false) {
+	let blockedCount = report ? report.blocked.length + report.blacklisted.length : 0;
+	let [text, color] = blockedCount > 0 || forceRed 
+		? [blockedCount && blockedCount.toString() || "!" , "red"] : ["✓", "green"]
+	browser.browserAction.setBadgeText({text, tabId});
+	browser.browserAction.setBadgeBackgroundColor({color, tabId});
 }
 
 /**
@@ -1074,15 +1097,8 @@ async function handle_html(response, whitelisted) {
 	let {url, tabId, type} = request;
 	url = ListStore.urlItem(url);
 	if (type === "main_frame") { 
-		delete activityReports[tabId];
-		browser.browserAction.setBadgeText({
-			text: "✓",
-			tabId
-		});
-		browser.browserAction.setBadgeBackgroundColor({
-			color: "green",
-			tabId
-		});
+		activityReports[tabId] = createReport({url, tabId});
+		updateBadge(tabId);
 	}
 	return await edit_html(text, url, tabId, whitelisted);
 }
@@ -1106,7 +1122,8 @@ async function init_addon(){
 	webex.runtime.onConnect.addListener(connected);
 	webex.storage.onChanged.addListener(options_listener);
 	webex.tabs.onRemoved.addListener(delete_removed_tab_info);
-
+	browser.tabs.onUpdated.addListener(onTabUpdated);
+	browser.tabs.onActivated.addListener(onTabActivated);
 	// Prevents Google Analytics from being loaded from Google servers
 	let all_types = [
 		"beacon", "csp_report", "font", "image", "imageset", "main_frame", "media",

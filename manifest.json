@@ -20,6 +20,7 @@
 	"webRequestBlocking",
 	"activeTab",
 	"notifications",
+	"sessions",
 	"storage",
 	"tabs",
 	"<all_urls>"
