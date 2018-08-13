@@ -170,8 +170,8 @@ function options_listener(changes, area){
 }
 
 
-var active_connections = {};
-var unused_data = {};
+var activeMessagePorts = {};
+var activityReports = {};
 function createReport(initializer = null) {
 	let template =  {
 		"accepted": [],
@@ -197,7 +197,7 @@ function createReport(initializer = null) {
 async function openReportInTab(data) {
 	let popupURL = await browser.browserAction.getPopup({});
 	let tab = await browser.tabs.create({url: `${popupURL}#fromTab=${data.tabId}`});
-	unused_data[tab.id] = createReport(data);
+	activityReports[tab.id] = createReport(data);
 }
 
 /**
@@ -222,8 +222,8 @@ function debug_print_local(){
 			console.log("%c "+i+" = "+items[i], 'color: blue;');
 		}
 	}
-	console.log("%c Variable 'unused_data': ", 'color: red;');
-	console.log(unused_data);
+	console.log("%c Variable 'activityReports': ", 'color: red;');
+	console.log(activityReports);
 	webex.storage.local.get(storage_got);
 }
 
@@ -254,11 +254,11 @@ function updateReport(tabId, oldReport, updateUI = false){
 			if (Array.isArray(newReport[status])) newReport[status].push(script);
 		}
 	}
-	unused_data[tabId] = newReport;
+	activityReports[tabId] = newReport;
 	dbg_print(newReport);
-	if (updateUI && active_connections[tabId]) {
+	if (updateUI && activeMessagePorts[tabId]) {
 		dbg_print(`[TABID: ${tabId}] Sending script blocking report directly to browser action.`);
-		active_connections[tabId].postMessage({show_info: newReport});
+		activeMessagePorts[tabId].postMessage({show_info: newReport});
 	}
 }
 
@@ -283,8 +283,8 @@ function updateReport(tabId, oldReport, updateUI = false){
 *
 */
 async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
-	if(!unused_data[tabId]) {
-		unused_data[tabId] = createReport({url: (await browser.tabs.get(tabId)).url});
+	if(!activityReports[tabId]) {
+		activityReports[tabId] = createReport({url: (await browser.tabs.get(tabId)).url});
 	}
 	let type, actionValue;
 	for (type of ["accepted", "blocked", "whitelisted", "blacklisted"]) {
@@ -310,10 +310,10 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 	let scriptName = actionValue[0];
 	try {
 		entryType = listManager.getStatus(scriptName, type);
-		let entries = unused_data[tabId][entryType];
+		let entries = activityReports[tabId][entryType];
 		if(isNew(entries, scriptName)){
-			dbg_print(unused_data);
-			dbg_print(unused_data[tabId]);
+			dbg_print(activityReports);
+			dbg_print(activityReports[tabId]);
 			dbg_print(entryType);
 			entries.push(actionValue);
 		}
@@ -322,9 +322,9 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 		entryType = "unknown";
 	}
 	
-	if (active_connections[tabId]) {
+	if (activeMessagePorts[tabId]) {
 		try {
-			active_connections[tabId].postMessage({show_info: unused_data[tabId]});
+			activeMessagePorts[tabId].postMessage({show_info: activityReports[tabId]});
 		} catch(e) {
 		}
 	}
@@ -400,20 +400,20 @@ function connected(p) {
 			dbg_print(`[TABID:${tab.id}] Injecting contact finder`);
 			//inject_contact_finder(tabs[0]["id"]);
 		}
-		if (update || m.update && unused_data[m.tabId]) {
+		if (update || m.update && activityReports[m.tabId]) {
 			let tabId = "tabId" in m ?  m.tabId : tabs.pop().id;
 			dbg_print(`%c updating tab ${tabId}`, "color: red;");
-			active_connections[tabId] = p;
-			await updateReport(tabId, unused_data[tabId], true);
+			activeMessagePorts[tabId] = p;
+			await updateReport(tabId, activityReports[tabId], true);
 		} else {
 			for(let tab of tabs) {
-				if(unused_data[tab.id]){
+				if(activityReports[tab.id]){
 					// If we have some data stored here for this tabID, send it
 					dbg_print(`[TABID: ${tab.id}] Sending stored data associated with browser action'`);								
-					p.postMessage({"show_info": unused_data[tab.id]});
+					p.postMessage({"show_info": activityReports[tab.id]});
 				} else{
 					// create a new entry
-					let report = unused_data[tab.id] = createReport({"url": tab.url, tabId: tab.id});
+					let report = activityReports[tab.id] = createReport({"url": tab.url, tabId: tab.id});
 					p.postMessage({show_info: report});							
 					dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);	
 				}
@@ -430,11 +430,11 @@ function connected(p) {
 */
 function delete_removed_tab_info(tab_id, remove_info){
 	dbg_print("[TABID:"+tab_id+"]"+"Deleting stored info about closed tab");
-	if(unused_data[tab_id] !== undefined){
-		delete unused_data[tab_id];
+	if(activityReports[tab_id] !== undefined){
+		delete activityReports[tab_id];
 	}
-	if(active_connections[tab_id] !== undefined){
-		delete active_connections[tab_id];
+	if(activeMessagePorts[tab_id] !== undefined){
+		delete activeMessagePorts[tab_id];
 	}
 }
 
@@ -741,7 +741,7 @@ function license_read(script_src, name, external = false){
 }
 
 /* *********************************************************************************************** */
-// TODO: Test if this script is being loaded from another domain compared to unused_data[tabid]["url"]
+// TODO: Test if this script is being loaded from another domain compared to activityReports[tabid]["url"]
 
 /**
 *	Asynchronous function, returns the final edited script as a string, 
@@ -774,7 +774,7 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	
 	let sourceHash = hash(response);
  	let domain = get_domain(url);
-	let report = unused_data[tabId] || (unused_data[tabId] = createReport({url, tabId}));
+	let report = activityReports[tabId] || (activityReports[tabId] = createReport({url, tabId}));
 	let blockedCount = report.blocked.length + report.blacklisted.length;
 	dbg_print(`amt. blocked on page: ${blockedCount}`);
 	if (blockedCount > 0 || !verdict) {
@@ -1074,7 +1074,7 @@ async function handle_html(response, whitelisted) {
 	let {url, tabId, type} = request;
 	url = ListStore.urlItem(url);
 	if (type === "main_frame") { 
-		delete unused_data[tabId];
+		delete activityReports[tabId];
 		browser.browserAction.setBadgeText({
 			text: "✓",
 			tabId
