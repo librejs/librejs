@@ -435,6 +435,8 @@ async function onTabUpdated(tabId, changedInfo, tab) {
 	let report = activityReports[tabId];
 	if (!(report && report.url === url)) {
 		let cache = await browser.sessions.getTabValue(tabId, url);
+		// on session restore tabIds may change
+		if (cache && cache.tabId !== tabId) cache.tabId = tabId; 
 		updateBadge(tabId, activityReports[tabId] = cache);
 	}
 }
