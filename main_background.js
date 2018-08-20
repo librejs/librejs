@@ -153,18 +153,21 @@ function options_listener(changes, area){
 
 var activeMessagePorts = {};
 var activityReports = {};
-function createReport(initializer = null) {
+async function createReport(initializer = null) {
 	let template =  {
 		"accepted": [],
 		"blocked": [],
 		"blacklisted": [],
 		"whitelisted": [],
 		"unknown": [],
-		url: "",
 	};
 	if (initializer) {
 		template = Object.assign(template, initializer);
+		if (!template.url && initializer.tabId) {
+			template.url = (await browser.tabs.get(initializer.tabId)).url;
+		}
 	}
+	
 	template.site = ListStore.siteItem(template.url);
 	template.siteStatus = listManager.getStatus(template.site);
 	return template;
@@ -178,7 +181,7 @@ function createReport(initializer = null) {
 async function openReportInTab(data) {
 	let popupURL = await browser.browserAction.getPopup({});
 	let tab = await browser.tabs.create({url: `${popupURL}#fromTab=${data.tabId}`});
-	activityReports[tab.id] = createReport(data);
+	activityReports[tab.id] = await createReport(data);
 }
 
 /**
@@ -223,9 +226,9 @@ function debug_print_local(){
 *	Make sure it will use the right URL when refering to a certain script.
 * 
 */
-function updateReport(tabId, oldReport, updateUI = false){
+async function updateReport(tabId, oldReport, updateUI = false){
 	let {url} = oldReport;
-	let newReport = createReport({url, tabId});
+	let newReport = await createReport({url, tabId});
 	for (let property of Object.keys(oldReport)) {
 		let entries = oldReport[property];
 		if (!Array.isArray(entries)) continue;
@@ -267,7 +270,7 @@ function updateReport(tabId, oldReport, updateUI = false){
 async function addReportEntry(tabId, scriptHashOrUrl, action) {
 	let report = activityReports[tabId];
 	if (!report) report = activityReports[tabId] = 
-			createReport({url: (await browser.tabs.get(tabId)).url});
+			await createReport({tabId});
 			
 	let type, actionValue;
 	for (type of ["accepted", "blocked", "whitelisted", "blacklisted"]) {
@@ -398,7 +401,7 @@ function connected(p) {
 					p.postMessage({"show_info": activityReports[tab.id]});
 				} else{
 					// create a new entry
-					let report = activityReports[tab.id] = createReport({"url": tab.url, tabId: tab.id});
+					let report = activityReports[tab.id] = await createReport({"url": tab.url, tabId: tab.id});
 					p.postMessage({show_info: report});							
 					dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);	
 				}
@@ -782,7 +785,7 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	
 	let sourceHash = hash(response);
  	let domain = get_domain(url);
-	let report = activityReports[tabId] || (activityReports[tabId] = createReport({url, tabId}));
+	let report = activityReports[tabId] || (activityReports[tabId] = await createReport({tabId}));
 	updateBadge(tabId, report, !verdict);
 	let category = await addReportEntry(tabId, sourceHash, {"url": domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
 	let scriptSource = verdict ? response : editedSource;
@@ -1096,12 +1099,11 @@ function edit_html(html,url,tabid,wl){
 async function handle_html(response, whitelisted) {
 	let {text, request} = response;
 	let {url, tabId, type} = request;
-	url = ListStore.urlItem(url);
 	if (type === "main_frame") { 
-		activityReports[tabId] = createReport({url, tabId});
+		activityReports[tabId] = await createReport({url, tabId});
 		updateBadge(tabId);
 	}
-	return await edit_html(text, url, tabId, whitelisted);
+	return await edit_html(text, ListStore.urlItem(url), tabId, whitelisted);
 }
 
 var whitelist = new ListStore("pref_whitelist", Storage.CSV);
