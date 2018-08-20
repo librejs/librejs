@@ -41,6 +41,16 @@
   ],
   "background": {
     "scripts": ["bundle.js"]
-  }
-
+  },
+  "content_scripts": [
+    {
+      "run_at": "document_start",
+      "matches": ["<all_urls>"],
+      "match_about_blank": true,
+      "all_frames": true,
+      "js": [
+        "content/externalLicenseChecker.js"
+      ]
+    }
+  ]
 }

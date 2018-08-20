@@ -28,6 +28,7 @@ var legacy_license_lib = require("./legacy_license_check.js");
 var {ResponseProcessor} = require("./bg/ResponseProcessor");
 var {Storage, ListStore} = require("./bg/Storage");
 var {ListManager} = require("./bg/ListManager");
+var {ExternalLicenses} = require("./bg/ExternalLicenses");
 
 console.log("main_background.js");
 /**
@@ -263,7 +264,7 @@ function updateReport(tabId, oldReport, updateUI = false){
 *	Make sure it will use the right URL when refering to a certain script.
 *
 */
-async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
+async function addReportEntry(tabId, scriptHashOrUrl, action) {
 	let report = activityReports[tabId];
 	if (!report) report = activityReports[tabId] = 
 			createReport({url: (await browser.tabs.get(tabId)).url});
@@ -312,7 +313,7 @@ async function addReportEntry(tabId, scriptHashOrUrl, action, update = false) {
 	}
 	
 	browser.sessions.setTabValue(tabId, report.url, report);
-	
+	updateBadge(tabId, report);
 	return entryType;
 }
 
@@ -903,8 +904,23 @@ var ResponseHandler = {
 */
 async function handle_script(response, whitelisted){
 	let {text, request} = response;
-	let {url, tabId} = request;
+	let {url, tabId, frameId} = request;
 	url = ListStore.urlItem(url);
+	if (!whitelisted) {
+		let scriptInfo = await ExternalLicenses.check({url, tabId, frameId});
+		if (scriptInfo) {
+			let verdict;
+			let msg = scriptInfo.toString();
+			if (scriptInfo.allFree) {
+				verdict = "accepted";
+			} else {
+				verdict = "blocked";
+				text = `/* ${msg} */`;
+			}
+			addReportEntry(tabId, url, {url, [verdict]: [url, msg]});
+			return text;
+		}
+	}
   let edited = await get_script(text, url, tabId, whitelisted, -2);
 	return Array.isArray(edited) ? edited[0] : edited;
 }
@@ -985,7 +1001,10 @@ function edit_html(html,url,tabid,wl){
 		
 		var parser = new DOMParser();
 		var html_doc = parser.parseFromString(html, "text/html");
-
+		
+		// moves external licenses reference, if any, before any <SCRIPT> element
+		ExternalLicenses.optimizeDocument(html_doc); 
+		
 		var amt_scripts = 0;
 		var total_scripts = 0;
 		var scripts = html_doc.scripts;
