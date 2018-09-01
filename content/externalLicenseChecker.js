@@ -22,12 +22,12 @@
 {
   let licensedScripts = null;
     
-  let fetchWebLabels = async (map = new Map()) => {
+  let fetchWebLabels = async args => {
     // see https://www.gnu.org/software/librejs/free-your-javascript.html#step3
-    
+    let {map, cache} = args;
     let link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
-    if (link) try {
-      let baseURL = link.href;
+    let baseURL = link ? link.href : cache.webLabels && new URL(cache.webLabels.href, document.baseURI);
+    if (baseURL) try {
       let response = await fetch(baseURL);
       if (!response.ok) throw `${response.status} ${response.statusText}`;
       let doc = new DOMParser().parseFromString(
@@ -55,16 +55,16 @@
     return map;
   }
   
-  let fetchLicenseInfo = async () => {
+  let fetchLicenseInfo = async cache => {
     let map = new Map();
-    
+    let args = {map, cache};
     // in the fetchXxx methods we add to a map whatever license(s)
     // URLs and source code references we can find in various formats 
     // (WebLabels is currently the only implementation), keyed by script URLs.
     await Promise.all([
-    fetchWebLabels(map),
-    // fetchXmlSpdx(),
-    // fetchTxtSpdx(),
+    fetchWebLabels(args),
+    // fetchXmlSpdx(args),
+    // fetchTxtSpdx(args),
     // ...
     ]);
     return map;
@@ -72,8 +72,8 @@
   
   let handlers = {
     async checkLicensedScript(m) {
-      let {url} = m;
-      if (!licensedScripts) licensedScripts = await fetchLicenseInfo();
+      let {url, cache} = m;
+      if (!licensedScripts) licensedScripts = await fetchLicenseInfo(cache);
       return licensedScripts.get(url);
     }
   }
@@ -82,7 +82,6 @@
     if (m.action in handlers) try {
       debug("Received message", m);
       let result =  await handlers[m.action](m);
-      console.debug("Returning", result);
       return result;
     } catch (e) {
       console.error(e);

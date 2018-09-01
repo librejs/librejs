@@ -424,6 +424,7 @@ function delete_removed_tab_info(tab_id, remove_info){
 	if(activeMessagePorts[tab_id] !== undefined){
 		delete activeMessagePorts[tab_id];
 	}
+	ExternalLicenses.purgeCache(tab_id);
 }
 
 /**
@@ -855,14 +856,14 @@ var ResponseHandler = {
 	*/
 	async pre(response) {
 		let {request} = response;
-		let {url, type, tabId, frameId} = request;
+		let {url, type, tabId, frameId, documentUrl} = request;
 		
 		url = ListStore.urlItem(url);
 		let site = ListStore.siteItem(url);
 		
 		let blacklistedSite = blacklist.contains(site);
 		let blacklisted = blacklistedSite || blacklist.contains(url);
-		let topUrl = request.frameAncestors && request.frameAncestors.pop() || request.documentUrl;
+		let topUrl = request.frameAncestors && request.frameAncestors.pop() || documentUrl;
 		
 		if (blacklisted) {
 			if (type === "script") {
@@ -886,7 +887,7 @@ var ResponseHandler = {
 						"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
 					return ResponseProcessor.ACCEPT;
 				} else {
-					let scriptInfo = await ExternalLicenses.check({url, tabId, frameId});
+					let scriptInfo = await ExternalLicenses.check({url, tabId, frameId, documentUrl});
 					if (scriptInfo) {
 						let verdict, ret;
 						let msg = scriptInfo.toString();
@@ -991,23 +992,26 @@ function read_metadata(meta_element){
 			return false;
 		}
 }
-
 /**
+
 * 	Reads/changes the HTML of a page and the scripts within it.
 */
-function edit_html(html,url,tabid,wl){
+function edit_html(html, documentUrl, tabId, frameId, whitelisted){
+	
 	
 	return new Promise((resolve, reject) => {
-		if(wl == true){
-			// Don't bother, page is whitelisted
-			resolve(html);	 
-		}
-		
+	
 		var parser = new DOMParser();
 		var html_doc = parser.parseFromString(html, "text/html");
 		
 		// moves external licenses reference, if any, before any <SCRIPT> element
-		ExternalLicenses.optimizeDocument(html_doc); 
+		ExternalLicenses.optimizeDocument(html_doc, {tabId, frameId, documentUrl}); 
+		
+ 		if (whitelisted) { // don't bother rewriting
+			resolve(null);	 
+		}
+		
+		let url = ListStore.urlItem(documentUrl);
 		
 		var amt_scripts = 0;
 		var total_scripts = 0;
@@ -1030,7 +1034,7 @@ function edit_html(html,url,tabid,wl){
 			license = legacy_license_lib.check(first_script_src);
 		if(read_metadata(meta_element) || license != false ){
 			console.log("Valid license for intrinsic events found");
-			addReportEntry(tabid, url, {url, "accepted":[url, `Global license for the page: ${license}`]});
+			addReportEntry(tabId, url, {url, "accepted":[url, `Global license for the page: ${license}`]});
 			// Do not process inline scripts
 			scripts="";
 		}else{
@@ -1072,7 +1076,7 @@ function edit_html(html,url,tabid,wl){
 		for(var i = 0; i < scripts.length; i++){
 			if (scripts[i].src == ""){
 				if (scripts[i].type=="" || scripts[i].type=="text/javascript"){
-					var edit_script = get_script(scripts[i].innerHTML,url,tabid,wl,i);
+					var edit_script = get_script(scripts[i].innerHTML, url, tabId, whitelisted, i);
 					edit_script.then(function(edited){
 						var edited_source = edited[0];
 						var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
@@ -1099,12 +1103,12 @@ function edit_html(html,url,tabid,wl){
 */
 async function handle_html(response, whitelisted) {
 	let {text, request} = response;
-	let {url, tabId, type} = request;
+	let {url, tabId, frameId, type} = request;
 	if (type === "main_frame") { 
 		activityReports[tabId] = await createReport({url, tabId});
 		updateBadge(tabId);
 	}
-	return await edit_html(text, ListStore.urlItem(url), tabId, whitelisted);
+	return await edit_html(text, url, tabId, frameId, whitelisted);
 }
 
 var whitelist = new ListStore("pref_whitelist", Storage.CSV);

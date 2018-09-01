@@ -35,13 +35,24 @@ let licensesByURL = new Map();
   }
 }
 
+let cachedHrefs = new Map();
+
 var ExternalLicenses = {
+  purgeCache(tabId) {
+    cachedHrefs.delete(tabId);
+  },
+  
   async check(script) {
-    let {url, tabId, frameId} = script;
+    let {url, tabId, frameId, documentUrl} = script;
+    let tabCache = cachedHrefs.get(tabId);
+    let frameCache = tabCache && tabCache.get(frameId);
+    let cache = frameCache && frameCache.get(documentUrl);
     let scriptInfo = await browser.tabs.sendMessage(tabId, {
       action: "checkLicensedScript",
-      url
+      url,
+      cache,
     }, {frameId});
+    
     if (!(scriptInfo && scriptInfo.licenseURLs.length)) {
       return null;
     }
@@ -65,12 +76,24 @@ var ExternalLicenses = {
   
   /**
   * moves / creates external license references before any script in the page
-  * if needed, to have them ready when the first script load is triggered
+  * if needed, to have them ready when the first script load is triggered.
+  * It also caches the external licens href by page URL, to help not actually
+  * modify the rendered HTML but rather feed the content script on demand.
   * Returns true if the document has been actually modified, false otherwise.
   */
-  optimizeDocument(document) {
+  optimizeDocument(document, cachePointer) {
+    let cache = {};
+    let {tabId, frameId, documentUrl} = cachePointer;
+    let frameCache = cachedHrefs.get(tabId);
+    if (!frameCache) {
+      cachedHrefs.set(tabId, frameCache = new Map());
+    }
+    frameCache.set(frameId, new Map([[documentUrl, cache]]));
+    
     let link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
     if (link) {
+      let href = link.getAttribute("href");
+      cache.webLabels = {href};
       let move = () => !!document.head.insertBefore(link, document.head.firstChild);
       if (link.parentNode === document.head) {
         for (let node; node = link.previousElementSibling;) {
@@ -82,12 +105,13 @@ var ExternalLicenses = {
         if (link.tagName.toUpperCase() === "A") {
           let newLink = document.createElement("link");
           newLink.rel = "jslicense";
-          newLink.setAttribute("href", link.getAttribute("href"));
+          newLink.setAttribute("href", href);
           link = newLink;
         }
         return move();
       }
     }
+    
     return false;
   }
 };
