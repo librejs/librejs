@@ -79,9 +79,13 @@
   }
 
   browser.runtime.onMessage.addListener(async m => {
-    if (m.action in handlers) {
+    if (m.action in handlers) try {
       debug("Received message", m);
-      return await handlers[m.action](m);
+      let result =  await handlers[m.action](m);
+      console.debug("Returning", result);
+      return result;
+    } catch (e) {
+      console.error(e);
     }
   });
 }

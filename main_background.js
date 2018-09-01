@@ -853,9 +853,9 @@ var ResponseHandler = {
 	/**
 	*	Enforce white/black lists for url/site early (hashes will be handled later)
 	*/
-	pre(response) {
+	async pre(response) {
 		let {request} = response;
-		let {url, type, tabId} = request;
+		let {url, type, tabId, frameId} = request;
 		
 		url = ListStore.urlItem(url);
 		let site = ListStore.siteItem(url);
@@ -878,15 +878,31 @@ var ResponseHandler = {
 			});
 		} else {
 			let whitelistedSite = whitelist.contains(site);
-			if ((response.whitelisted = (whitelistedSite || whitelist.contains(url)))
-					&& type === "script") {
-				// accept the script and stop processing
-				addReportEntry(tabId, url, {url: topUrl, 
-					"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
-				return ResponseProcessor.ACCEPT;
+			let whitelisted = response.whitelisted = whitelistedSite || whitelist.contains(url);
+			if (type === "script") {
+				if (whitelisted) {
+					// accept the script and stop processing
+					addReportEntry(tabId, url, {url: topUrl, 
+						"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
+					return ResponseProcessor.ACCEPT;
+				} else {
+					let scriptInfo = await ExternalLicenses.check({url, tabId, frameId});
+					if (scriptInfo) {
+						let verdict, ret;
+						let msg = scriptInfo.toString();
+						if (scriptInfo.allFree) {
+							verdict = "accepted";
+							ret = ResponseProcessor.ACCEPT;
+						} else {
+							verdict = "blocked";
+							ret = ResponseProcessor.REJECT;
+						}
+						addReportEntry(tabId, url, {url, [verdict]: [url, msg]});
+						return ret;
+					}
+				}
 			}
 		}
-		
 		// it's a page (it's too early to report) or an unknown script:
 		//  let's keep processing
 		return ResponseProcessor.CONTINUE;
@@ -909,21 +925,6 @@ async function handle_script(response, whitelisted){
 	let {text, request} = response;
 	let {url, tabId, frameId} = request;
 	url = ListStore.urlItem(url);
-	if (!whitelisted) {
-		let scriptInfo = await ExternalLicenses.check({url, tabId, frameId});
-		if (scriptInfo) {
-			let verdict;
-			let msg = scriptInfo.toString();
-			if (scriptInfo.allFree) {
-				verdict = "accepted";
-			} else {
-				verdict = "blocked";
-				text = `/* ${msg} */`;
-			}
-			addReportEntry(tabId, url, {url, [verdict]: [url, msg]});
-			return text;
-		}
-	}
   let edited = await get_script(text, url, tabId, whitelisted, -2);
 	return Array.isArray(edited) ? edited[0] : edited;
 }

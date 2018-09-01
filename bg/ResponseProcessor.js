@@ -33,8 +33,8 @@ class ResponseProcessor {
 
   static install(handler, types = ["main_frame", "sub_frame", "script"]) {
     if (listeners.has(handler)) return false;
-    let listener =
-      request =>  new ResponseTextFilter(request).process(handler);
+    let listener = 
+      async request =>  await new ResponseTextFilter(request).process(handler);
     listeners.set(handler, listener);
     webRequestEvent.addListener(
   		listener,
@@ -70,12 +70,12 @@ class ResponseTextFilter {
       (type === "script" || /\bhtml\b/i.test(md.contentType));
   }
 
-  process(handler) {
+  async process(handler) {
     if (!this.canProcess) return ResponseProcessor.ACCEPT;
     let {metaData, request} = this;
     let response = {request, metaData}; // we keep it around allowing callbacks to store state
     if (typeof handler.pre === "function") {
-      let res = handler.pre(response);
+      let res = await handler.pre(response);
       if (res) return res;
       if (handler.post) handler = handler.post;
       if (typeof handler !== "function") ResponseProcessor.ACCEPT;
@@ -101,7 +101,7 @@ class ResponseTextFilter {
       } catch(e) {
         console.error(e);
       }
-      if (metaData.forcedUTF8 ||
+      if (metaData.forcedUTF8 && request.type !== "script" ||
         editedText !== null && response.text !== editedText) {
         // if we changed the charset, the text or both, let's re-encode
         filter.write(new TextEncoder().encode(editedText));
