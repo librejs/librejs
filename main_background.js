@@ -931,6 +931,22 @@ async function handle_script(response, whitelisted){
 }
 
 /**
+* Serializes HTMLDocument objects including the root element and 
+*	the DOCTYPE declaration
+*/
+function doc2HTML(doc) {
+	let s = doc.documentElement.outerHTML;
+	if (doc.doctype) {
+		let dt = doc.doctype;
+		let sDoctype = `<!DOCTYPE ${dt.name || "html"}`;
+		if (dt.publicId) sDoctype += ` PUBLIC "${dt.publicId}"`;
+		if (dt.systemId) sDoctype += ` "${dt.systemId}"`;
+		s = `${sDoctype}>\n${s}`;
+	}
+	return s;
+}
+
+/**
 *	Removes noscript tags with name "librejs-path" leaving the inner content to load.
 */
 function remove_noscripts(html_doc){
@@ -940,7 +956,7 @@ function remove_noscripts(html_doc){
 		}
 	}
 	
-	return html_doc.documentElement.innerHTML;
+	return doc2HTML(html_doc);
 }
 
 /**
