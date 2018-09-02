@@ -68,6 +68,7 @@ document.querySelector("#reload").onclick = async e => {
   let {tabId} = currentReport;
   if (tabId) {
     await browser.tabs.reload(tabId);
+    myPort.postMessage({"update": true, tabId});
   }
 };
 
