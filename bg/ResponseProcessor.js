@@ -101,8 +101,9 @@ class ResponseTextFilter {
       } catch(e) {
         console.error(e);
       }
-      if (metaData.forcedUTF8 && request.type !== "script" ||
-        editedText !== null && response.text !== editedText) {
+      if (editedText !== null &&
+        (metaData.forcedUTF8 && request.type !== "script" ||
+          response.text !== editedText)) {
         // if we changed the charset, the text or both, let's re-encode
         filter.write(new TextEncoder().encode(editedText));
       } else {

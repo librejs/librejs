@@ -1012,106 +1012,91 @@ function read_metadata(meta_element){
 
 * 	Reads/changes the HTML of a page and the scripts within it.
 */
-function edit_html(html, documentUrl, tabId, frameId, whitelisted){
+async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 	
+	var parser = new DOMParser();
+	var html_doc = parser.parseFromString(html, "text/html");
+		
+	// moves external licenses reference, if any, before any <SCRIPT> element
+	ExternalLicenses.optimizeDocument(html_doc, {tabId, frameId, documentUrl}); 
 	
-	return new Promise((resolve, reject) => {
+	let url = ListStore.urlItem(documentUrl);
 	
-		var parser = new DOMParser();
-		var html_doc = parser.parseFromString(html, "text/html");
-		
-		// moves external licenses reference, if any, before any <SCRIPT> element
-		ExternalLicenses.optimizeDocument(html_doc, {tabId, frameId, documentUrl}); 
-		
- 		if (whitelisted) { // don't bother rewriting
-			resolve(null);	 
-		}
-		
-		let url = ListStore.urlItem(documentUrl);
-		
-		var amt_scripts = 0;
-		var total_scripts = 0;
-		var scripts = html_doc.scripts;
-		
-		var meta_element = html_doc.getElementById("LibreJS-info");
-		var first_script_src = "";
-		
-		// get the potential inline source that can contain a license
-		for(var i = 0; i < scripts.length; i++){
-			// The script must be in-line and exist
-			if(scripts[i] !== undefined && scripts[i].src == ""){
-				first_script_src = scripts[i].innerHTML;
-				break;
-			}
-		}
+	if (whitelisted) { // don't bother rewriting
+		await get_script(html, url, tabId, whitelisted); // generates whitelisted report
+		return null;
+	}
 
-		var license = false;
-		if (first_script_src != "")
-			license = legacy_license_lib.check(first_script_src);
-		if(read_metadata(meta_element) || license != false ){
-			console.log("Valid license for intrinsic events found");
-			addReportEntry(tabId, url, {url, "accepted":[url, `Global license for the page: ${license}`]});
-			// Do not process inline scripts
-			scripts="";
-		}else{
-			// Deal with intrinsic events
-			var has_intrinsic_events = [];
-			for(var i = 0; i < html_doc.all.length; i++){
-				for(var j = 0; j < intrinsic_events.length; j++){
-					if(intrinsic_events[j] in html_doc.all[i].attributes){
-						has_intrinsic_events.push([i,j]);
+	var scripts = html_doc.scripts;
+		
+	var meta_element = html_doc.getElementById("LibreJS-info");
+	var first_script_src = "";
+		
+	// get the potential inline source that can contain a license
+	for (let script of scripts) {
+		// The script must be in-line and exist
+		if(script && !script.src){
+			first_script_src = script.textContent;
+			break;
+		}
+	}
+
+	let license = false;
+	if (first_script_src != "") {
+		license = legacy_license_lib.check(first_script_src);
+	}
+	if (read_metadata(meta_element) || license) {
+		console.log("Valid license for intrinsic events found");
+		addReportEntry(tabId, url, {url, "accepted":[url, `Global license for the page: ${license}`]});
+		// Do not process inline scripts
+		scripts = [];
+	} else {
+		let modified = false;
+		
+		// Deal with intrinsic events
+		for (let element of html_doc.all) {
+			let attributes = element.attributes;
+			for (let event of intrinsic_events) {
+				if (event in attributes) {
+					let attr = attributes[events];
+					try {
+						let edited = await get_script(attr.value, `Intrinsic event [${event}]`);
+					  if (edited) {
+							let value = edited[0];
+							if (value !== attr.value) {
+								modified = true;
+								attr.value = value;
+							}
+						}
+					} catch (e) {
+						console.error(e);
 					}
 				}
 			}
-
-			// "i" is an index in html_doc.all
-			// "j" is an index in intrinsic_events
-			function edit_event(src,i,j,name){
-				var edited = get_script(src, name);
-				edited.then(function(){
-					html_doc.all[i].attributes[intrinsic_events[j]].value = edited[0];
-				});
-			}
-
-			// Find all the document's elements with intrinsic events
-			for(var i = 0; i < has_intrinsic_events.length; i++){
-				var s_name = "Intrinsic event ["+has_intrinsic_events[i][0]+"]";
-				edit_event(html_doc.all[has_intrinsic_events[i][0]].attributes[intrinsic_events[has_intrinsic_events[i][1]]].value,has_intrinsic_events[i][0],has_intrinsic_events[i][1],s_name);
-			}
 		}
-
-		// Deal with inline scripts
-		for(var i = 0; i < scripts.length; i++){
-			if(scripts[i].src == ""){
-				total_scripts++;
-			}
-		}
-
-		dbg_print("Analyzing "+total_scripts+" inline scripts...");
-
-		for(var i = 0; i < scripts.length; i++){
-			if (scripts[i].src == ""){
-				if (scripts[i].type=="" || scripts[i].type=="text/javascript"){
-					var edit_script = get_script(scripts[i].innerHTML, url, tabId, whitelisted, i);
-					edit_script.then(function(edited){
-						var edited_source = edited[0];
-						var unedited_source = html_doc.scripts[edited[1]].innerHTML.trim();
-						html_doc.scripts[edited[1]].innerHTML = edited_source;
-
-					});
-				}
-				amt_scripts++;
-				if(amt_scripts >= total_scripts){
-				resolve(remove_noscripts(html_doc));
+		
+		let modifiedInline = false;
+		for(let i = 0, len = scripts.length; i < len; i++) {
+			let script = scripts[i];
+			if (!script.src && !(script.type && script.type !== "text/javascript")) {
+				let edited = await get_script(script.textContent, url, tabId, whitelisted, i);
+				if (edited) {
+					let edited_source = edited[0];
+					let unedited_source = script.textContent.trim();
+					if (edited_source.trim() !== unedited_source) {
+						script.textContent = edited_source;
+						modified = modifiedInline = true;
+					}
 				}
 			}
+			if (modified) {
+				return modifiedInline 
+					? await remove_noscripts(html_doc) 
+					: doc2HTML(html_doc);
+			}
 		}
-		if(total_scripts == 0){
-			dbg_print("Nothing to analyze.");
-			resolve(remove_noscripts(html_doc));
-		}
-
-	});
+	}
+	return null;
 }
 
 /**
@@ -1124,7 +1109,7 @@ async function handle_html(response, whitelisted) {
 		activityReports[tabId] = await createReport({url, tabId});
 		updateBadge(tabId);
 	}
-	return await edit_html(text, url, tabId, frameId, whitelisted);
+	return await editHtml(text, url, tabId, frameId, whitelisted);
 }
 
 var whitelist = new ListStore("pref_whitelist", Storage.CSV);
