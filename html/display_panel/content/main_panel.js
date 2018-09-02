@@ -51,7 +51,7 @@ document.querySelector("#info").addEventListener("click", e => {
   if (site) {
     ([action] = action.split("-"));
   }
-	myPort.postMessage({[action]: entry, site});
+	myPort.postMessage({[action]: entry, site, tabId: currentReport.tabId});
 });
 
 document.querySelector("#report-tab").onclick = e => {
