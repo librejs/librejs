@@ -1058,7 +1058,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 			let attributes = element.attributes;
 			for (let event of intrinsic_events) {
 				if (event in attributes) {
-					let attr = attributes[events];
+					let attr = attributes[event];
 					try {
 						let edited = await get_script(attr.value, `Intrinsic event [${event}]`);
 					  if (edited) {
