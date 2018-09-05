@@ -436,7 +436,7 @@ function delete_removed_tab_info(tab_id, remove_info){
 */
 
 async function onTabUpdated(tabId, changedInfo, tab) {
-	let {url} = tab;
+	let url = tab.url.replace(/#.*/, '');
 	let report = activityReports[tabId];
 	if (!(report && report.url === url)) {
 		let cache = await browser.sessions.getTabValue(tabId, url);
