@@ -23,11 +23,14 @@
  A tiny wrapper around extensions storage API, supporting CSV serialization for
  retro-compatibility
 */
+"use strict";
 
 var Storage = {
   ARRAY: {
-    async load(key) {
-      let array = (await browser.storage.local.get(key))[key];
+    async load(key, array = undefined) {
+      if (array === undefined) {
+        array = (await browser.storage.local.get(key))[key];
+      }
       return array ? new Set(array) : new Set();
     },
     async save(key, list) {
@@ -40,7 +43,7 @@ var Storage = {
       let csv = (await browser.storage.local.get(key))[key];
       return csv ? new Set(csv.split(/\s*,\s*/)) : new Set();
     },
-    
+
     async save(key, list) {
       return await browser.storage.local.set({[key]: [...list].join(",")});
     }
@@ -56,8 +59,13 @@ class ListStore {
     this.key = key;
     this.storage = storage;
     this.items = new Set();
+    browser.storage.onChanged.addListener(changes => {
+      if (!this.saving && this.key in changes) {
+        this.load(changes[this.key].newValue);
+      }
+    });
   }
-  
+
   static hashItem(hash) {
     return hash.startsWith("(") ? hash : `(${hash})`;
   }
@@ -73,32 +81,50 @@ class ListStore {
       return `${url}/*`;
     }
   }
-  
+
   async save() {
-    return await this.storage.save(this.key, this.items);
-  }
-  
-  async load() {
+    this._saving = true;
     try {
-      this.items = await this.storage.load(this.key);
+      return await this.storage.save(this.key, this.items);
+    } finally {
+      this._saving = false;
+    }
+  }
+
+  async load(values = undefined) {
+    try {
+      this.items = await this.storage.load(this.key, values);
     } catch (e) {
       console.error(e);
     }
     return this.items;
   }
-  
-  async store(item) {
+
+  async store(...items) {
     let size = this.items.size;
-    return (size !== this.items.add(item).size) && await this.save();
+    let changed = false;
+    for (let item of items) {
+      if (size !== this.items.add(item).size) {
+        changed = true;
+      }
+    }
+    return changed && await this.save();
   }
-  
-  async remove(item) {
-    return this.items.delete(item) && await this.save();
+
+  async remove(...items) {
+    let changed = false;
+    for (let item of items) {
+      if (this.items.delete(item)) {
+        changed = true;
+      }
+    }
+    return changed && await this.save();
   }
-  
+
   contains(item) {
     return this.items.has(item);
   }
 }
-
-module.exports = { ListStore, Storage };
+if (typeof module === "object") {
+  module.exports = { ListStore, Storage };
+}
