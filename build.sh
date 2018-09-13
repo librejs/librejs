@@ -12,6 +12,7 @@ mkdir ./build_temp
 cp -r icons ./build_temp
 cp -r ./html ./build_temp
 cp -r ./content ./build_temp
+cp -r ./common ./build_temp
 cp manifest.json ./build_temp
 cp contact_finder.js ./build_temp
 cp bundle.js ./build_temp

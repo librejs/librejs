@@ -23,7 +23,7 @@
   A class to manage whitelist/blacklist operations
 */
 
-let {ListStore} = require("./Storage");
+let {ListStore} = require("../common/Storage");
 
 class ListManager {
   constructor(whitelist, blacklist, builtInHashes) {
