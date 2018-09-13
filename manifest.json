@@ -34,7 +34,8 @@
 		"default_popup": "html/display_panel/content/display-panel.html"
  	},
   "options_ui": {
-    "page": "html/preferences_panel/preferences_panel.html"
+    "page": "html/preferences_panel/preferences_panel.html",
+    "open_in_tab": true
   },
   "web_accessible_resources": [
     "html/report_page/report.html"

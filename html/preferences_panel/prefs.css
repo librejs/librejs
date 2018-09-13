@@ -1,0 +1,87 @@
+@import url("chrome://browser/content/extension.css");
+@import url("/html/common.css");
+h3 {
+  position: absolute;
+  bottom: 0px;
+  left: 240px;
+  font-size: 18px;
+}
+textarea {
+  width: 100%;
+}
+fieldset {
+  border: none;
+  padding: 0;
+  margin-top: 1em;
+  border-top: 1px solid #ccc;
+}
+legend {
+  font-weight: bold;
+  margin: 0;
+  padding: 0;
+}
+label, legend {
+  display: block;
+  font-size: 1.2em;
+}
+
+#lists {
+  display: flex;
+  flex-direction: row;
+}
+.list-container {
+  flex: 3;
+  flex-direction: row;
+}
+.list-container select {
+width: 100%
+}
+
+.black {
+  color: #600;
+}
+.white {
+  color: #060;
+}
+
+#commands {
+  display: flex;
+  justify-content: center;
+  flex: none;
+  flex-flow: column nowrap;
+}
+
+#commands button {
+  font-weight: bold;
+}
+input[type="text"] {
+  width: 100%;
+}
+
+#lists label {
+  font-weight: bold;
+}
+#lists select {
+  color: black;
+}
+#black {
+  background-color: #fcc;
+}
+#white {
+  background-color: #cfc;
+}
+
+#new-site {
+  display: flex;
+  flex 2;
+}
+.error-msg {
+  color: red;
+}
+.error-msg::after {
+  content: "\00A0";
+}
+.error {
+  background: #ffe;
+  color: #800;
+}
