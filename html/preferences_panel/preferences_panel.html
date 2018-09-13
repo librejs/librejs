@@ -44,7 +44,7 @@
         <h3>Settings</h3>
     </div>
     <div id="widgets">
-      <fieldset><legend>Allow or block scripts matching the following URLs ("*" matches any path)</legend>
+      <fieldset id="section-lists"><legend>Allow or block scripts matching the following URLs ("*" matches any path)</legend>
         <label>Type a new whitelist / blacklist entry:</label>
         <div id="new-site">
           <input type="text" id="site" value="" placeholder="https://www.gnu.org/*">
@@ -69,7 +69,7 @@
         </div>
       </fieldset>
 
-      <fieldset><legend>Complaint email defaults</legend>
+      <fieldset id="section-complaint"><legend>Complaint email defaults</legend>
         <label for="pref_subject">Subject</label>
         <input id="pref_subject" type="text"
           value="Issues with Javascript on your website"
