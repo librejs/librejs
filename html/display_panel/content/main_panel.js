@@ -64,6 +64,11 @@ document.querySelector("#complain").onclick = e => {
   close();
 }
 
+document.querySelector("#open-options").onclick = e => {
+  browser.runtime.openOptionsPage();
+  close();
+}
+
 document.querySelector("#reload").onclick = async e => {
   let {tabId} = currentReport;
   if (tabId) {
@@ -72,9 +77,9 @@ document.querySelector("#reload").onclick = async e => {
   }
 };
 
-/* 
+/*
 *	Takes in the [[file_id, reason],...] array and the group name for one group
-* of scripts found in this tab, rendering it as a list with management buttons. 
+* of scripts found in this tab, rendering it as a list with management buttons.
 *	Groups are "unknown", "blacklisted", "whitelisted", "accepted", and "blocked".
 */
 function createList(data, group){
@@ -98,7 +103,7 @@ function createList(data, group){
    let [scriptId, reason] = entry;
 	 let li = liTemplate.cloneNode(true);
 	 let a = li.querySelector("a");
-	 a.href = scriptId.split("(")[0];  
+	 a.href = scriptId.split("(")[0];
    a.textContent = scriptId;
 	 li.querySelector(".reason").textContent = reason;
    let bySite = !!reason.match(/https?:\/\/[^/]+\/\*/);
@@ -116,7 +121,7 @@ function createList(data, group){
 /**
 * Updates scripts lists and buttons to act on them.
 * If return_HTML is true, it returns the HTML of the popup window without updating it.
-*	example report argument: 
+*	example report argument:
 * {
 *		"accepted": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
 *		"blocked": [["FILENAME 1","REASON 1"],["FILENAME 2","REASON 2"]],
@@ -131,29 +136,29 @@ function refreshUI(report) {
   currentReport = report;
 
   document.querySelector("#site").className = report.siteStatus || "";
-  document.querySelector("#site h2").textContent = 
+  document.querySelector("#site h2").textContent =
     `This site ${report.site}`;
-  
+
   for (let toBeErased of document.querySelectorAll("#info h2:not(.site) > *, #info ul > *")) {
   	toBeErased.remove();
   }
-  
+
   let scriptsCount = 0;
   for (let group of ["unknown", "accepted", "whitelisted", "blocked", "blacklisted"]) {
   	if (group in report) createList(report, group);
     scriptsCount += report[group].length;
   }
-  
+
   for (let b of document.querySelectorAll(`.forget, .whitelist, .blacklist`)) {
     b.disabled = false;
   }
   for (let b of document.querySelectorAll(
-    `.unknown .forget, .accepted .forget, .blocked .forget, 
+    `.unknown .forget, .accepted .forget, .blocked .forget,
      .whitelisted .whitelist, .blacklisted .blacklist`
    )) {
     b.disabled = true;
-  } 
-  
+  }
+
   let noscript = scriptsCount === 0;
   document.body.classList.toggle("empty", noscript);
 }

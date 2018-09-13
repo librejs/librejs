@@ -17,38 +17,16 @@
  * along with this program.  If not, see  <http://www.gnu.org/licenses/>.
  *
  */
-html {
-    padding:0px;
-    margin:0px;
-    color:#000 !important;
-    background:url('background-panel.png') !important;
-}
-body {
-    padding:0;
-    margin:10px 30px 10px 20px;
-    color:#000;
-width:500px;
-}
+@import url("/html/common.css");
 
+body {
+  width:500px;
+}
 #header{
 display:block;
 width:500px;
 }
 
-.libre {
-    width:230px;
-    height:104px;
-    display:block;
-}
-h1.libre {
-    font-size:1.5em;
-    font-weight:normal;
-    padding:0;
-    font-weight:bold;
-    background:url('librejs-title.png') no-repeat top left;
-    text-indent:-1000px;
-    overflow:hidden;
-}
 h2 {
     font-size:1.1em;
     font-weight:bold;
@@ -170,4 +148,10 @@ span.blocked {
 #buttons button {
   width: 100%;
   text-align: center;
+}
+
+
+
+#complain {
+  display: none; /* TODO: Complaint to owner UI */
 }

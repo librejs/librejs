@@ -26,7 +26,7 @@ var jssha = require('jssha');
 var walk = require("acorn/dist/walk");
 var legacy_license_lib = require("./legacy_license_check.js");
 var {ResponseProcessor} = require("./bg/ResponseProcessor");
-var {Storage, ListStore} = require("./bg/Storage");
+var {Storage, ListStore} = require("./common/Storage");
 var {ListManager} = require("./bg/ListManager");
 var {ExternalLicenses} = require("./bg/ExternalLicenses");
 
@@ -37,8 +37,8 @@ console.log("main_background.js");
 *	Also, it controls whether or not this part of the code logs to the console.
 *
 */
-var DEBUG = false; // debug the JS evaluation 
-var PRINT_DEBUG = false; // Everything else 
+var DEBUG = false; // debug the JS evaluation
+var PRINT_DEBUG = false; // Everything else
 var time = Date.now();
 
 function dbg_print(a,b){
@@ -134,16 +134,16 @@ function options_listener(changes, area){
 	// TODO: See if this can be minimized
 	function flushed(){
 		dbg_print("cache flushed");
-	}	
+	}
 	//var flushingCache = browser.webRequest.handlerBehaviorChanged(flushed);
-	
+
 
 	dbg_print("Items updated in area" + area +": ");
 
 	var changedItems = Object.keys(changes);
 	var changed_items = "";
 	for (var i = 0; i < changedItems.length; i++){
-		var item = changedItems[i];		
+		var item = changedItems[i];
 		changed_items += item + ",";
 	}
 	dbg_print(changed_items);
@@ -167,7 +167,7 @@ async function createReport(initializer = null) {
 			template.url = (await browser.tabs.get(initializer.tabId)).url;
 		}
 	}
-	
+
 	template.site = ListStore.siteItem(template.url);
 	template.siteStatus = listManager.getStatus(template.site);
 	return template;
@@ -224,7 +224,7 @@ function debug_print_local(){
 *
 *	NOTE: This WILL break if you provide inconsistent URLs to it.
 *	Make sure it will use the right URL when refering to a certain script.
-* 
+*
 */
 async function updateReport(tabId, oldReport, updateUI = false){
 	let {url} = oldReport;
@@ -253,8 +253,8 @@ async function updateReport(tabId, oldReport, updateUI = false){
 *
 *	Sends a message to the content script that adds a popup entry for a tab.
 *
-*	The action argument is an object with two properties: one named either 
-* "accepted","blocked", "whitelisted", "blacklisted" or "unknown", whose value 
+*	The action argument is an object with two properties: one named either
+* "accepted","blocked", "whitelisted", "blacklisted" or "unknown", whose value
 * is the array [scriptName, reason], and another named "url". Example:
 * action = {
 *		"accepted": ["jquery.js (someHash)","Whitelisted by user"],
@@ -269,9 +269,9 @@ async function updateReport(tabId, oldReport, updateUI = false){
 */
 async function addReportEntry(tabId, scriptHashOrUrl, action) {
 	let report = activityReports[tabId];
-	if (!report) report = activityReports[tabId] = 
+	if (!report) report = activityReports[tabId] =
 			await createReport({tabId});
-			
+
 	let type, actionValue;
 	for (type of ["accepted", "blocked", "whitelisted", "blacklisted"]) {
 		if (type in action) {
@@ -307,14 +307,14 @@ async function addReportEntry(tabId, scriptHashOrUrl, action) {
 		console.error("action %o, type %s, entryType %s", action, type, entryType, e);
 		entryType = "unknown";
 	}
-	
+
 	if (activeMessagePorts[tabId]) {
 		try {
 			activeMessagePorts[tabId].postMessage({show_info: report});
 		} catch(e) {
 		}
 	}
-	
+
 	browser.sessions.setTabValue(tabId, report.url, report);
 	updateBadge(tabId, report);
 	return entryType;
@@ -347,21 +347,21 @@ function connected(p) {
 			p.postMessage(items);
 		}
 		browser.storage.local.get(cb);
-		return;		
+		return;
 	}
 	p.onMessage.addListener(async function(m) {
 		var update = false;
 		var contact_finder = false;
-		
+
 		for (let action of ["whitelist", "blacklist", "forget"]) {
 			if (m[action]) {
 				let [key] = m[action];
-				if (m.site) key = ListStore.siteItem(key); 
+				if (m.site) key = ListStore.siteItem(key);
 				await listManager[action](key);
 				update = true;
 			}
 		}
-		
+
 		if(m.report_tab){
 			openReportInTab(m.report_tab);
 		}
@@ -380,9 +380,9 @@ function connected(p) {
 			console.log("Delete local storage");
 			debug_delete_local();
 		}
-	
+
 		let tabs = await browser.tabs.query({active: true, currentWindow: true});
-		
+
 		if(contact_finder){
 			let tab = tabs.pop();
 			dbg_print(`[TABID:${tab.id}] Injecting contact finder`);
@@ -397,13 +397,13 @@ function connected(p) {
 			for(let tab of tabs) {
 				if(activityReports[tab.id]){
 					// If we have some data stored here for this tabID, send it
-					dbg_print(`[TABID: ${tab.id}] Sending stored data associated with browser action'`);								
+					dbg_print(`[TABID: ${tab.id}] Sending stored data associated with browser action'`);
 					p.postMessage({"show_info": activityReports[tab.id]});
 				} else{
 					// create a new entry
 					let report = activityReports[tab.id] = await createReport({"url": tab.url, tabId: tab.id});
-					p.postMessage({show_info: report});							
-					dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);	
+					p.postMessage({show_info: report});
+					dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);
 				}
 			}
 		}
@@ -430,7 +430,7 @@ function delete_removed_tab_info(tab_id, remove_info){
 /**
 *	Called when the tab gets updated / activated
 *
-*	Here we check if  new tab's url matches activityReports[tabId].url, and if 
+*	Here we check if  new tab's url matches activityReports[tabId].url, and if
 * it doesn't we use the session cached value (if any).
 *
 */
@@ -441,7 +441,7 @@ async function onTabUpdated(tabId, changedInfo, tab) {
 	if (!(report && report.url === url)) {
 		let cache = await browser.sessions.getTabValue(tabId, url);
 		// on session restore tabIds may change
-		if (cache && cache.tabId !== tabId) cache.tabId = tabId; 
+		if (cache && cache.tabId !== tabId) cache.tabId = tabId;
 		updateBadge(tabId, activityReports[tabId] = cache);
 	}
 }
@@ -457,9 +457,9 @@ var fname_data = require("./fname_data.json").fname_data;
 //************************this part can be tested in the HTML file index.html's script test.js****************************
 
 function full_evaluate(script){
-		var res = true;		
+		var res = true;
 		if(script === undefined || script == ""){
-			return [true,"Harmless null script"];		
+			return [true,"Harmless null script"];
 		}
 
 		var ast = acorn.parse_dammit(script).body[0];
@@ -470,10 +470,10 @@ function full_evaluate(script){
 		var loopkeys = {"for":true,"if":true,"while":true,"switch":true};
 		var operators = {"||":true,"&&":true,"=":true,"==":true,"++":true,"--":true,"+=":true,"-=":true,"*":true};
 		try{
-			var tokens = acorn_base.tokenizer(script);	
+			var tokens = acorn_base.tokenizer(script);
 		}catch(e){
 			console.warn("Tokenizer could not be initiated (probably invalid code)");
-			return [false,"Tokenizer could not be initiated (probably invalid code)"];		
+			return [false,"Tokenizer could not be initiated (probably invalid code)"];
 		}
 		try{
 			var toke = tokens.getToken();
@@ -512,27 +512,27 @@ function full_evaluate(script){
 			return script.charAt(end+i) == "[";
 		}
 		var error_count = 0;
-		while(toke !== undefined && toke.type != acorn_base.tokTypes.eof){		
+		while(toke !== undefined && toke.type != acorn_base.tokTypes.eof){
 			if(toke.type.keyword !== undefined){
 				//dbg_print("Keyword:");
 				//dbg_print(toke);
-				
+
 				// This type of loop detection ignores functional loop alternatives and ternary operators
 
 				if(toke.type.keyword == "function"){
 					dbg_print("%c NONTRIVIAL: Function declaration.","color:red");
-					if(DEBUG == false){			
+					if(DEBUG == false){
 						return [false,"NONTRIVIAL: Function declaration."];
-					}		
+					}
 				}
 
 				if(loopkeys[toke.type.keyword] !== undefined){
 					amtloops++;
 					if(amtloops > 3){
 						dbg_print("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
-						if(DEBUG == false){			
+						if(DEBUG == false){
 							return [false,"NONTRIVIAL: Too many loops/conditionals."];
-						}		
+						}
 					}
 				}
 			}else if(toke.value !== undefined && operators[toke.value] !== undefined){
@@ -540,39 +540,39 @@ function full_evaluate(script){
 				// kind of primitive (I.e. a number)
 			}else if(toke.value !== undefined){
 				var status = fname_data[toke.value];
-				if(status === true){ // is the identifier banned?				
+				if(status === true){ // is the identifier banned?
 					dbg_print("%c NONTRIVIAL: nontrivial token: '"+toke.value+"'","color:red");
-					if(DEBUG == false){			
+					if(DEBUG == false){
 						return [false,"NONTRIVIAL: nontrivial token: '"+toke.value+"'"];
-					}	
+					}
 				}else if(status === false){// is the identifier not banned?
 					// Is there bracket suffix notation?
 					if(is_bsn(toke.end)){
 						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-						if(DEBUG == false){			
+						if(DEBUG == false){
 							return [false,"%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-						}	
+						}
 					}
 				}else if(status === undefined){// is the identifier user defined?
 					// Are arguments being passed to a user defined variable?
 					if(being_called(toke.end)){
 						dbg_print("%c NONTRIVIAL: User defined variable '"+toke.value+"' called as function","color:red");
-						if(DEBUG == false){			
+						if(DEBUG == false){
 							return [false,"NONTRIVIAL: User defined variable '"+toke.value+"' called as function"];
-						}	
+						}
 					}
 					// Is there bracket suffix notation?
 					if(is_bsn(toke.end)){
 						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-						if(DEBUG == false){			
+						if(DEBUG == false){
 							return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-						}	
+						}
 					}
 				}else{
 					dbg_print("trivial token:"+toke.value);
 				}
 			}
-			// If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets 
+			// If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets
 			try{
 				toke = tokens.getToken();
 			}catch(e){
@@ -603,7 +603,7 @@ function evaluate(script,name){
 		var scope_chars = "\{\}\]\[\(\)\,";
 		var trailing_chars = "\s*"+"\(\.\[";
 		return new RegExp("(?:[^\\w\\d]|^|(?:"+arith_operators+"))"+object+'(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)',"g");
-	}		
+	}
 	reserved_object_regex("window");
 	var all_strings = new RegExp('".*?"'+"|'.*?'","gm");
 	var ml_comment = /\/\*([\s\S]+?)\*\//g;
@@ -622,7 +622,7 @@ function evaluate(script,name){
 		var res = reserved_object_regex(reserved_objects[i]).exec(temp);
 		if(res != null){
 			dbg_print("%c fail","color:red;");
-			flag = false;		
+			flag = false;
 			reason = "Script uses a reserved object (" + reserved_objects[i] + ")";
 		}
 	}
@@ -644,7 +644,7 @@ function license_valid(matches){
 		return [false, "malformed or unrecognized license tag"];
 	}
 	if(matches[1] != "@license"){
-		return [false, "malformed or unrecognized license tag"];	
+		return [false, "malformed or unrecognized license tag"];
 	}
 	if(licenses[matches[3]] === undefined){
 		return [false, "malformed or unrecognized license tag"];
@@ -659,14 +659,14 @@ function license_valid(matches){
 *	Evaluates the content of a script (license, if it is non-trivial)
 *
 *	Returns
-*	[ 
+*	[
 *		true (accepted) or false (denied),
 *		edited content,
-*		reason text		
+*		reason text
 *	]
 */
 function license_read(script_src, name, external = false){
-	
+
 	var reason_text = "";
 
 	var edited_src = "";
@@ -701,7 +701,7 @@ function license_read(script_src, name, external = false){
 				edited_src += "\n/*\nLIBREJS BLOCKED:"+nontrivial_status[1]+"\n*/\n";
 			}
 			reason_text += "\n" + nontrivial_status[1];
-			
+
 			if(parts_denied == true && parts_accepted == true){
 				reason_text = "Script was determined partly non-trivial after editing. (check source for details)\n"+reason_text;
 			}
@@ -709,7 +709,7 @@ function license_read(script_src, name, external = false){
 				return [false,edited_src,reason_text];
 			}
 			else return [true,edited_src,reason_text];
-			
+
 		}
 		// sponge
 		dbg_print("undedited_src:");
@@ -742,7 +742,7 @@ function license_read(script_src, name, external = false){
 		var license_res = license_valid(matches);
 		if(license_res[0] == true){
 			edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
-			reason_text += "\n" + license_res[1];		
+			reason_text += "\n" + license_res[1];
 		} else{
 			edited_src = edited_src + "\n/*\n"+license_res[1]+"\n*/\n";
 			reason_text += "\n" + license_res[1];
@@ -756,34 +756,34 @@ function license_read(script_src, name, external = false){
 // TODO: Test if this script is being loaded from another domain compared to activityReports[tabid]["url"]
 
 /**
-*	Asynchronous function, returns the final edited script as a string, 
+*	Asynchronous function, returns the final edited script as a string,
 * or an array containing it and the index, if the latter !== -1
 */
 async function get_script(response, url, tabId = -1, whitelisted = false, index = -1) {
 	function result(scriptSource) {
 		return index === -1 ? scriptSource : [scriptSource, index];
 	}
-	
+
 
 	let scriptName = url.split("/").pop();
 	if (whitelisted) {
 		if (tabId !== -1) {
-			let site = ListStore.siteItem(url); 
+			let site = ListStore.siteItem(url);
 			// Accept without reading script, it was explicitly whitelisted
 			let reason = whitelist.contains(site)
-				? `All ${site} whitelisted by user` 
+				? `All ${site} whitelisted by user`
 				: "Address whitelisted by user";
 			addReportEntry(tabId, url, {"whitelisted": [url, reason], url});
 		}
 		return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
 	}
-	
+
 	let [verdict, editedSource, reason] = license_read(response, scriptName, index === -2);
-	
+
 	if (tabId < 0) {
 		return result(verdict ? response : editedSource);
 	}
-	
+
 	let sourceHash = hash(response);
  	let domain = get_domain(url);
 	let report = activityReports[tabId] || (activityReports[tabId] = await createReport({tabId}));
@@ -792,17 +792,17 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	let scriptSource = verdict ? response : editedSource;
 	switch(category) {
 		case "blacklisted":
-		case "whitelisted": 
+		case "whitelisted":
 			return result(`/* LibreJS: script ${category} by user. */\n${scriptSource}`);
 		default:
-			return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);		
+			return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);
 	}
 }
 
 
 function updateBadge(tabId, report = null, forceRed = false) {
 	let blockedCount = report ? report.blocked.length + report.blacklisted.length : 0;
-	let [text, color] = blockedCount > 0 || forceRed 
+	let [text, color] = blockedCount > 0 || forceRed
 		? [blockedCount && blockedCount.toString() || "!" , "red"] : ["✓", "green"]
 	browser.browserAction.setBadgeText({text, tabId});
 	browser.browserAction.setBadgeBackgroundColor({color, tabId});
@@ -857,21 +857,21 @@ var ResponseHandler = {
 	async pre(response) {
 		let {request} = response;
 		let {url, type, tabId, frameId, documentUrl} = request;
-		
+
 		url = ListStore.urlItem(url);
 		let site = ListStore.siteItem(url);
-		
+
 		let blacklistedSite = blacklist.contains(site);
 		let blacklisted = blacklistedSite || blacklist.contains(url);
 		let topUrl = request.frameAncestors && request.frameAncestors.pop() || documentUrl;
-		
+
 		if (blacklisted) {
 			if (type === "script") {
 				// abort the request before the response gets fetched
-				addReportEntry(tabId, url, {url: topUrl, 
+				addReportEntry(tabId, url, {url: topUrl,
 					"blacklisted": [url, blacklistedSite ? `User blacklisted ${site}` : "Blacklisted by user"]});
 				return ResponseProcessor.REJECT;
-			} 
+			}
 			// use CSP to restrict JavaScript execution in the page
 			request.responseHeaders.unshift({
 				name: `Content-security-policy`,
@@ -883,7 +883,7 @@ var ResponseHandler = {
 			if (type === "script") {
 				if (whitelisted) {
 					// accept the script and stop processing
-					addReportEntry(tabId, url, {url: topUrl, 
+					addReportEntry(tabId, url, {url: topUrl,
 						"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
 					return ResponseProcessor.ACCEPT;
 				} else {
@@ -908,7 +908,7 @@ var ResponseHandler = {
 		//  let's keep processing
 		return ResponseProcessor.CONTINUE;
 	},
-	
+
 	/**
 	*	Here we do the heavylifting, analyzing unknown scripts
 	*/
@@ -931,7 +931,7 @@ async function handle_script(response, whitelisted){
 }
 
 /**
-* Serializes HTMLDocument objects including the root element and 
+* Serializes HTMLDocument objects including the root element and
 *	the DOCTYPE declaration
 */
 function doc2HTML(doc) {
@@ -955,7 +955,7 @@ function remove_noscripts(html_doc){
 			html_doc.getElementsByName("librejs-path")[i].outerHTML = html_doc.getElementsByName("librejs-path")[i].innerHTML;
 		}
 	}
-	
+
 	return doc2HTML(html_doc);
 }
 
@@ -966,23 +966,23 @@ function remove_noscripts(html_doc){
 function read_metadata(meta_element){
 
 		if(meta_element === undefined || meta_element === null){
-			return;		
+			return;
 		}
 
-		console.log("metadata found");				
-		
+		console.log("metadata found");
+
 		var metadata = {};
-		
-		try{			
+
+		try{
 			metadata = JSON.parse(meta_element.innerHTML);
 		}catch(error){
 			console.log("Could not parse metadata on page.")
 			return false;
 		}
-		
+
 		var license_str = metadata["intrinsic-events"];
 		if(license_str === undefined){
-			console.log("No intrinsic events license");			
+			console.log("No intrinsic events license");
 			return false;
 		}
 		console.log(license_str);
@@ -992,7 +992,7 @@ function read_metadata(meta_element){
 			console.log("invalid (>2 tokens)");
 			return false;
 		}
-	
+
 		// this should be adequete to escape the HTML escaping
 		parts[0] = parts[0].replace(/&amp;/g, '&');
 
@@ -1013,25 +1013,25 @@ function read_metadata(meta_element){
 * 	Reads/changes the HTML of a page and the scripts within it.
 */
 async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
-	
+
 	var parser = new DOMParser();
 	var html_doc = parser.parseFromString(html, "text/html");
-		
+
 	// moves external licenses reference, if any, before any <SCRIPT> element
-	ExternalLicenses.optimizeDocument(html_doc, {tabId, frameId, documentUrl}); 
-	
+	ExternalLicenses.optimizeDocument(html_doc, {tabId, frameId, documentUrl});
+
 	let url = ListStore.urlItem(documentUrl);
-	
+
 	if (whitelisted) { // don't bother rewriting
 		await get_script(html, url, tabId, whitelisted); // generates whitelisted report
 		return null;
 	}
 
 	var scripts = html_doc.scripts;
-		
+
 	var meta_element = html_doc.getElementById("LibreJS-info");
 	var first_script_src = "";
-		
+
 	// get the potential inline source that can contain a license
 	for (let script of scripts) {
 		// The script must be in-line and exist
@@ -1052,7 +1052,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		scripts = [];
 	} else {
 		let modified = false;
-		
+
 		// Deal with intrinsic events
 		for (let element of html_doc.all) {
 			let attributes = element.attributes;
@@ -1074,7 +1074,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 				}
 			}
 		}
-		
+
 		let modifiedInline = false;
 		for(let i = 0, len = scripts.length; i < len; i++) {
 			let script = scripts[i];
@@ -1090,8 +1090,8 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 				}
 			}
 			if (modified) {
-				return modifiedInline 
-					? await remove_noscripts(html_doc) 
+				return modifiedInline
+					? await remove_noscripts(html_doc)
 					: doc2HTML(html_doc);
 			}
 		}
@@ -1105,7 +1105,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 async function handle_html(response, whitelisted) {
 	let {text, request} = response;
 	let {url, tabId, frameId, type} = request;
-	if (type === "main_frame") { 
+	if (type === "main_frame") {
 		activityReports[tabId] = await createReport({url, tabId});
 		updateBadge(tabId);
 	}
@@ -1136,7 +1136,7 @@ async function init_addon(){
 	let all_types = [
 		"beacon", "csp_report", "font", "image", "imageset", "main_frame", "media",
 		"object", "object_subrequest", "ping", "script", "stylesheet", "sub_frame",
-		"web_manifest", "websocket", "xbl", "xml_dtd", "xmlhttprequest", "xslt", 
+		"web_manifest", "websocket", "xbl", "xml_dtd", "xmlhttprequest", "xslt",
 		"other"
 	];
 	browser.webRequest.onBeforeRequest.addListener(
@@ -1144,7 +1144,7 @@ async function init_addon(){
 		{urls: ["<all_urls>"], types: all_types},
 		["blocking"]
 	);
-	
+
 	// Analyzes all the html documents and external scripts as they're loaded
 	ResponseProcessor.install(ResponseHandler);
 

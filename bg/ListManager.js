@@ -23,27 +23,28 @@
   A class to manage whitelist/blacklist operations
 */
 
-let {ListStore} = require("./Storage");
+let {ListStore} = require("../common/Storage");
 
 class ListManager {
   constructor(whitelist, blacklist, builtInHashes) {
     this.lists = {whitelist, blacklist};
     this.builtInHashes = new Set(builtInHashes);
   }
-  async whitelist(key) {
-    await this.lists.blacklist.remove(key);
-    await this.lists.whitelist.store(key);
+
+  static async move(fromList, toList, ...keys) {
+    await Promise.all([fromList.remove(...keys), toList.store(...keys)]);
   }
-  async blacklist(key) {
-    await this.lists.whitelist.remove(key);
-    await this.lists.blacklist.store(key);
+
+  async whitelist(...keys) {
+    ListManager.move(this.lists.blacklist, this.lists.whitelist, ...keys);
   }
-  async forget(key) {
-    for (let list of Object.values(this.lists)) {
-      await list.remove(key);
-    }
+  async blacklist(...keys) {
+    ListManager.move(this.lists.whitelist, this.lists.blacklist, ...keys);
   }
-  /* key is a string representing either a URL or an optional path 
+  async forget(...keys) {
+    await Promise.all(Object.values(this.lists).map(l => l.remove(...keys)));
+  }
+  /* key is a string representing either a URL or an optional path
     with a trailing (hash).
     Returns "blacklisted", "whitelisted" or defValue
   */
@@ -53,16 +54,16 @@ class ListManager {
     if (!match) {
       let url = ListStore.urlItem(key);
       let site = ListStore.siteItem(key);
-      return (blacklist.contains(url) || blacklist.contains(site)) 
+      return (blacklist.contains(url) || blacklist.contains(site))
         ? "blacklisted"
-        : whitelist.contains(url) || whitelist.contains(site) 
-        ? "whitelisted" : defValue; 
+        : whitelist.contains(url) || whitelist.contains(site)
+        ? "whitelisted" : defValue;
     }
-  		 
+
   	let [hashItem, srcHash] = match; // (hash), hash
-  
+
   	return blacklist.contains(hashItem) ? "blacklisted"
-  			: this.builtInHashes.has(srcHash) || whitelist.contains(hashItem) 
+  			: this.builtInHashes.has(srcHash) || whitelist.contains(hashItem)
         ? "whitelisted"
   			: defValue;
   	}

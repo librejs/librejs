@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "GNU LibreJS [webExtensions]",
   "short_name": "LibreJS [experimental]",
-  "version": "7.16",
+  "version": "7.17",
   "author": "various",
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
@@ -34,7 +34,8 @@
 		"default_popup": "html/display_panel/content/display-panel.html"
  	},
   "options_ui": {
-    "page": "html/preferences_panel/preferences_panel.html"
+    "page": "html/preferences_panel/preferences_panel.html",
+    "open_in_tab": true
   },
   "web_accessible_resources": [
     "html/report_page/report.html"
