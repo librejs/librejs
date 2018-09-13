@@ -1,0 +1,29 @@
+html {
+  padding:0px;
+  margin:0px;
+  color:#000 !important;
+  background:url('background-panel.png') !important;
+}
+body {
+  padding:0;
+  margin:10px 30px 10px 20px;
+  color:#000;
+}
+
+div.libre {
+  position: relative;
+}
+
+.libre {
+    width:230px;
+    height:104px;
+    display:block;
+}
+h1.libre {
+    font-size:1.5em;
+    font-weight:normal;
+    padding:0;
+    font-weight:bold;
+    background:url('librejs-title.png') no-repeat top left;
+    text-indent:-1000px;
+}
