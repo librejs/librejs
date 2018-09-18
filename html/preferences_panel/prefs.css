@@ -85,7 +85,3 @@ input[type="text"] {
   background: #ffe;
   color: #800;
 }
-
-#section-complaint {
-  display: none; /* TODO: Complaint to owner UI */
-}

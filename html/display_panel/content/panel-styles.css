@@ -149,9 +149,3 @@ span.blocked {
   width: 100%;
   text-align: center;
 }
-
-
-
-#complain {
-  display: none; /* TODO: Complaint to owner UI */
-}
