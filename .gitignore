@@ -10,5 +10,6 @@ node_modules/
 # artifacts
 librejs.xpi
 bundle.js
+test_bundle.js
 npm-debug.log
 package-lock.json

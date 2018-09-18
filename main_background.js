@@ -20,10 +20,9 @@
 * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var acorn_base = require("acorn");
-var acorn = require('acorn/dist/acorn_loose');
+var acorn = require('acorn');
+var acornLoose = require('acorn-loose');
 var jssha = require('jssha');
-var walk = require("acorn/dist/walk");
 var legacy_license_lib = require("./legacy_license_check.js");
 var {ResponseProcessor} = require("./bg/ResponseProcessor");
 var {Storage, ListStore} = require("./common/Storage");
@@ -462,7 +461,7 @@ function full_evaluate(script){
 			return [true,"Harmless null script"];
 		}
 
-		var ast = acorn.parse_dammit(script).body[0];
+		var ast = acornLoose.parse(script).body[0];
 
 		var flag = false;
 		var amtloops = 0;
@@ -470,7 +469,7 @@ function full_evaluate(script){
 		var loopkeys = {"for":true,"if":true,"while":true,"switch":true};
 		var operators = {"||":true,"&&":true,"=":true,"==":true,"++":true,"--":true,"+=":true,"-=":true,"*":true};
 		try{
-			var tokens = acorn_base.tokenizer(script);
+			var tokens = acorn.tokenizer(script);
 		}catch(e){
 			console.warn("Tokenizer could not be initiated (probably invalid code)");
 			return [false,"Tokenizer could not be initiated (probably invalid code)"];
@@ -512,7 +511,7 @@ function full_evaluate(script){
 			return script.charAt(end+i) == "[";
 		}
 		var error_count = 0;
-		while(toke !== undefined && toke.type != acorn_base.tokTypes.eof){
+		while(toke !== undefined && toke.type != acorn.tokTypes.eof){
 			if(toke.type.keyword !== undefined){
 				//dbg_print("Keyword:");
 				//dbg_print(toke);

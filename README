@@ -4,7 +4,7 @@
 BUILD:
 
 First, you need to get some stuff with npm:
-  $ npm install acorn
+  $ npm install acorn-loose
   $ npm install jssha
   $ npm install browserify
   $ export PATH=$PATH:./node_modules/.bin

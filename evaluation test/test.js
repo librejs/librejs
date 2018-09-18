@@ -1,6 +1,5 @@
-var acorn = require('acorn/dist/acorn_loose');
-var walk = require("acorn/dist/walk");
-var acorn_base = require("acorn");
+var acornLoose = require('acorn-loose');
+var acorn = require("acorn");
 
 var fname_data = {
 	"WebGLShader": true,
@@ -851,12 +850,12 @@ function dbg_print(a,b){
 	}
 }
 function full_evaluate(script){
-		var res = true;		
+		var res = true;
 		if(script === undefined || script == ""){
-			return [true,"Harmless null script"];		
+			return [true,"Harmless null script"];
 		}
 
-		var ast = acorn.parse_dammit(script).body[0];
+		var ast = acornLoose.parse(script).body[0];
 
 		var flag = false;
 		var amtloops = 0;
@@ -864,10 +863,10 @@ function full_evaluate(script){
 		var loopkeys = {"for":true,"if":true,"while":true,"switch":true};
 		var operators = {"||":true,"&&":true,"=":true,"==":true,"++":true,"--":true,"+=":true,"-=":true,"*":true};
 		try{
-			var tokens = acorn_base.tokenizer(script);	
+			var tokens = acorn.tokenizer(script);
 		}catch(e){
 			console.warn("Tokenizer could not be initiated (probably invalid code)");
-			return [false,"Tokenizer could not be initiated (probably invalid code)"];		
+			return [false,"Tokenizer could not be initiated (probably invalid code)"];
 		}
 		try{
 			var toke = tokens.getToken();
@@ -911,66 +910,66 @@ function full_evaluate(script){
 			}
 		}
 		var error_count = 0;
-		while(toke.type != acorn_base.tokTypes.eof){
+		while(toke.type != acorn.tokTypes.eof){
 			if(toke.type.keyword !== undefined){
 				// This type of loop detection ignores functional loop alternatives and ternary operators
 				//dbg_print("Keyword:"+toke.type.keyword);
 				console.log(toke);
 				if(toke.type.keyword == "function"){
 					dbg_print("%c NONTRIVIAL: Function declaration.","color:red");
-					if(DEBUG == false){			
+					if(DEBUG == false){
 						return [false,"NONTRIVIAL: Function declaration."];
-					}		
+					}
 				}
 
 				if(loopkeys[toke.type.keyword] !== undefined){
 					amtloops++;
 					if(amtloops > 3){
 						dbg_print("%c NONTRIVIAL: Too many loops/conditionals.","color:red");
-						if(DEBUG == false){			
+						if(DEBUG == false){
 							return [false,"NONTRIVIAL: Too many loops/conditionals."];
-						}		
+						}
 					}
 				}
 			}else if(toke.value !== undefined){
 				var status = fname_data[toke.value];
-				if(status === true){ // is the identifier banned?				
+				if(status === true){ // is the identifier banned?
 					dbg_print("%c NONTRIVIAL: nontrivial token: '"+toke.value+"'","color:red");
-					if(DEBUG == false){			
+					if(DEBUG == false){
 						return [false,"NONTRIVIAL: nontrivial token: '"+toke.value+"'"];
-					}	
+					}
 				}else if(status === false){// is the identifier not banned?
 					// Is there bracket suffix notation?
-					if(operators[toke.value] === undefined){					
+					if(operators[toke.value] === undefined){
 						if(is_bsn(toke.end)){
 							dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-							if(DEBUG == false){			
+							if(DEBUG == false){
 								return [false,"%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-							}	
+							}
 						}
 					}
 				}else if(status === undefined){// is the identifier user defined?
 					// Are arguments being passed to a user defined variable?
 					if(being_called(toke.end)){
 						dbg_print("%c NONTRIVIAL: User defined variable '"+toke.value+"' called as function","color:red");
-						if(DEBUG == false){			
+						if(DEBUG == false){
 							return [false,"NONTRIVIAL: User defined variable '"+toke.value+"' called as function"];
-						}	
+						}
 					}
 					// Is there bracket suffix notation?
-					if(operators[toke.value] === undefined){					
+					if(operators[toke.value] === undefined){
 						if(is_bsn(toke.end)){
 							dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
-							if(DEBUG == false){			
+							if(DEBUG == false){
 								return [false,"NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'"];
-							}	
+							}
 						}
 					}
 				}else{
 					dbg_print("trivial token:"+toke.value);
 				}
 			}
-			// If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets 
+			// If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets
 			try{
 				toke = tokens.getToken();
 			}catch(e){
@@ -990,9 +989,8 @@ function full_evaluate(script){
 window.onload = function () {
 	document.getElementById("parse").addEventListener("click",function(){
 		var script = document.getElementById("input").value;
-		var ast = acorn.parse_dammit(script).body[0];
+		var ast = acornLoose.parse(script).body[0];
 		document.getElementById("output").innerHTML = JSON.stringify(ast, null, '\t'); // Indented with tab
 		document.getElementById("output").innerHTML = full_evaluate(script) + "\n\n" + document.getElementById("output").innerHTML;
 	});
 }
-
