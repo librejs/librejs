@@ -21,7 +21,7 @@
 "use strict";
 {
   let licensedScripts = null;
-    
+
   let fetchWebLabels = async args => {
     // see https://www.gnu.org/software/librejs/free-your-javascript.html#step3
     let {map, cache} = args;
@@ -40,26 +40,31 @@
       } else {
         doc.head.appendChild(doc.createElement("base")).href = baseURL;
       }
-      let firstURL = parent => parent.querySelector("a").href;
-      let allURLs = parent => Array.map(parent.querySelectorAll("a"), a => a.href);
-      for (let row of doc.querySelectorAll("table#jslicense-labels1 tr")) {
-        let cols = row.querySelectorAll("td");
-        let scriptURL = firstURL(cols[0]);
-        let licenseURLs = allURLs(cols[1]);
-        let sourceURLs = cols[2] ? allURLs(cols[2]) : [];
-        map.set(scriptURL, {scriptURL, licenseURLs, sourceURLs});
+      let link = a => ({ url: a.href, label: a.textContent });
+      let firstLink = parent => link(parent.querySelector("a"));
+      let allLinks = parent => Array.map(parent.querySelectorAll("a"), link);
+      for (let row of doc.querySelectorAll("table#jslicense-labels1 > tbody > tr")) {
+        try {
+          let cols = row.querySelectorAll("td");
+          let script = firstLink(cols[0]);
+          let licenseLinks = allLinks(cols[1]);
+          let sources = cols[2] ? allLinks(cols[2]) : [];
+          map.set(script.url, {script, licenseLinks, sources});
+        } catch (e) {
+         console.error("LibreJS: error parsing Web Labels at %s, row %s", baseURL, row.innerHTML, e);
+        }
       }
     } catch (e) {
       console.error("Error fetching Web Labels at %o", link, e);
     }
     return map;
   }
-  
+
   let fetchLicenseInfo = async cache => {
     let map = new Map();
     let args = {map, cache};
     // in the fetchXxx methods we add to a map whatever license(s)
-    // URLs and source code references we can find in various formats 
+    // URLs and source code references we can find in various formats
     // (WebLabels is currently the only implementation), keyed by script URLs.
     await Promise.all([
     fetchWebLabels(args),
@@ -69,7 +74,7 @@
     ]);
     return map;
   }
-  
+
   let handlers = {
     async checkLicensedScript(m) {
       let {url, cache} = m;

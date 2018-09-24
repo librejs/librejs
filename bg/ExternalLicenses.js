@@ -25,13 +25,11 @@
 
 "use strict";
 
-let licensesByURL = new Map();
+let licensesByLabel = new Map();
 {
   let {licenses} = require("../license_definitions");
-  for (let l of Object.values(licenses).filter(l => l.canonicalUrl)) {
-    for (let url of l.canonicalUrl) {
-      licensesByURL.set(url, l);
-    }
+  for (let l of Object.values(licenses).filter(l => l.identifier)) {
+    licensesByLabel.set(l.identifier, l);
   }
 }
 
@@ -41,7 +39,7 @@ var ExternalLicenses = {
   purgeCache(tabId) {
     cachedHrefs.delete(tabId);
   },
-  
+
   async check(script) {
     let {url, tabId, frameId, documentUrl} = script;
     let tabCache = cachedHrefs.get(tabId);
@@ -52,20 +50,23 @@ var ExternalLicenses = {
       url,
       cache,
     }, {frameId});
-    
-    if (!(scriptInfo && scriptInfo.licenseURLs.length)) {
+
+    if (!(scriptInfo && scriptInfo.licenseLinks.length)) {
       return null;
     }
     scriptInfo.licenses = new Set();
     scriptInfo.allFree = true;
     scriptInfo.toString = function() {
       let licenseIds = [...this.licenses].map(l => l.identifier).sort().join(", ");
-      return this.allFree ? `Free license${licenseIds.length > 1 ? "s" : ""} (${licenseIds})` : `Mixed free (${licenseIds}) and unknown licenses`;
+      return licenseIds
+         ? (this.allFree ? `Free license${this.licenses.length > 1 ? "s" : ""} (${licenseIds})`
+                         : `Mixed free (${licenseIds}) and unknown licenses`)
+         : "Unknown license(s)";
     }
-    
-    for (let u of scriptInfo.licenseURLs) {
-      if (licensesByURL.has(u)) {
-        scriptInfo.licenses.add(licensesByURL.get(u));
+
+    for (let {label} of scriptInfo.licenseLinks) {
+      if (licensesByLabel.has(label)) {
+        scriptInfo.licenses.add(licensesByLabel.get(label));
       } else {
         scriptInfo.allFree = false;
         break;
@@ -73,7 +74,7 @@ var ExternalLicenses = {
     }
     return scriptInfo;
   },
-  
+
   /**
   * moves / creates external license references before any script in the page
   * if needed, to have them ready when the first script load is triggered.
@@ -89,7 +90,7 @@ var ExternalLicenses = {
       cachedHrefs.set(tabId, frameCache = new Map());
     }
     frameCache.set(frameId, new Map([[documentUrl, cache]]));
-    
+
     let link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
     if (link) {
       let href = link.getAttribute("href");
@@ -111,7 +112,7 @@ var ExternalLicenses = {
         return move();
       }
     }
-    
+
     return false;
   }
 };
