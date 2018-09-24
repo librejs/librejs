@@ -1,0 +1,28 @@
+#_LibreJS_overlay {
+  z-index: 2147483647 !important;
+  background-color: #000;
+  opacity: 0.7 !important;
+  display: block !important;
+  position: fixed !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+}
+
+#_LibreJS_frame {
+  width: 60% !important;
+  height: 80% !important;
+  top: 10% !important;
+  bottom: 10% !important;
+  left: 20% !important;
+  right: 20% !important;
+  overflow: auto !important;
+  position: fixed !important;
+  display:inline-block !important;
+  border: 2px solid #444 !important;
+  z-index: 2147483647 !important;
+  background: #eee;
+}

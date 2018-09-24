@@ -339,13 +339,18 @@ function get_domain(url){
 *
 */
 var portFromCS;
-function connected(p) {
-	if(p["name"] == "contact_finder"){
+async function connected(p) {
+	if(p.name === "contact_finder"){
+		// style the contact finder panel
+		await browser.tabs.insertCSS(p.sender.tab.id, {
+			file: "/content/dialog.css",
+			cssOrigin: "user",
+			matchAboutBlank: true,
+			allFrames: true
+		});
+
 		// Send a message back with the relevant settings
-		function cb(items){
-			p.postMessage(items);
-		}
-		browser.storage.local.get(cb);
+		p.postMessage(await browser.storage.local.get(["prefs_subject", "prefs_body"]));
 		return;
 	}
 	p.onMessage.addListener(async function(m) {
@@ -1180,9 +1185,9 @@ async function init_addon() {
 */
 async function injectContactFinder(tabId){
 	await Promise.all([
+		browser.tabs.insertCSS(tabId, {file: "/content/overlay.css", cssOrigin: "user"}),
 		browser.tabs.executeScript(tabId, {file: "/content/contactFinder.js"}),
-		browser.tabs.insertCSS(tabId, {file: "/content/contactFinder.css", cssOrigin: "user"})
-	]);
+ ]);
 }
 
 init_addon();

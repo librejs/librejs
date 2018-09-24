@@ -1,0 +1,91 @@
+#_LibreJS_dialog {
+  font-family: sans-serif;
+  font-size: 1.2em;
+  color: #000;
+  background-color: #eee;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+#_LibreJS_dialog .close {
+  -moz-appearance: none;
+  border: 0;
+  position: fixed;
+  top: .2em;
+  right: .2em;
+  font-size: 1em;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: white;
+  background: black;
+  border-radius: 1em;
+  cursor: pointer;
+  display: block;
+  width: 1.5em;
+  height: 1.5em;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0;
+}
+#_LibreJS_dialog .close:hover {
+  background: #800;
+}
+
+ #_LibreJS_dialog h1, #_LibreJS_dialog h2, #_LibreJS_dialog h3 {
+  font-family: sans-serif;
+  color: #000;
+  font-weight: bold;
+  text-align: center;
+  border: none;
+  padding: .2em;
+  margin: .2em;
+  display: block;
+}
+
+#_LibreJS_dialog a {
+  text-decoration: none;
+  color: #048;
+  border: none;
+}
+
+#_LibreJS_dialog a:hover {
+  text-decoration: none;
+  color: #06c;
+  border-bottom: 1px solid #048;
+}
+
+#_LibreJS_dialog h1 {
+  font-size: 1.5em;
+  background: #666;
+  color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  padding: .2em;
+}
+
+#_LibreJS_dialog h3 {
+  font-size: 1.2em !important
+}
+
+#_LibreJS_dialog h4 {
+  font-size: 1em;
+}
+
+#_LibreJS_dialog #content {
+  position: fixed;
+  overflow: auto;
+  top: 2.5em;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+}
+
+#_LibreJS_dialog #content ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;"
+}

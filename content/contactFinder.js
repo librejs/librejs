@@ -39,7 +39,13 @@
 //Copyright (C) 2011, 2012, 2014 Loic J. Duros
 //Copyright (C) 2014, 2015 Nik Nyby
 
-console.debug("Injecting contact finder in %s", document.URL);
+function debug(format, ...args) {
+  console.debug(`LibreJS - ${format}`, ...args);
+}
+
+var myPort;
+
+debug("Injecting contact finder in %s", document.URL);
 
 // email address regexp
 var reEmail = /^mailto\:(admin|feedback|webmaster|info|contact|support|comments|team|help)\@[a-z0-9.\-]+\.[a-z]{2,4}$/i;
@@ -223,10 +229,10 @@ function find_contacts(){
 }
 
 
-function createWidget(id, tag) {
+function createWidget(id, tag, parent = document.body) {
   let widget = document.getElementById(id);
   if (widget)  widget.remove();
-  widget = document.body.appendChild(document.createElement(tag));
+  widget = parent.appendChild(document.createElement(tag));
   widget.id = id;
   return widget;
 }
@@ -237,57 +243,86 @@ function createWidget(id, tag) {
 *
 */
 
-function createOverlay() {
-	let res = find_contacts();
-  let widget = createWidget("_LibreJS_CF_panel", "div");
-  let addHTML = s => widget.insertAdjacentHTML("beforeend", s);
-  widget.innerHTML = "<h3>LibreJS Complaint</h3>";
-  if ("fail" in res){
-    widget.classList.toggle("_LibreJS_CF_fail", true)
-		addHTML("<div>Contact finder failed.</div>");
-	} else {
-    addHTML("<h3>LibreJS</h3><h4>Contact info guessed for this site</h4>");
-		if(typeof(res[1]) === "string") {
-      let a = document.createElement("a");
-      a.href = a.textContent = res[1];
-      widget.appendChild(a);
-		} else if (typeof(res[1]) === "object"){
-			 addHTML(`${res[0]}: ${res[1].outerHTML}`);
-		}
-	}
+function main() {
+  let overlay = createWidget("_LibreJS_overlay", "div");
+  let frame = createWidget("_LibreJS_frame", "iframe");
 
-	let email = document.documentElement.innerText.match(email_regex);
-	if (email != null) {
-    addHTML("<h5>Possible email addresses:</h5>");
-    let list = document.createElement("ul");
-    let max = Math.max(email.length, 10);
-		for (let i = 0; i < max; i++) {
-      let recipient = email[i];
-      let a = document.createElement("a");
-      a.href = `mailto:${recipient}?subject${
-          encodeURIComponent(prefs["pref_subject"])
-        }&body=${
-          encodeURIComponent(prefs["pref_body"])
-        }`;
-      a.textContent = recipient;
-      list.appendChild(document.createElement("li")).appendChild(a);
-		}
-    widget.appendChild(list);
-	}
+  let close = () => {
+    frame.remove();
+    overlay.remove();
+  };
 
   let closeListener = e => {
-    if (!widget.contains(e.target)) {
-      widget.remove();
-      window.removeEventListener("click", closeListener);
+    let t = e.currentTarget;
+    if (t.href) { // link navigation
+      if (t.href !== document.URL) {
+        if (t.href.includes("#")) {
+          window.addEventListener("hashchange", close);
+        }
+        return;
+      }
     }
+    close();
   };
-  window.addEventListener("click", closeListener);
+  let makeCloser = clickable => clickable.addEventListener("click", closeListener);
+
+  makeCloser(overlay);
+
+  let initFrame = () => {
+    debug("initFrame");
+    let res = find_contacts();
+    let contentDoc = frame.contentWindow.document;
+    let {body} = contentDoc;
+    body.id = "_LibreJS_dialog";
+    body.innerHTML = `<h1>LibreJS Complaint</h1><button class='close'>x</button>`;
+    contentDoc.documentElement.appendChild(contentDoc.createElement("base")).target = "_top";
+    let content = body.appendChild(contentDoc.createElement("div"));
+    content.id = "content";
+    let addHTML = s => content.insertAdjacentHTML("beforeend", s);
+    if ("fail" in res) {
+      content.classList.toggle("_LibreJS_fail", true)
+  		addHTML("<div>Could not guess any contact page for this site.</div>");
+  	} else {
+      addHTML("<h3>Contact info guessed for this site</h3>");
+  		if(typeof(res[1]) === "string") {
+        let a = contentDoc.createElement("a");
+        a.href = a.textContent = res[1];
+        content.appendChild(a);
+  		} else if (typeof(res[1]) === "object"){
+  			 addHTML(`${res[0]}: ${res[1].outerHTML}`);
+  		}
+  	}
+
+  	let emails = document.documentElement.textContent.match(email_regex);
+  	if (emails  && (emails = Array.filter(emails, e => !!e)).length) {
+      addHTML("<h5>Possible email addresses:</h5>");
+      let list = contentDoc.createElement("ul");
+  		for (let i = 0, max = Math.min(emails.length, 10); i < max; i++) {
+        let recipient = emails[i];
+        let a = contentDoc.createElement("a");
+        a.href = `mailto:${recipient}?subject${
+            encodeURIComponent(prefs["pref_subject"])
+          }&body=${
+            encodeURIComponent(prefs["pref_body"])
+          }`;
+        a.textContent = recipient;
+        list.appendChild(contentDoc.createElement("li")).appendChild(a);
+  		}
+      content.appendChild(list);
+  	}
+    Array.forEach(contentDoc.querySelectorAll(".close, a"), makeCloser);
+    debug("frame initialized");
+  }
+
+
+
+  frame.addEventListener("load", e => {
+    debug("frame loaded");
+    myPort = browser.runtime.connect({name: "contact_finder"}).onMessage.addListener(m => {
+    	prefs = m;
+    	initFrame();
+    });
+  });
 }
 
-
-var myPort = browser.runtime.connect({name:"contact_finder"});
-
-myPort.onMessage.addListener(function(m) {
-	prefs = m;
-	createOverlay();
-});
+main();
