@@ -599,6 +599,8 @@ function full_evaluate(script){
 *	This can only determine if a script is bad, not if it's good
 *
 *	If it passes the intitial pass, it runs the full pass and returns the result
+
+*	It returns an array of [flag (boolean, false if "bad"), reason (string, human readable report)]
 *
 */
 function evaluate(script,name){
@@ -636,9 +638,7 @@ function evaluate(script,name){
 		return [flag,reason];
 	}
 
-	var final = full_evaluate(script);
-//	final[1] = final[1] + "<br>";
-	return final;
+	return full_evaluate(script);
 }
 
 
@@ -668,91 +668,89 @@ function validateLicense(matches) {
 *		reason text
 *	]
 */
-function license_read(script_src, name, external = false){
+function license_read(scriptSrc, name, external = false){
 
-	var reason_text = "";
-
-	var edited_src = "";
-	var unedited_src = script_src;
-	var nontrivial_status;
-	var parts_denied = false;
-	var parts_accepted = false;
-	var license = legacy_license_lib.check(script_src);
-	if(license != false){
-		return [true,script_src,"Licensed under: "+license];
+	let license = legacy_license_lib.check(scriptSrc);
+	if (license){
+		return [true, scriptSrc, `Licensed under: ${license}`];
 	}
-	if (listManager.builtInHashes.has(hash(script_src))){
-		return [true,script_src,"Common script known to be free software."];
+	if (listManager.builtInHashes.has(hash(scriptSrc))){
+		return [true, scriptSrc, "Common script known to be free software."];
 	}
-	while(true){ // TODO: refactor me
-		// TODO: support multiline comments
-		var matches = /\/[\/\*]\s*?(@license)\s([\S]+)\s([\S]+$)/gm.exec(unedited_src);
-		var empty = /[^\s]/gm.exec(unedited_src);
-		if(empty == null){
-			return [true,edited_src,reason_text];
-		}
-		if(matches == null){
-			if (external)
-				return [false,edited_src,"External script with no known license."];
-			else
-				nontrivial_status = evaluate(unedited_src,name);
-			if(nontrivial_status[0] == true){
-				parts_accepted = true;
-				edited_src += unedited_src;
-			} else{
-				parts_denied = true;
-				edited_src += "\n/*\nLIBREJS BLOCKED:"+nontrivial_status[1]+"\n*/\n";
-			}
-			reason_text += "\n" + nontrivial_status[1];
 
-			if(parts_denied == true && parts_accepted == true){
-				reason_text = "Script was determined partly non-trivial after editing. (check source for details)\n"+reason_text;
-			}
-			if(parts_denied == true && parts_accepted == false){
-				return [false,edited_src,reason_text];
-			}
-			else return [true,edited_src,reason_text];
+	let editedSrc = "";
+	let uneditedSrc = scriptSrc.trim();
+	let reason = uneditedSrc ? "" : "Empty source.";
+	let partsDenied = false;
+	let partsAccepted = false;
 
+	function checkTriviality(s) {
+		if (!s.trim()) {
+			return true; // empty, ignore it
 		}
-		// sponge
-		dbg_print("undedited_src:");
-		dbg_print(unedited_src);
-		dbg_print(matches);
-		dbg_print("chopping at " + matches["index"] + ".");
-		var before = unedited_src.substring(0,matches["index"]);
-		// sponge
-		dbg_print("before:");
-		dbg_print(before);
-		if (external)
-			nontrivial_status = [true, "External script with no known license"]
-		else
-			nontrivial_status = evaluate(before,name);
-		if(nontrivial_status[0] == true){
-			parts_accepted = true;
-			edited_src += before;
-		} else{
-			parts_denied = true;
-			edited_src += "\n/*\nLIBREJS BLOCKED:"+nontrivial_status[1]+"\n*/\n";
+		let [trivial, message] = external ?
+			[false, "External script with no known license"]
+			: evaluate(s, name);
+		if (trivial) {
+			partsAccepted = true;
+			editedSrc += s;
+		} else {
+			partsDenied = true;
+			editedSrc += `\n/*\nLIBREJS BLOCKED: ${message}\n*/\n`;
 		}
-		unedited_src = unedited_src.substr(matches["index"],unedited_src.length);
-		// TODO: support multiline comments
-		var matches_end = /\/\/\s*?(@license-end)/gm.exec(unedited_src);
-		if(matches_end == null){
-			dbg_print("ERROR: @license with no @license-end");
-			return [false,"\n/*\n ERROR: @license with no @license-end \n*/\n","ERROR: @license with no @license-end"];
+		reason += `\n${message}`;
+		return trivial;
+	}
+
+	while (uneditedSrc) {
+		let openingMatch = /\/[\/\*]\s*?(@license)\s+(\S+)\s+(\S+)\s*$/mi.exec(uneditedSrc);
+		if (!openingMatch) { // no license found, check for triviality
+			checkTriviality(uneditedSrc);
+			break;
 		}
-		var endtag_end_index = matches_end["index"]+matches_end[0].length;
-		let [licenseOK, licenseMessage] = validateLicense(matches);
+
+		let openingIndex = openingMatch.index;
+		if (openingIndex) {
+			// let's check the triviality of the code before the license tag, if any
+			checkTriviality(uneditedSrc.substring(0, openingIndex));
+		}
+		// let's check the actual license
+		uneditedSrc = uneditedSrc.substring(openingIndex);
+
+		let closureMatch = /\/([*/])\s*@license-end\b[^*/\n]*/i.exec(uneditedSrc);
+		if (!closureMatch) {
+			let msg = "ERROR: @license with no @license-end";
+			return [false, `\n/*\n ${msg} \n*/\n`, msg];
+		}
+
+		let closureEndIndex = closureMatch.index + closureMatch[0].length;
+		let commentEndOffset = uneditedSrc.substring(closureEndIndex).indexOf(closureMatch[1] === "*" ? "*/" : "\n");
+		if (commentEndOffset !== -1) {
+			closureEndIndex += commentEndOffset;
+		}
+
+		let [licenseOK, message] = validateLicense(openingMatch);
 		if(licenseOK) {
-			edited_src += unedited_src.substr(0, endtag_end_index);
-			reason_text += `\n${licenseMessage}`;
-		} else{
-			edited_src += `\n/*\n${licenseMessage}\n*/\n`;
-			reason_text += `\n${licenseMessage}`;
+			editedSrc += uneditedSrc.substr(0, closureEndIndex);
+			partsAccepted = true;
+		} else {
+			editedSrc += `\n/*\n${message}\n*/\n`;
+			partsDenied = true;
 		}
+		reason += `\n${message}`;
+
 		// trim off everything we just evaluated
-		unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
+		uneditedSrc = uneditedSrc.substring(closureEndIndex).trim();
 	}
+
+	if(partsDenied) {
+		if (partsAccepted) {
+			reason = `Some parts of the script have been disabled (check the source for details).\n^--- ${reason}`;
+		}
+		return [false, editedSrc, reason];
+	}
+
+	return [true, scriptSrc, reason];
 }
 
 /* *********************************************************************************************** */
