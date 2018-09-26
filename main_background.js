@@ -643,20 +643,19 @@ function evaluate(script,name){
 
 
 
-function license_valid(matches){
-	if(matches.length != 4){
-		return [false, "malformed or unrecognized license tag"];
+function validateLicense(matches) {
+	if (!(Array.isArray(matches) && matches.length === 4)){
+		return [false, "Malformed or unrecognized license tag."];
 	}
-	if(matches[1] != "@license"){
-		return [false, "malformed or unrecognized license tag"];
+	let [all, tag, link, id] = matches;
+	let license = licenses[id];
+	if(!license){
+		return [false, `Unrecognized license "${id}"`];
 	}
-	if(licenses[matches[3]] === undefined){
-		return [false, "malformed or unrecognized license tag"];
+	if(license["Magnet link"] != link){
+		return [false, `License magnet link does not match for "${id}".`];
 	}
-	if(licenses[matches[3]]["Magnet link"] != matches[2]){
-		return [false, "malformed or unrecognized license tag"];
-	}
-	return [true,"Recognized license as '"+matches[3]+"'<br>"];
+	return [true, `Recognized license: "${id}".`];
 }
 /**
 *
@@ -743,13 +742,13 @@ function license_read(script_src, name, external = false){
 			return [false,"\n/*\n ERROR: @license with no @license-end \n*/\n","ERROR: @license with no @license-end"];
 		}
 		var endtag_end_index = matches_end["index"]+matches_end[0].length;
-		var license_res = license_valid(matches);
-		if(license_res[0] == true){
-			edited_src =  edited_src + unedited_src.substr(0,endtag_end_index);
-			reason_text += "\n" + license_res[1];
+		let [licenseOK, licenseMessage] = validateLicense(matches);
+		if(licenseOK) {
+			edited_src += unedited_src.substr(0, endtag_end_index);
+			reason_text += `\n${licenseMessage}`;
 		} else{
-			edited_src = edited_src + "\n/*\n"+license_res[1]+"\n*/\n";
-			reason_text += "\n" + license_res[1];
+			edited_src += `\n/*\n${licenseMessage}\n*/\n`;
+			reason_text += `\n${licenseMessage}`;
 		}
 		// trim off everything we just evaluated
 		unedited_src = unedited_src.substr(endtag_end_index,unedited_src.length);
