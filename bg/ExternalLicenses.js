@@ -26,10 +26,27 @@
 "use strict";
 
 let licensesByLabel = new Map();
+let licensesByUrl = new Map();
 {
   let {licenses} = require("../license_definitions");
-  for (let l of Object.values(licenses).filter(l => l.identifier)) {
-    licensesByLabel.set(l.identifier, l);
+  for (let [id, l] of Object.entries(licenses)) {
+    let {identifier, canonicalUrl, licenseName} = l;
+    if (identifier) {
+      licensesByLabel.set(identifier, l);
+    } else {
+      l.identifier = id;
+    }
+    if (id !== identifier) {
+      licensesByLabel.set(id, l);
+    }
+    if (licenseName) {
+      licensesByLabel.set(licenseName, l);
+    }
+    if (Array.isArray(canonicalUrl)) {
+      for (let url of canonicalUrl) {
+        licensesByUrl.set(url, l);
+      }
+    }
   }
 }
 
@@ -55,23 +72,26 @@ var ExternalLicenses = {
       return null;
     }
     scriptInfo.licenses = new Set();
-    scriptInfo.allFree = true;
     scriptInfo.toString = function() {
       let licenseIds = [...this.licenses].map(l => l.identifier).sort().join(", ");
       return licenseIds
-         ? (this.allFree ? `Free license${this.licenses.length > 1 ? "s" : ""} (${licenseIds})`
-                         : `Mixed free (${licenseIds}) and unknown licenses`)
+         ? `Free license${this.licenses.size > 1 ? "s" : ""} (${licenseIds})`
          : "Unknown license(s)";
     }
-
-    for (let {label} of scriptInfo.licenseLinks) {
-      if (licensesByLabel.has(label)) {
-        scriptInfo.licenses.add(licensesByLabel.get(label));
-      } else {
-        scriptInfo.allFree = false;
-        break;
+    let match = (map, key) => {
+      if (map.has(key)) {
+        scriptInfo.licenses.add(map.get(key));
+        return true;
       }
+      return false;
+    };
+
+    for (let {label, url} of scriptInfo.licenseLinks) {
+      match(licensesByLabel, label = label.trim()) ||
+        match(licensesByUrl, url) ||
+        match(licensesByLabel, label.replace(/^GNU-|-(?:or-later|only)$/i, ''));
     }
+    scriptInfo.free = scriptInfo.licenses.size > 0;
     return scriptInfo;
   },
 
