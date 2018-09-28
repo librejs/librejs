@@ -33,7 +33,7 @@ class ResponseProcessor {
 
   static install(handler, types = ["main_frame", "sub_frame", "script"]) {
     if (listeners.has(handler)) return false;
-    let listener = 
+    let listener =
       async request =>  await new ResponseTextFilter(request).process(handler);
     listeners.set(handler, listener);
     webRequestEvent.addListener(
@@ -80,7 +80,7 @@ class ResponseTextFilter {
       if (handler.post) handler = handler.post;
       if (typeof handler !== "function") ResponseProcessor.ACCEPT;
     }
-    
+
     let {requestId, responseHeaders} = request;
     let filter = browser.webRequest.filterResponseData(requestId);
     let buffer = [];
@@ -90,11 +90,29 @@ class ResponseTextFilter {
     };
 
     filter.onstop = async event => {
-      let decoder = metaData.createDecoder();
+
       let params = {stream: true};
-      response.text = buffer.map(
-        chunk => decoder.decode(chunk, params))
-        .join('');
+      // concatenate chunks
+      let size = buffer.reduce((sum, chunk, n) => sum + chunk.byteLength, 0)
+      let allBytes = new Uint8Array(size);
+      let pos = 0;
+      for (let chunk of buffer) {
+        allBytes.set(new Uint8Array(chunk), pos);
+        pos += chunk.byteLength;
+      }
+      buffer = null; // allow garbage collection
+      if (allBytes.indexOf(0) !== -1) {
+        console.debug("Warning: zeroes in bytestream, probable cached encoding mismatch.", request);
+        if (request.type === "script") {
+          console.debug("It's a script, trying to refetch it.");
+          response.text = await (await fetch(request.url, {cache: "reload", credentials: "include"})).text();
+        } else {
+          console.debug("It's a %s, trying to decode it as UTF-16.", request.type);
+          response.text = new TextDecoder("utf-16be").decode(allBytes);
+        }
+      } else {
+        response.text = metaData.createDecoder().decode(allBytes, {stream: true});
+      }
       let editedText = null;
       try {
         editedText = await handler(response);
@@ -108,10 +126,9 @@ class ResponseTextFilter {
         filter.write(new TextEncoder().encode(editedText));
       } else {
         // ... otherwise pass all the raw bytes through
-        for (let chunk of buffer) filter.write(chunk);
+        filter.write(allBytes);
       }
-
-      filter.disconnect();
+      filter.close();
     }
 
     return metaData.forceUTF8() ? {responseHeaders} : ResponseProcessor.ACCEPT;;
