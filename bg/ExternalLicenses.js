@@ -29,18 +29,19 @@ let licensesByLabel = new Map();
 let licensesByUrl = new Map();
 {
   let {licenses} = require("../license_definitions");
+  let mapByLabel = (label, license) => licensesByLabel.set(label.toUpperCase(), license);
   for (let [id, l] of Object.entries(licenses)) {
     let {identifier, canonicalUrl, licenseName} = l;
     if (identifier) {
-      licensesByLabel.set(identifier, l);
+      mapByLabel(identifier, l);
     } else {
       l.identifier = id;
     }
     if (id !== identifier) {
-      licensesByLabel.set(id, l);
+      mapByLabel(id, l);
     }
     if (licenseName) {
-      licensesByLabel.set(licenseName, l);
+      mapByLabel(licenseName, l);
     }
     if (Array.isArray(canonicalUrl)) {
       for (let url of canonicalUrl) {
@@ -87,9 +88,9 @@ var ExternalLicenses = {
     };
 
     for (let {label, url} of scriptInfo.licenseLinks) {
-      match(licensesByLabel, label = label.trim()) ||
+      match(licensesByLabel, label = label.trim().toUpperCase()) ||
         match(licensesByUrl, url) ||
-        match(licensesByLabel, label.replace(/^GNU-|-(?:or-later|only)$/i, ''));
+        match(licensesByLabel, label.replace(/^GNU-|-(?:OR-LATER|ONLY)$/, ''));
     }
     scriptInfo.free = scriptInfo.licenses.size > 0;
     return scriptInfo;
