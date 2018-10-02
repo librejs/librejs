@@ -43,11 +43,12 @@ describe("LibreJS' components", () => {
   let unknownLicensed = `// @license ${unknownLicense.id} ${unknownLicense.magnet}\n${nontrivial}\n// @license-end`;
   let malformedLicensed = `// @license\n${nontrivial}`;
 
-  let tab;
+  let tab, documentUrl;
 
   beforeAll(async () => {
     let url = browser.extension.getURL("/test/resources/index.html");
     tab = (await browser.tabs.query({url}))[0] || (await browser.tabs.create({url}));
+    documentUrl = url;
   });
 
   describe("The external script source processor", () => {
@@ -56,7 +57,7 @@ describe("LibreJS' components", () => {
     let processScript = async (source, whitelisted = false) =>
       await LibreJS.handle_script({
         text: source,
-        request: {url, tabId: tab.id, documentUrl: tab.url, frameId: 0},
+        request: {url, tabId: tab.id, documentUrl, frameId: 0},
       }, whitelisted);
 
     it("should accept whitelisted scripts", async () => {
@@ -175,7 +176,6 @@ describe("LibreJS' components", () => {
     let check;
 
     beforeAll(async () => {
-      let documentUrl = tab.url;
       let args = {tabId: tab.id, frameId: 0, documentUrl};
       let resolve = url => new URL(url, documentUrl).href;
       check = async url => await ExternalLicenses.check(Object.assign({url: resolve(url)}, args));
