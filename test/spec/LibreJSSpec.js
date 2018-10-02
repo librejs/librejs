@@ -206,7 +206,7 @@ describe("LibreJS' components", () => {
     });
   });
   afterAll(async () => {
-    // await browser.tabs.remove(tab.id);
+    await browser.tabs.remove(tab.id);
     browser.tabs.update((await browser.tabs.getCurrent()).id, {active: true});
   });
 });
