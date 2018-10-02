@@ -79,7 +79,7 @@
     async checkLicensedScript(m) {
       let {url, cache} = m;
       if (!licensedScripts) licensedScripts = await fetchLicenseInfo(cache);
-      return licensedScripts.get(url);
+      return licensedScripts.get(url) || licensedScripts.get(url.replace(/\?.*/, ''));
     }
   }
 
