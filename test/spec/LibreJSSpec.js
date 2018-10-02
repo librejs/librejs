@@ -21,10 +21,6 @@
 "use strict";
 
 describe("LibreJS' components", () => {
-  const LENIENT_TAG_MSG =
-    `actual requirement? at this moment (20181001)
-      formal validity only gets checked, therefore this test would fail.`;
-
   let LibreJS = browser.extension.getBackgroundPage().LibreJS;
   let license = {
     id: 'GPL-3.0',
@@ -39,8 +35,8 @@ describe("LibreJS' components", () => {
 
   let trivial = "1+1";
   let nontrivial = `function nt() { document.documentElement.innerHTML=""; nt(); }`;
-  let licensed = `// @license ${license.id} ${license.magnet}\n${nontrivial}\n// @license-end`;
-  let unknownLicensed = `// @license ${unknownLicense.id} ${unknownLicense.magnet}\n${nontrivial}\n// @license-end`;
+  let licensed = `// @license ${license.magnet} ${license.id}\n${nontrivial}\n// @license-end`;
+  let unknownLicensed = `// @license ${unknownLicense.magnet} ${unknownLicense.id}\n${nontrivial}\n// @license-end`;
   let malformedLicensed = `// @license\n${nontrivial}`;
 
   let tab, documentUrl;
@@ -79,10 +75,10 @@ describe("LibreJS' components", () => {
       expect(processed || licensed).toContain(nontrivial);
     });
 
-    xit("should block scripts with unknown license tags", async () => {
+    it("should block scripts with unknown license tags", async () => {
       let processed = await processScript(unknownLicensed);
       expect(processed).not.toContain(nontrivial);
-    }).pend(LENIENT_TAG_MSG);
+    });
 
     it("should block scripts with malformed license tags", async () => {
       let processed = await processScript(malformedLicensed);
@@ -137,11 +133,11 @@ describe("LibreJS' components", () => {
       expect(extractScripts(processed, licensed)).toContain(nontrivial);
     });
 
-    xit("should block scripts with unknown license tags", async () => {
+    it("should block scripts with unknown license tags", async () => {
       let unknownInHtml = addScript(html, unknownLicensed);
       let processed = await processHtml(unknownInHtml);
       expect(extractScripts(processed, nontrivial)).not.toContain(nontrivial);
-    }).pend(LENIENT_TAG_MSG);
+    });
 
     it("should block scripts with malformed license tags", async () => {
       let malformedInHtml = addScript(html, malformedLicensed);
