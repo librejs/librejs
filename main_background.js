@@ -1175,6 +1175,21 @@ async function init_addon() {
 	ResponseProcessor.install(ResponseHandler);
 
 	legacy_license_lib.init();
+
+
+	let Test = require("./common/Test");
+	if (Test.getURL()) {
+		// export testable functions to the global scope
+		this.LibreJS = {
+			editHtml,
+			handle_script,
+			ExternalLicenses,
+		};
+		// create or focus the autotest tab if it's a debugging session
+		if ((await browser.management.getSelf()).installType === "development") {
+			Test.getTab(true);
+		}
+	}
 }
 
 

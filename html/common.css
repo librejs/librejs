@@ -3,6 +3,7 @@ html {
   margin:0px;
   color:#000 !important;
   background:url('background-panel.png') !important;
+  font-family: sans-serif;
 }
 body {
   padding:0;
@@ -26,4 +27,15 @@ h1.libre {
     font-weight:bold;
     background:url('librejs-title.png') no-repeat top left;
     text-indent:-1000px;
+    position: relative;
+}
+h1.libre span {
+  font-family: sans-serif;
+  position: absolute;
+  bottom: 32px;
+  padding: 0 16px;
+  left: 230px;
+  display: block;
+  text-indent: 0;
+  vertical-align: bottom;
 }

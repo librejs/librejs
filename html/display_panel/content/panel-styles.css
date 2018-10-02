@@ -141,7 +141,8 @@ span.blocked {
   display: none;
 }
 
-.tab #must-reload, .tab #buttons, .empty #buttons {
+.tab #must-reload, .tab #buttons,
+.empty #complain, .empty #report-tab, #autotest {
   display: none;
 }
 
