@@ -859,6 +859,7 @@ var ResponseHandler = {
 		let {request} = response;
 		let {url, type, tabId, frameId, documentUrl} = request;
 
+		let fullUrl = url;
 		url = ListStore.urlItem(url);
 		let site = ListStore.siteItem(url);
 
@@ -888,11 +889,11 @@ var ResponseHandler = {
 						"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
 					return ResponseProcessor.ACCEPT;
 				} else {
-					let scriptInfo = await ExternalLicenses.check({url, tabId, frameId, documentUrl});
+					let scriptInfo = await ExternalLicenses.check({url: fullUrl, tabId, frameId, documentUrl});
 					if (scriptInfo) {
 						let verdict, ret;
 						let msg = scriptInfo.toString();
-						if (scriptInfo.allFree) {
+						if (scriptInfo.free) {
 							verdict = "accepted";
 							ret = ResponseProcessor.ACCEPT;
 						} else {
