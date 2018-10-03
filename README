@@ -15,6 +15,11 @@ To build the extension run:
 To build the extension plus create a .xpi package run:
   $ ./build.sh
 
+To build the extension including the automated test suite (see TEST below) run:
+  $ ./build.sh -t
+  or
+  $ ./build.sh --test
+
 Note: this build.sh script relies on no new source files being created.
 
 
@@ -24,6 +29,12 @@ To debug this add-on on IceCat and other Firefox derivatives, browse to the spec
 
 LibreJS should work with other WebExtensions-compliant browsers; but currently, none of them meet the freedom standards of GNU, so no help will be provided for their usage.
 
+TEST:
+
+An automated test suite runs automatically in its own tab whenever the extension
+is loaded as a "temporary add-on" from about:debugging.
+Otherwise (if included in the xpi, see BUILD above) it can be launched from the
+UI by clicking the [Automated self test...] button.
 
 CONTACT:
 

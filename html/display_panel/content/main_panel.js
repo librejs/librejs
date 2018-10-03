@@ -38,6 +38,18 @@ myPort.postMessage({"update": true, tabId: parseInt(currentReport && currentRepo
 // Display the actual extension version Number
 document.querySelector("#version").textContent = browser.runtime.getManifest().version;
 
+// Enable autotest button if this is a test-enabled build / session
+(async () => {
+  if (await Test.getURL()) {
+    let button = document.querySelector("#autotest");
+    button.style.display = "block";
+    button.onclick = async () => {
+      await Test.getTab(true);
+      close();
+    }
+  }
+})();
+
 var liTemplate = document.querySelector("#li-template");
 liTemplate.remove();
 
