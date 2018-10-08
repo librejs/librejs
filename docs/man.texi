@@ -408,6 +408,41 @@ Many free licenses are listed in this page:
 @node LibreJS Development Notes
 @chapter LibreJS Development Notes
 
+@section Dependencies
+
+LibreJS @value{VERSION} depends on a number of Node.js-based libraries that
+can be installed using the @code{npm} utility:
+
+@verbatim
+  $ npm install acorn-loose
+  $ npm install jssha
+  $ npm install browserify
+  $ export PATH=$PATH:./node_modules/.bin
+@end verbatim
+
+@section Building
+
+To build the extension run:
+@verbatim
+  $ browserify main_background.js -o bundle.js
+@end verbatim
+
+To build the extension plus create a .xpi package run:
+@verbatim
+  $ ./build.sh
+@end verbatim
+
+To build the extension including the automated test suite (see TEST below) run:
+@verbatim
+  $ ./build.sh -t
+@end verbatim
+or
+@verbatim
+  $ ./build.sh --test
+@end verbatim
+
+Note: this @file{build.sh} script relies on no new source files being created.
+
 @section Debugging
 
 To debug LibreJS, visit the special URL @code{about:debugging}. Click
@@ -417,6 +452,13 @@ to LibreJS's unpacked source directory and select @file{manifest.json}.
 Lines 39 and 40 in @file{main_background.js} assign two variables controlling
 the verbosity of @code{dbg_print()} statements. Make sure these are set to false
 before building a release.
+
+@section Testing
+
+An automated test suite runs automatically in its own tab whenever the extension
+is loaded as a "Temporary add-on" from @code{about:debugging}.
+Otherwise (if included in the xpi) it can be launched from the
+UI by clicking the "Automated self test..." button.
 
 @section Adding new whitelisted libraries
 
@@ -435,7 +477,7 @@ Update the version number in manifest.json.
 Make sure debug statements are set to false on lines 39/40 in
 @file{main_background.js}.
 
-Then, run the build script @file{build.sh}. This
+Then run the build script @file{build.sh}.
 
 @node Installation Requirements
 @appendix Installation Requirements

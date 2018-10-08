@@ -382,7 +382,36 @@ File: librejs.info,  Node: LibreJS Development Notes,  Next: Installation Requir
 8 LibreJS Development Notes
 ***************************
 
-8.1 Debugging
+8.1 Dependencies
+================
+
+LibreJS 7.17 depends on a number of Node.js-based libraries that can be
+installed using the 'npm' utility:
+
+  $ npm install acorn-loose
+  $ npm install jssha
+  $ npm install browserify
+  $ export PATH=$PATH:./node_modules/.bin
+
+8.2 Building
+============
+
+To build the extension run:
+  $ browserify main_background.js -o bundle.js
+
+   To build the extension plus create a .xpi package run:
+  $ ./build.sh
+
+   To build the extension including the automated test suite (see TEST
+below) run:
+  $ ./build.sh -t
+   or
+  $ ./build.sh --test
+
+   Note: this 'build.sh' script relies on no new source files being
+created.
+
+8.3 Debugging
 =============
 
 To debug LibreJS, visit the special URL 'about:debugging'.  Click on
@@ -393,7 +422,15 @@ LibreJS's unpacked source directory and select 'manifest.json'.
 controlling the verbosity of 'dbg_print()' statements.  Make sure these
 are set to false before building a release.
 
-8.2 Adding new whitelisted libraries
+8.4 Testing
+===========
+
+An automated test suite runs automatically in its own tab whenever the
+extension is loaded as a "Temporary add-on" from 'about:debugging'.
+Otherwise (if included in the xpi) it can be launched from the UI by
+clicking the "Automated self test..."  button.
+
+8.5 Adding new whitelisted libraries
 ====================================
 
 The script index.js in './hash_script' generates the default whitelist.
@@ -404,7 +441,7 @@ Run it with the following command:
    Then, just copy the contents of the file "output" to the appropriate
 place in main_background.js.
 
-8.3 Releasing a new version
+8.6 Releasing a new version
 ===========================
 
 Update the version number in manifest.json.
@@ -412,7 +449,7 @@ Update the version number in manifest.json.
    Make sure debug statements are set to false on lines 39/40 in
 'main_background.js'.
 
-   Then, run the build script 'build.sh'.  This
+   Then run the build script 'build.sh'.
 
 
 File: librejs.info,  Node: Installation Requirements,  Next: LibreJS Internals,  Prev: LibreJS Development Notes,  Up: Top
@@ -942,9 +979,9 @@ Node: How to Use3539
 Node: JavaScript Detection7045
 Node: Free Licenses Detection8332
 Node: Setting Your JavaScript Free8803
-Node: LibreJS Development Notes14531
-Node: Installation Requirements15691
-Node: LibreJS Internals16401
-Node: GNU Free Documentation License17051
+Node: LibreJS Development Notes14530
+Node: Installation Requirements16612
+Node: LibreJS Internals17322
+Node: GNU Free Documentation License17972
 
 End Tag Table
