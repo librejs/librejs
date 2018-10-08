@@ -111,8 +111,8 @@ it to @email{bug-librejs@@gnu.org}.
 You can install LibreJS directly using a generated @file{librejs.xpi}
 file, or by building it from source.
 
-You can also download it from Mozilla, but due to Mozilla's review
-process the download isn't always up to date. 
+You can also download it from @url{https://addons.mozilla.org/addon/librejs/},
+but due to Mozilla's review process the download isn't always up to date.
 
 @node How to Use
 @chapter How to Use
@@ -134,15 +134,15 @@ will always get rejected.
 
 It is important to note that this feature recognizes which scripts are
 blacklisted and whitelisted based on hash. This means that even a slight
-difference in a script's code will cause it to be recognized as a 
-seperate script. 
+difference in a script's code will cause it to be recognized as a
+separate script.
 
-Sometimes, JavaScript will be dynamically generated so that it is 
-different every time a website is loaded. These types of scripts cannot 
+Sometimes, JavaScript will be dynamically generated so that it is
+different every time a website is loaded. These types of scripts cannot
 be whitelisted or blacklisted since they cannot be recognized.
 
 LibreJS has a default whitelist of scripts that are known to be free but
-may not use the format for declaring a license that it can understand.  
+may not declare their license in a format that LibreJS can understand.
 
 @section Complaint Feature
 
@@ -172,20 +172,21 @@ LibreJS add-on preferences in your web browser.
 @section Options
 
 @table @dfn
-@item Whitelist
 
-LibreJS lets you whitelist domain names and subdomains to bypass the
-regular JavaScript check. This might be useful, for example, if you are
-running your own code in a local web server. In order to add a whitelisted
-domain or url, go to Tools >> Add-ons. Inside the add-on window, click on 
-@dfn{Extensions}, and in the list, where you see LibreJS, click on the 
-@dfn{Preferences} button. You will see an input field labeled @dfn{Whitelist}. 
+You can manage LibreJS's preferences either from the extension's entry in your
+browser's Add-ons Manager page (@code{about:addons}) or by clicking the LibreJS
+toolbar icon and then the "Settings..." button on the top right of the popup.
+This will open a panel containing a whitelist/blacklist manager and a section
+to configure your complaints messages to site owners.
 
-In the field, enter comma-separated domain names. Do not enter the protocol. 
-For instance to whitelist all the pages of @url{http://www.gnu.org} and
-@url{https://gnu.org}, enter @samp{gnu.org}. To allow all subdomains from
-gnu.org, enter: @samp{*.gnu.org}. This will match such sites as
-@url{http://savannah.gnu.org} and @url{http://audio-video.gnu.org}.
+@item Whitelist/Blacklist
+
+LibreJS lets you whitelist or blacklist domain names and subdomains, to bypass
+the regular JavaScript checks. This might be useful, for example, if you are
+running your own code in a local web server, or if you don't want to waste
+computing resources on script origins you already know you can't trust. librejs
+provides a lists manager UI to handle both the lists on the top of its Options
+panel.
 
 @item Complaint email subject
 Configure the default subject used in complaint emails.
@@ -413,9 +414,9 @@ To debug LibreJS, visit the special URL @code{about:debugging}. Click
 on `Enable add-on debugging` then `Load Temporary Add-on`. Navigate
 to LibreJS's unpacked source directory and select @file{manifest.json}.
 
-Lines 34 and 35 in @file{main_background.js} control the printing of
-@code{dbg_print()} statements. Make sure these are set to false in 
-releases.
+Lines 39 and 40 in @file{main_background.js} assign two variables controlling
+the verbosity of @code{dbg_print()} statements. Make sure these are set to false
+before building a release.
 
 @section Adding new whitelisted libraries
 
@@ -431,10 +432,10 @@ place in main_background.js.
 
 Update the version number in manifest.json.
 
-Make sure debug statements are set to false on lines 34/35 in
+Make sure debug statements are set to false on lines 39/40 in
 @file{main_background.js}.
 
-Then, run the build script @file{build.sh}. This 
+Then, run the build script @file{build.sh}. This
 
 @node Installation Requirements
 @appendix Installation Requirements
@@ -447,8 +448,8 @@ LibreJS. It can be installed on the following:
 
 GNU IceCat,  Mozilla Firefox, Trisquel Abrowser, Debian Iceweasel.
 
-LibreJS works on these browsers starting from version 57. We recommend
-that you use the latest version of your Mozilla browser. LibreJS has 
+LibreJS works on these browsers starting from version 60. We recommend
+that you use the latest version of your Mozilla browser. LibreJS has
 been tested on a GNU/Linux distribution, but it is compatible any
 operating system as long as you're using a compatible Mozilla browser.
 
