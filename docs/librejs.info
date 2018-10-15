@@ -1,6 +1,6 @@
-This is librejs.info, produced by makeinfo version 5.2 from man.texi.
+This is librejs.info, produced by makeinfo version 6.5 from man.texi.
 
-This manual is for GNU LibreJS (version 7.2, 10 February 2018), a GNU
+This manual is for GNU LibreJS (version 7.17, 8 October 2018), a GNU
 IceCat extension to detect and block nonfree nontrivial JavaScript on
 webpages.
 
@@ -23,7 +23,7 @@ File: librejs.info,  Node: Top,  Next: Overview,  Up: (dir)
 LibreJS
 *******
 
-This manual is for GNU LibreJS (version 7.2, 10 February 2018).
+This manual is for GNU LibreJS (version 7.17, 8 October 2018).
 
 * Menu:
 
@@ -91,7 +91,8 @@ File: librejs.info,  Node: Installation,  Next: How to Use,  Prev: Disclaimer,  
 You can install LibreJS directly using a generated 'librejs.xpi' file,
 or by building it from source.
 
-   You can also download it from Mozilla, but due to Mozilla's review
+   You can also download it from
+<https://addons.mozilla.org/addon/librejs/>, but due to Mozilla's review
 process the download isn't always up to date.
 
 
@@ -120,14 +121,14 @@ will always get rejected.
    It is important to note that this feature recognizes which scripts
 are blacklisted and whitelisted based on hash.  This means that even a
 slight difference in a script's code will cause it to be recognized as a
-seperate script.
+separate script.
 
    Sometimes, JavaScript will be dynamically generated so that it is
 different every time a website is loaded.  These types of scripts cannot
 be whitelisted or blacklisted since they cannot be recognized.
 
    LibreJS has a default whitelist of scripts that are known to be free
-but may not use the format for declaring a license that it can
+but may not declare their license in a format that LibreJS can
 understand.
 
 4.3 Complaint Feature
@@ -159,22 +160,22 @@ in the LibreJS add-on preferences in your web browser.
 4.4 Options
 ===========
 
-"Whitelist"
+     You can manage LibreJS's preferences either from the extension's
+     entry in your browser's Add-ons Manager page ('about:addons') or by
+     clicking the LibreJS toolbar icon and then the "Settings..."
+     button on the top right of the popup.  This will open a panel
+     containing a whitelist/blacklist manager and a section to configure
+     your complaints messages to site owners.
 
-     LibreJS lets you whitelist domain names and subdomains to bypass
-     the regular JavaScript check.  This might be useful, for example,
-     if you are running your own code in a local web server.  In order
-     to add a whitelisted domain or url, go to Tools >> Add-ons.  Inside
-     the add-on window, click on "Extensions", and in the list, where
-     you see LibreJS, click on the "Preferences" button.  You will see
-     an input field labeled "Whitelist".
+"Whitelist/Blacklist"
 
-     In the field, enter comma-separated domain names.  Do not enter the
-     protocol.  For instance to whitelist all the pages of
-     <http://www.gnu.org> and <https://gnu.org>, enter 'gnu.org'.  To
-     allow all subdomains from gnu.org, enter: '*.gnu.org'.  This will
-     match such sites as <http://savannah.gnu.org> and
-     <http://audio-video.gnu.org>.
+     LibreJS lets you whitelist or blacklist domain names and
+     subdomains, to bypass the regular JavaScript checks.  This might be
+     useful, for example, if you are running your own code in a local
+     web server, or if you don't want to waste computing resources on
+     script origins you already know you can't trust.  librejs provides
+     a lists manager UI to handle both the lists on the top of its
+     Options panel.
 
 "Complaint email subject"
      Configure the default subject used in complaint emails.
@@ -355,7 +356,7 @@ must be declared using a machine-readable license format.
 	},
 	'X11':{
 		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
-		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'
+		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'	
 	},
 	'Modified-BSD':{
 		'URL': 'http://www.xfree86.org/current/LICENSE4.html',
@@ -381,17 +382,55 @@ File: librejs.info,  Node: LibreJS Development Notes,  Next: Installation Requir
 8 LibreJS Development Notes
 ***************************
 
-8.1 Debugging
+8.1 Dependencies
+================
+
+LibreJS 7.17 depends on a number of Node.js-based libraries that can be
+installed using the 'npm' utility:
+
+  $ npm install acorn-loose
+  $ npm install jssha
+  $ npm install browserify
+  $ export PATH=$PATH:./node_modules/.bin
+
+8.2 Building
+============
+
+To build the extension run:
+  $ browserify main_background.js -o bundle.js
+
+   To build the extension plus create a .xpi package run:
+  $ ./build.sh
+
+   To build the extension including the automated test suite (see TEST
+below) run:
+  $ ./build.sh -t
+   or
+  $ ./build.sh --test
+
+   Note: this 'build.sh' script relies on no new source files being
+created.
+
+8.3 Debugging
 =============
 
 To debug LibreJS, visit the special URL 'about:debugging'.  Click on
 'Enable add-on debugging' then 'Load Temporary Add-on'.  Navigate to
 LibreJS's unpacked source directory and select 'manifest.json'.
 
-   Lines 34 and 35 in 'main_background.js' control the printing of
-'dbg_print()' statements.  Make sure these are set to false in releases.
+   Lines 39 and 40 in 'main_background.js' assign two variables
+controlling the verbosity of 'dbg_print()' statements.  Make sure these
+are set to false before building a release.
 
-8.2 Adding new whitelisted libraries
+8.4 Testing
+===========
+
+An automated test suite runs automatically in its own tab whenever the
+extension is loaded as a "Temporary add-on" from 'about:debugging'.
+Otherwise (if included in the xpi) it can be launched from the UI by
+clicking the "Automated self test..."  button.
+
+8.5 Adding new whitelisted libraries
 ====================================
 
 The script index.js in './hash_script' generates the default whitelist.
@@ -402,15 +441,15 @@ Run it with the following command:
    Then, just copy the contents of the file "output" to the appropriate
 place in main_background.js.
 
-8.3 Releasing a new version
+8.6 Releasing a new version
 ===========================
 
 Update the version number in manifest.json.
 
-   Make sure debug statements are set to felse on lines 34/35 in
+   Make sure debug statements are set to false on lines 39/40 in
 'main_background.js'.
 
-   Then, run the build script 'build.sh'.
+   Then run the build script 'build.sh'.
 
 
 File: librejs.info,  Node: Installation Requirements,  Next: LibreJS Internals,  Prev: LibreJS Development Notes,  Up: Top
@@ -426,7 +465,7 @@ LibreJS. It can be installed on the following:
 
    GNU IceCat, Mozilla Firefox, Trisquel Abrowser, Debian Iceweasel.
 
-   LibreJS works on these browsers starting from version 57.  We
+   LibreJS works on these browsers starting from version 60.  We
 recommend that you use the latest version of your Mozilla browser.
 LibreJS has been tested on a GNU/Linux distribution, but it is
 compatible any operating system as long as you're using a compatible
@@ -932,17 +971,17 @@ their use in free software.
 
 
 Tag Table:
-Node: Top826
-Node: Overview1820
-Node: Disclaimer2667
-Node: Installation3163
-Node: How to Use3505
-Node: JavaScript Detection7002
-Node: Free Licenses Detection8289
-Node: Setting Your JavaScript Free8760
-Node: LibreJS Development Notes14487
-Node: Installation Requirements15601
-Node: LibreJS Internals16311
-Node: GNU Free Documentation License16961
+Node: Top825
+Node: Overview1818
+Node: Disclaimer2665
+Node: Installation3161
+Node: How to Use3539
+Node: JavaScript Detection7045
+Node: Free Licenses Detection8332
+Node: Setting Your JavaScript Free8803
+Node: LibreJS Development Notes14530
+Node: Installation Requirements16612
+Node: LibreJS Internals17322
+Node: GNU Free Documentation License17972
 
 End Tag Table
