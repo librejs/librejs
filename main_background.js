@@ -61,29 +61,6 @@ function hash(source){
 	return shaObj.getHash("HEX");
 }
 
-
-// the list of all available event attributes
-var intrinsic_events = [
-    "onload",
-    "onunload",
-    "onclick",
-    "ondblclick",
-    "onmousedown",
-    "onmouseup",
-    "onmouseovr",
-    "onmousemove",
-    "onmouseout",
-    "onfocus",
-    "onblur",
-    "onkeypress",
-    "onkeydown",
-    "onkeyup",
-    "onsubmit",
-    "onreset",
-    "onselect",
-    "onchange"
-];
-
 /*
 	NONTRIVIAL THINGS:
 	- Fetch
@@ -1056,20 +1033,21 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		let modified = false;
 
 		// Deal with intrinsic events
+		let intrinsecindex = 0;
 		for (let element of html_doc.all) {
-			let attributes = element.attributes;
-			for (let event of intrinsic_events) {
-				if (event in attributes) {
-					let attr = attributes[event];
+			for (let attr of element.attributes){
+				if (attr.name.startsWith("on") || (attr.name === "href" && attr.value.startsWith("javascript:"))){
+					intrinsecindex++;
 					try {
-						let edited = await get_script(attr.value, `Intrinsic event [${event}]`);
-					  if (edited) {
-							let value = edited[0];
-							if (value !== attr.value) {
-								modified = true;
-								attr.value = value;
+						let url = `${documentUrl}# Intrinsic event ${intrinsecindex} [${attr.name}]`;
+						let edited = await get_script(attr.value, url, tabId, whitelist.contains(url));
+							if (edited) {
+								let value = edited;
+								if (value !== attr.value) {
+									modified = true;
+									attr.value = value;
+								}
 							}
-						}
 					} catch (e) {
 						console.error(e);
 					}
