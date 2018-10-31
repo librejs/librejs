@@ -493,6 +493,7 @@ function full_evaluate(script){
 			return script.charAt(end+i) == "[";
 		}
 		var error_count = 0;
+		var defines_functions = false;
 		while(toke !== undefined && toke.type != acorn.tokTypes.eof){
 			if(toke.type.keyword !== undefined){
 				//dbg_print("Keyword:");
@@ -501,10 +502,8 @@ function full_evaluate(script){
 				// This type of loop detection ignores functional loop alternatives and ternary operators
 
 				if(toke.type.keyword == "function"){
-					dbg_print("%c NONTRIVIAL: Function declaration.","color:red");
-					if(DEBUG == false){
-						return [false,"NONTRIVIAL: Function declaration."];
-					}
+					dbg_print("%c NOTICE: Function declaration.","color:green");
+					defines_functions = true;
 				}
 
 				if(loopkeys[toke.type.keyword] !== undefined){
@@ -535,13 +534,6 @@ function full_evaluate(script){
 						}
 					}
 				}else if(status === undefined){// is the identifier user defined?
-					// Are arguments being passed to a user defined variable?
-					if(being_called(toke.end)){
-						dbg_print("%c NONTRIVIAL: User defined variable '"+toke.value+"' called as function","color:red");
-						if(DEBUG == false){
-							return [false,"NONTRIVIAL: User defined variable '"+toke.value+"' called as function"];
-						}
-					}
 					// Is there bracket suffix notation?
 					if(is_bsn(toke.end)){
 						dbg_print("%c NONTRIVIAL: Bracket suffix notation on variable '"+toke.value+"'","color:red");
@@ -563,7 +555,10 @@ function full_evaluate(script){
 		}
 
 		dbg_print("%cAppears to be trivial.","color:green;");
-		return [true,"Script appears to be trivial."];
+		if (defines_functions === true)
+			return [true,"Script appears to be trivial but defines functions."];
+		else
+			return [true,"Script appears to be trivial."];
 }
 
 
