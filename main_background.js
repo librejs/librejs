@@ -616,15 +616,23 @@ function evaluate(script,name){
 
 
 function validateLicense(matches) {
-	if (!(Array.isArray(matches) && matches.length === 4)){
+	if (!(Array.isArray(matches) && matches.length >= 4)){
 		return [false, "Malformed or unrecognized license tag."];
 	}
 	let [all, tag, link, id] = matches;
-	let license = licenses[id];
+	let license = null;
+	if (licenses[id])
+		license = licenses[id];
+	for (let key in licenses){
+		if (licenses[key]["Magnet link"] === link)
+			license = licenses[key];
+		if (licenses[key]["URL"] === link)
+			license = licenses[key];
+	}
 	if(!license){
 		return [false, `Unrecognized license "${id}"`];
 	}
-	if(license["Magnet link"] != link){
+	if (!(license["Magnet link"] === link || license["URL"] === link)){
 		return [false, `License magnet link does not match for "${id}".`];
 	}
 	return [true, `Recognized license: "${id}".`];
