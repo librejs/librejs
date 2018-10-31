@@ -676,7 +676,10 @@ function license_read(scriptSrc, name, external = false){
 			editedSrc += s;
 		} else {
 			partsDenied = true;
-			editedSrc += `\n/*\nLIBREJS BLOCKED: ${message}\n*/\n`;
+			if (s.startsWith("javascript:"))
+				editedSrc += `# LIBREJS BLOCKED: ${message}`;
+			else
+				editedSrc += `/*\nLIBREJS BLOCKED: ${message}\n*/`;
 		}
 		reason += `\n${message}`;
 		return trivial;
@@ -756,7 +759,10 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 				: "Address whitelisted by user";
 			addReportEntry(tabId, url, {"whitelisted": [url, reason], url});
 		}
-		return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
+		if (response.startsWith("javascript:"))
+			return result(response);
+		else
+			return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
 	}
 
 	let [verdict, editedSource, reason] = license_read(response, scriptName, index === -2);
@@ -773,10 +779,20 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	let scriptSource = verdict ? response : editedSource;
 	switch(category) {
 		case "blacklisted":
+			if (response.startsWith("javascript:"))
+				return result(`# LibreJS: script ${category} by user.`);
+			else
+				return result(`/* LibreJS: script ${category} by user. */`);
 		case "whitelisted":
-			return result(`/* LibreJS: script ${category} by user. */\n${scriptSource}`);
+			if (response.startsWith("javascript:"))
+				return result(scriptSource);
+			else
+				return result(`/* LibreJS: script ${category} by user. */\n${scriptSource}`);
 		default:
-			return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);
+                        if (response.startsWith("javascript:"))
+				return result(scriptSource);
+			else
+				return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);
 	}
 }
 
@@ -1061,6 +1077,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		let modifiedInline = false;
 		for(let i = 0, len = scripts.length; i < len; i++) {
 			let script = scripts[i];
+			let url = `${documentUrl}# script ${i}`;
 			if (!script.src && !(script.type && script.type !== "text/javascript")) {
 				let edited = await get_script(script.textContent, url, tabId, whitelisted, i);
 				if (edited) {
@@ -1072,11 +1089,11 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 					}
 				}
 			}
-			if (modified) {
-				return modifiedInline
-					? await remove_noscripts(html_doc)
-					: doc2HTML(html_doc);
-			}
+		}
+		if (modified) {
+			return modifiedInline
+				? await remove_noscripts(html_doc)
+				: doc2HTML(html_doc);
 		}
 	}
 	return null;
