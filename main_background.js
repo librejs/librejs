@@ -129,7 +129,10 @@ function options_listener(changes, area){
 
 var activeMessagePorts = {};
 var activityReports = {};
-async function createReport(initializer = null) {
+async function createReport(initializer) {
+	if (!(initializer && (initializer.url || initializer.tabId)))  {
+		throw new Error("createReport() needs an URL or a tabId at least");
+	}
 	let template =  {
 		"accepted": [],
 		"blocked": [],
@@ -137,14 +140,10 @@ async function createReport(initializer = null) {
 		"whitelisted": [],
 		"unknown": [],
 	};
-	if (initializer) {
-		template = Object.assign(template, initializer);
-		if (!template.url && initializer.tabId) {
-			template.url = (await browser.tabs.get(initializer.tabId)).url;
-		}
-	}
-
-	template.site = ListStore.siteItem(template.url);
+	template = Object.assign(template, initializer);
+	let [url] = (template.url || (await browser.tabs.get(initializer.tabId)).url).split("#");
+	template.url = url;
+	template.site = ListStore.siteItem(url);
 	template.siteStatus = listManager.getStatus(template.site);
 	return template;
 }
@@ -417,7 +416,7 @@ function delete_removed_tab_info(tab_id, remove_info){
 */
 
 async function onTabUpdated(tabId, changedInfo, tab) {
-	let url = tab.url.replace(/#.*/, '');
+	let [url] = tab.url.split("#");
 	let report = activityReports[tabId];
 	if (!(report && report.url === url)) {
 		let cache = await browser.sessions.getTabValue(tabId, url);
