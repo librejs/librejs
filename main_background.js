@@ -800,8 +800,14 @@ function updateBadge(tabId, report = null, forceRed = false) {
 	let blockedCount = report ? report.blocked.length + report.blacklisted.length : 0;
 	let [text, color] = blockedCount > 0 || forceRed
 		? [blockedCount && blockedCount.toString() || "!" , "red"] : ["✓", "green"]
-	browser.browserAction.setBadgeText({text, tabId});
-	browser.browserAction.setBadgeBackgroundColor({color, tabId});
+	let {browserAction} = browser;
+	if ("setBadgeText" in browserAction) {
+		browserAction.setBadgeText({text, tabId});
+		browserAction.setBadgeBackgroundColor({color, tabId});
+	} else {
+		// Mobile
+		browserAction.setTitle({title: `LibreJS (${text})`, tabId});
+	}
 }
 
 /**
