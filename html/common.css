@@ -6,9 +6,20 @@ html {
   font-family: sans-serif;
 }
 body {
-  padding:0;
-  margin:10px 30px 10px 20px;
+  padding: 0;
+  font-size: 12px;
+  margin: 1em;
   color:#000;
+}
+
+.mobile body {
+  font-size: 6mm;
+  width: auto;
+  max-width: auto;
+}
+
+.mobile button {
+  font-size: 1.5em
 }
 
 div.libre {

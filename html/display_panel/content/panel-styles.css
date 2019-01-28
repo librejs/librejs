@@ -20,24 +20,24 @@
 @import url("/html/common.css");
 
 body {
-  width:500px;
+  width: 500px;
 }
 #header{
-display:block;
-width:500px;
+display: block;
+width: 100%
 }
 
 h2 {
-    font-size:1.1em;
+    font-size: 1.4em;
     font-weight:bold;
     font-family:arial;
-    border-bottom:4px solid #444;
+    border-bottom:.2em solid #444;
     padding-bottom:0;
-    margin:10px 0 0 0;
+    margin:.8em 0 0 0;
     line-height:140%;
 }
 code {
-    font-size:1.2em;
+    font-size: 1.2em;
     margin:0;
     padding:0;
 }
@@ -47,18 +47,18 @@ ul {
     list-style:none;
 }
 #info li {
-    padding:5px;
-    border-bottom:2px solid #CCC;
+    padding: .3em;
+    border-bottom:.1em solid #CCC;
     margin:0;
     overflow: hidden;
 }
 
 #info ul ul {
-    margin:10px;
+    margin: .4em;
     list-style:disc;
 }
 #info ul ul li {
-    padding:5px;
+    padding: .5em;
     border-bottom:0;
 }
 #info {
@@ -121,18 +121,18 @@ span.blocked {
 }
 
 .title-area {
-    width: 250px;
+    width: 50%;
     float:left !important;
     text-align: center !important;
 }
 
 .title-area #librejs-web-link {
-    font-size: 18px;
+    font-size: 1.2em;
 }
 
 #librejs-web-labels-pages>ul {
-    margin-top: 8px;
-    font-size: 14px;
+    margin-top: .5em;
+    font-size: 1.2em;
     list-style-type: disc;
 }
 
@@ -149,4 +149,8 @@ span.blocked {
 #buttons button {
   width: 100%;
   text-align: center;
+}
+
+.mobile #report-tab {
+  display: none;
 }
