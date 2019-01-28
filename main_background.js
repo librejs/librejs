@@ -214,7 +214,7 @@ async function updateReport(tabId, oldReport, updateUI = false){
 		}
 	}
 	activityReports[tabId] = newReport;
-	browser.sessions.setTabValue(tabId, url, newReport);
+	if (browser.sessions) browser.sessions.setTabValue(tabId, url, newReport);
 	dbg_print(newReport);
 	if (updateUI && activeMessagePorts[tabId]) {
 		dbg_print(`[TABID: ${tabId}] Sending script blocking report directly to browser action.`);
@@ -290,7 +290,7 @@ async function addReportEntry(tabId, scriptHashOrUrl, action) {
 		}
 	}
 
-	browser.sessions.setTabValue(tabId, report.url, report);
+	if (browser.sessions) browser.sessions.setTabValue(tabId, report.url, report);
 	updateBadge(tabId, report);
 	return entryType;
 }
@@ -419,7 +419,8 @@ async function onTabUpdated(tabId, changedInfo, tab) {
 	let [url] = tab.url.split("#");
 	let report = activityReports[tabId];
 	if (!(report && report.url === url)) {
-		let cache = await browser.sessions.getTabValue(tabId, url);
+		let cache = browser.sessions &&
+			await browser.sessions.getTabValue(tabId, url) || null;
 		// on session restore tabIds may change
 		if (cache && cache.tabId !== tabId) cache.tabId = tabId;
 		updateBadge(tabId, activityReports[tabId] = cache);
