@@ -111,7 +111,7 @@ function createList(data, group){
    container.classList.add("empty");
  }
  // generate list
- let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\)/;
+ let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\).*/;
  for (let entry of entries) {
    let [scriptId, reason] = entry;
 	 let li = liTemplate.cloneNode(true);

@@ -1039,7 +1039,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 	// get the potential inline source that can contain a license
 	for (let script of scripts) {
 		// The script must be in-line and exist
-		if(script && !script.src){
+		if(script && !script.src) {
 			first_script_src = script.textContent;
 			break;
 		}
@@ -1049,13 +1049,21 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 	if (first_script_src != "") {
 		license = legacy_license_lib.check(first_script_src);
 	}
+
+	let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
 	if (read_metadata(meta_element) || license) {
 		console.log("Valid license for intrinsic events found");
-		addReportEntry(tabId, url, {url, "accepted":[url, `Global license for the page: ${license}`]});
+		let line = 0;
+		if (meta_element) {
+		  line = findLine(/id\s*=\s*['"]?LibreJS-info\b/gi);
+		} else if (license) {
+			line = html.substring(0, html.indexOf(first_script_src)).split(/\n/).length;
+		}
+		let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${meta_element ? meta_element.tagName : "SCRIPT"}>)(0)` : url;
+		addReportEntry(tabId, url, {url, "accepted":[viewUrl, `Global license for the page: ${license}`]});
 		// Do not process inline scripts
 		scripts = [];
 	} else {
-		let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
 		let modified = false;
 		// Deal with intrinsic events
 		let intrinsecindex = 0;
@@ -1069,7 +1077,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 						line = findLine(intrinsicFinder);
 					}
 					try {
-						let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${attr.name}>)`;
+						let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${attr.name}>)(${intrinsicIndex})`;
 						let edited = await get_script(attr.value, url, tabId, whitelist.contains(url));
 							if (edited) {
 								let value = edited;
@@ -1092,7 +1100,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 			let line = findLine(scriptFinder);
 			if (!script.src && !(script.type && script.type !== "text/javascript")) {
 				let source = script.textContent;
-				let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)`;
+				let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)(${i})`;
 				let edited = await get_script(source, url, tabId, whitelisted, i);
 				if (edited) {
 					let edited_source = edited[0];
