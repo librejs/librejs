@@ -1055,16 +1055,21 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		// Do not process inline scripts
 		scripts = [];
 	} else {
+		let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
 		let modified = false;
-
 		// Deal with intrinsic events
 		let intrinsecindex = 0;
+		let intrinsicFinder = /<[a-z][^>]*\b(on\w+|href\s*=\s*['"]?javascript:)/gi;
 		for (let element of html_doc.all) {
-			for (let attr of element.attributes){
-				if (attr.name.startsWith("on") || (attr.name === "href" && attr.value.startsWith("javascript:"))){
+			let line = -1;
+			for (let attr of element.attributes) {
+				if (attr.name.startsWith("on") || (attr.name === "href" && attr.value.toLowerCase().startsWith("javascript:"))){
 					intrinsecindex++;
+					if (line === -1) {
+						line = findLine(intrinsicFinder);
+					}
 					try {
-						let url = `${documentUrl}# Intrinsic event ${intrinsecindex} [${attr.name}]`;
+						let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${attr.name}>)`;
 						let edited = await get_script(attr.value, url, tabId, whitelist.contains(url));
 							if (edited) {
 								let value = edited;
@@ -1081,14 +1086,17 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		}
 
 		let modifiedInline = false;
+		let scriptFinder = /<script\b/ig;
 		for(let i = 0, len = scripts.length; i < len; i++) {
 			let script = scripts[i];
-			let url = `${documentUrl}# script ${i}`;
+			let line = findLine(scriptFinder);
 			if (!script.src && !(script.type && script.type !== "text/javascript")) {
-				let edited = await get_script(script.textContent, url, tabId, whitelisted, i);
+				let source = script.textContent;
+				let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)`;
+				let edited = await get_script(source, url, tabId, whitelisted, i);
 				if (edited) {
 					let edited_source = edited[0];
-					let unedited_source = script.textContent.trim();
+					let unedited_source = source.trim();
 					if (edited_source.trim() !== unedited_source) {
 						script.textContent = edited_source;
 						modified = modifiedInline = true;

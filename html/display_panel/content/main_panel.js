@@ -111,11 +111,16 @@ function createList(data, group){
    container.classList.add("empty");
  }
  // generate list
+ let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\)/;
  for (let entry of entries) {
    let [scriptId, reason] = entry;
 	 let li = liTemplate.cloneNode(true);
 	 let a = li.querySelector("a");
 	 a.href = scriptId.split("(")[0];
+   if (scriptId.startsWith("view-source:")) {
+     a.target ="LibreJS-ViewSource";
+     scriptId = scriptId.replace(viewSourceToHuman, "$3 at line $2 of $1");
+   }
    a.textContent = scriptId;
 	 li.querySelector(".reason").textContent = reason;
    let bySite = !!reason.match(/https?:\/\/[^/]+\/\*/);
