@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "GNU LibreJS [webExtensions]",
   "short_name": "LibreJS [experimental]",
-  "version": "7.19rc3",
+  "version": "7.19rc4",
   "author": "various",
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
