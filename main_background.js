@@ -1064,6 +1064,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		// Do not process inline scripts
 		scripts = [];
 	} else {
+		let dejaVu = new Map(); // deduplication map & edited script cache
 		let modified = false;
 		// Deal with intrinsic events
 		let intrinsecindex = 0;
@@ -1071,21 +1072,27 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 		for (let element of html_doc.all) {
 			let line = -1;
 			for (let attr of element.attributes) {
-				if (attr.name.startsWith("on") || (attr.name === "href" && attr.value.toLowerCase().startsWith("javascript:"))){
+				let {name, value} = attr;
+				value = value.trim();
+				if (name.startsWith("on") || (name === "href" && value.toLowerCase().startsWith("javascript:"))){
 					intrinsecindex++;
 					if (line === -1) {
 						line = findLine(intrinsicFinder);
 					}
 					try {
-						let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${attr.name}>)(${intrinsicIndex})`;
-						let edited = await get_script(attr.value, url, tabId, whitelist.contains(url));
-							if (edited) {
-								let value = edited;
-								if (value !== attr.value) {
-									modified = true;
-									attr.value = value;
-								}
-							}
+						let key = `<${element.tagName} ${name}="${value}">`;
+						let edited;
+						if (dejaVu.has(key)) {
+							edited = dejaVu.get(key);
+						} else {
+							let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${encodeURIComponent(value.trim())}`;
+							edited = await get_script(value, url, tabId, whitelist.contains(documentUrl));
+							dejaVu.set(key, edited);
+						}
+						if (edited && edited !== value) {
+							modified = true;
+							attr.value = edited;
+						}
 					} catch (e) {
 						console.error(e);
 					}
@@ -1099,14 +1106,19 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 			let script = scripts[i];
 			let line = findLine(scriptFinder);
 			if (!script.src && !(script.type && script.type !== "text/javascript")) {
-				let source = script.textContent;
-				let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)(${i})`;
-				let edited = await get_script(source, url, tabId, whitelisted, i);
-				if (edited) {
-					let edited_source = edited[0];
-					let unedited_source = source.trim();
-					if (edited_source.trim() !== unedited_source) {
-						script.textContent = edited_source;
+				let source = script.textContent.trim();
+				let editedSource;
+				if (dejaVu.has(source)) {
+					editedSource = dejaVu.get(source);
+				} else {
+					let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${encodeURIComponent(source)}`;
+					let edited = await get_script(source, url, tabId, whitelisted, i);
+					editedSource = edited && edited[0].trim();
+					dejaVu.set(url, editedSource);
+				}
+				if (editedSource) {
+					if (source !== editedSource) {
+						script.textContent = editedSource;
 						modified = modifiedInline = true;
 					}
 				}

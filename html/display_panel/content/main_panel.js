@@ -55,6 +55,10 @@ liTemplate.remove();
 
 document.querySelector("#info").addEventListener("click", e => {
 	let button = e.target;
+  if (button.matches(".toggle-source")) {
+    let sourceContainer = button.parentNode.querySelector(".source").classList.toggle("visible");
+    return;
+  }
 	if (!button.matches(".buttons > button")) return;
 	let li = button.closest("li");
 	let entry = li && li._scriptEntry || [currentReport.url, "Page's site"];
@@ -111,7 +115,7 @@ function createList(data, group){
    container.classList.add("empty");
  }
  // generate list
- let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\).*/;
+ let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\)[^]*/;
  for (let entry of entries) {
    let [scriptId, reason] = entry;
 	 let li = liTemplate.cloneNode(true);
@@ -119,6 +123,11 @@ function createList(data, group){
 	 a.href = scriptId.split("(")[0];
    if (scriptId.startsWith("view-source:")) {
      a.target ="LibreJS-ViewSource";
+     let source = scriptId.split("\n")[1];
+     if (source)  {
+       li.querySelector(".source").textContent = decodeURIComponent(source);
+       li.querySelector(".toggle-source").style.display = "inline";
+     }
      scriptId = scriptId.replace(viewSourceToHuman, "$3 at line $2 of $1");
    }
    a.textContent = scriptId;

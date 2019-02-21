@@ -109,6 +109,20 @@ button:disabled {
   color: #888 !important;
 }
 
+button.toggle-source {
+  display: none;
+}
+pre.source {
+  display: none;
+  background: white;
+  border: 1px solid #444;
+  padding: .5em;
+  overflow: auto;
+  max-height: 8em;
+  white-space: pre-wrap;
+}
+pre.source.visible { display: block }
+
 span.accepted, span.blocked {
     color:#008e00;
     font-size:145%;
