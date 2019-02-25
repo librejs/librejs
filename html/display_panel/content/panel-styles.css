@@ -110,8 +110,12 @@ button:disabled {
 }
 
 button.toggle-source {
-  display: none;
+  color: #004;
+  margin-right: .5em;
+  width: 4em;
+  overflow: hide;
 }
+
 pre.source {
   display: none;
   background: white;
@@ -121,7 +125,11 @@ pre.source {
   max-height: 8em;
   white-space: pre-wrap;
 }
-pre.source.visible { display: block }
+
+button.hide { display: none  }
+.visible > button.show { display: none !important}
+.visible > pre.source { display: block }
+.visible > button.hide { display: initial }
 
 span.accepted, span.blocked {
     color:#008e00;

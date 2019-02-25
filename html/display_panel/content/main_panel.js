@@ -55,8 +55,17 @@ liTemplate.remove();
 
 document.querySelector("#info").addEventListener("click", e => {
 	let button = e.target;
+  if (button.tagName === "A") {
+    setTimeout(close, 100);
+    return;
+  }
   if (button.matches(".toggle-source")) {
-    let sourceContainer = button.parentNode.querySelector(".source").classList.toggle("visible");
+    let parent = button.parentNode;
+    if (!parent.querySelector(".source").textContent) {
+      parent.querySelector("a").click();
+    } else {
+      parent.classList.toggle("visible");
+    }
     return;
   }
 	if (!button.matches(".buttons > button")) return;
