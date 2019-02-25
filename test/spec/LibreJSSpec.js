@@ -94,6 +94,10 @@ describe("LibreJS' components", () => {
     let addScript = (html, script, before = "</head>") =>
       html.replace(before, `<script>${script}</script>${before}`);
 
+    let addToBody = (html, fragment) => html.replace("</body>", `${fragment}</body>`);
+
+    let jsUrl = js => `javascript:${encodeURIComponent(js)}`;
+
     function extractScripts(html, def = "") {
       let matches = html && html.match(/<script>[^]*?<\/script>/g);
       return matches && matches.join("") || def;
@@ -164,6 +168,21 @@ describe("LibreJS' components", () => {
       expect(scripts).toContain(trivial);
       expect(scripts).toContain(licensed);
       expect(scripts.replace(licensed, "")).not.toContain(nontrivial);
+    });
+
+    it("should correctly process (de)duplicated inline scripts", async () => {
+      let trivialAsUrl = jsUrl(trivial);
+      let nontrivialAsUrl = jsUrl(nontrivial);
+      let a = (url, label) => `<a href="${url}">${label}</a>`;
+      let mixedPage = `<body></body>`;
+      for (let dup = 0; dup < 3; dup++) {
+        mixedPage = addToBody(mixedPage, a(trivialAsUrl, `Trivial #${dup}`));
+        mixedPage = addToBody(mixedPage, a(nontrivialAsUrl, `Nontrivial #${dup}`));
+      }
+      let processed = await processHtml(mixedPage);
+      expect(processed).not.toBeNull();
+      expect(processed).toContain(trivialAsUrl);
+      expect(processed).not.toContain(nontrivialAsUrl);
     });
   });
 
