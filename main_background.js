@@ -1053,13 +1053,15 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 	let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
 	if (read_metadata(meta_element) || license) {
 		console.log("Valid license for intrinsic events found");
-		let line = 0;
+		let line, extras;
 		if (meta_element) {
 		  line = findLine(/id\s*=\s*['"]?LibreJS-info\b/gi);
+			extras = "(0)";
 		} else if (license) {
 			line = html.substring(0, html.indexOf(first_script_src)).split(/\n/).length;
+			extras = "\n" + encodeURIComponent(first_script_src);
 		}
-		let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${meta_element ? meta_element.tagName : "SCRIPT"}>)(0)` : url;
+		let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${meta_element ? meta_element.tagName : "SCRIPT"}>)${extras}` : url;
 		addReportEntry(tabId, url, {url, "accepted":[viewUrl, `Global license for the page: ${license}`]});
 		// Do not process inline scripts
 		scripts = [];
