@@ -1086,6 +1086,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 							edited = dejaVu.get(key);
 						} else {
 							let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${encodeURIComponent(value.trim())}`;
+							if (name === "href") value = decodeURIComponent(value);
 							edited = await get_script(value, url, tabId, whitelist.contains(documentUrl));
 							dejaVu.set(key, edited);
 						}
