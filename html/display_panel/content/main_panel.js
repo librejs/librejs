@@ -132,9 +132,9 @@ function createList(data, group){
 	 a.href = scriptId.split("(")[0];
    if (scriptId.startsWith("view-source:")) {
      a.target ="LibreJS-ViewSource";
-     let source = scriptId.split("\n")[1];
+     let source = scriptId.match(/\n([^]*)/);
      if (source)  {
-       li.querySelector(".source").textContent = decodeURIComponent(source);
+       li.querySelector(".source").textContent = source[1];
        li.querySelector(".toggle-source").style.display = "inline";
      }
      scriptId = scriptId.replace(viewSourceToHuman, "$3 at line $2 of $1");

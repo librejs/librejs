@@ -336,7 +336,11 @@ async function connected(p) {
 		for (let action of ["whitelist", "blacklist", "forget"]) {
 			if (m[action]) {
 				let [key] = m[action];
-				if (m.site) key = ListStore.siteItem(key);
+				if (m.site) {
+					key = ListStore.siteItem(key);
+				} else {
+					key = ListStore.viewSourceItem(key) || key;
+				}
 				await listManager[action](key);
 				update = true;
 			}
@@ -776,23 +780,20 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	let report = activityReports[tabId] || (activityReports[tabId] = await createReport({tabId}));
 	updateBadge(tabId, report, !verdict);
 	let category = await addReportEntry(tabId, sourceHash, {"url": domain, [verdict ? "accepted" : "blocked"]: [url, reason]});
-	let scriptSource = verdict ? response : editedSource;
 	switch(category) {
 		case "blacklisted":
-			if (response.startsWith("javascript:"))
-				return result(`# LibreJS: script ${category} by user.`);
-			else
-				return result(`/* LibreJS: script ${category} by user. */`);
+			editedSource = `/* LibreJS: script ${category} by user. */`;
+			return result(response.startsWith("javascript:")
+				? `javascript:void(${encodeURIComponent(editedSource)})` : editedSource);
 		case "whitelisted":
-			if (response.startsWith("javascript:"))
-				return result(scriptSource);
-			else
-				return result(`/* LibreJS: script ${category} by user. */\n${scriptSource}`);
+			return result(response.startsWith("javascript:")
+				? response : `/* LibreJS: script ${category} by user. */\n${response}`);
 		default:
-                        if (response.startsWith("javascript:"))
-				return result(scriptSource);
-			else
-				return result(`/* LibreJS: script ${category}. */\n${scriptSource}`);
+			let scriptSource = verdict ? response : editedSource;
+      return result(response.startsWith("javascript:")
+				? (verdict ? scriptSource : `javascript:void(/* ${scriptSource} */)`)
+				: `/* LibreJS: script ${category}. */\n${scriptSource}`
+			);
 	}
 }
 
@@ -1059,7 +1060,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 			extras = "(0)";
 		} else if (license) {
 			line = html.substring(0, html.indexOf(first_script_src)).split(/\n/).length;
-			extras = "\n" + encodeURIComponent(first_script_src);
+			extras = "\n" + first_script_src;
 		}
 		let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${meta_element ? meta_element.tagName : "SCRIPT"}>)${extras}` : url;
 		addReportEntry(tabId, url, {url, "accepted":[viewUrl, `Global license for the page: ${license}`]});
@@ -1087,10 +1088,9 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 						if (dejaVu.has(key)) {
 							edited = dejaVu.get(key);
 						} else {
-							let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${encodeURIComponent(value.trim())}`;
+							let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${value.trim()}`;
 							if (name === "href") value = decodeURIComponent(value);
-							edited = await get_script(value, url, tabId, whitelist.contains(documentUrl));
-							dejaVu.set(key, edited);
+							edited = await get_script(value, url, tabId, whitelist.contains(url));						dejaVu.set(key, edited);
 						}
 						if (edited && edited !== value) {
 							modified = true;
@@ -1114,7 +1114,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 				if (dejaVu.has(source)) {
 					editedSource = dejaVu.get(source);
 				} else {
-					let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${encodeURIComponent(source)}`;
+					let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${source}`;
 					let edited = await get_script(source, url, tabId, whitelisted, i);
 					editedSource = edited && edited[0].trim();
 					dejaVu.set(url, editedSource);

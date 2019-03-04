@@ -50,6 +50,14 @@ class ListManager {
   */
   getStatus(key, defValue = "unknown") {
     let {blacklist, whitelist} = this.lists;
+    let inline = ListStore.viewSourceItem(key);
+    if (inline) {
+      return blacklist.contains(inline)
+        ? "blacklisted"
+        : whitelist.contains(inline) ? "whitelisted"
+        : defValue;
+    }
+
     let match = key.match(/\(([^)]+)\)(?=[^()]*$)/);
     if (!match) {
       let url = ListStore.urlItem(key);
@@ -61,7 +69,6 @@ class ListManager {
     }
 
   	let [hashItem, srcHash] = match; // (hash), hash
-
   	return blacklist.contains(hashItem) ? "blacklisted"
   			: this.builtInHashes.has(srcHash) || whitelist.contains(hashItem)
         ? "whitelisted"

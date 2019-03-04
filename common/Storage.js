@@ -66,6 +66,9 @@ class ListStore {
     });
   }
 
+  static viewSourceItem(url) {
+    return url.startsWith("view-source:") && url.replace(/#line\d+/,"#");
+  }
   static hashItem(hash) {
     return hash.startsWith("(") ? hash : `(${hash})`;
   }
