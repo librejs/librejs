@@ -66,8 +66,12 @@ class ListStore {
     });
   }
 
-  static viewSourceItem(url) {
-    return url.startsWith("view-source:") && url.replace(/#line\d+/,"#");
+  static inlineItem(url) {
+    // here we simplify and hash inline script references
+    return url.startsWith("inline:") ? url
+      : url.startsWith("view-source:")
+        && url.replace(/^view-source:[\w-+]+:\/+([^/]+).*#line\d+/,"inline://$1#")
+              .replace(/\n[^]*/, s => s.replace(/\s+/g, ' ').substring(0, 16) + "…" + hash(s.trim()));
   }
   static hashItem(hash) {
     return hash.startsWith("(") ? hash : `(${hash})`;
@@ -128,6 +132,14 @@ class ListStore {
     return this.items.has(item);
   }
 }
+
+var jssha = require('jssha');
+function hash(source){
+	var shaObj = new jssha("SHA-256","TEXT")
+	shaObj.update(source);
+	return shaObj.getHash("HEX");
+}
+
 if (typeof module === "object") {
-  module.exports = { ListStore, Storage };
+  module.exports = { ListStore, Storage, hash };
 }

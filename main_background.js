@@ -22,10 +22,9 @@
 
 var acorn = require('acorn');
 var acornLoose = require('acorn-loose');
-var jssha = require('jssha');
 var legacy_license_lib = require("./legacy_license_check.js");
 var {ResponseProcessor} = require("./bg/ResponseProcessor");
-var {Storage, ListStore} = require("./common/Storage");
+var {Storage, ListStore, hash} = require("./common/Storage");
 var {ListManager} = require("./bg/ListManager");
 var {ExternalLicenses} = require("./bg/ExternalLicenses");
 
@@ -49,16 +48,6 @@ function dbg_print(a,b){
 			console.log(a,b);
 		}
 	}
-}
-
-/**
-*	Wrapper around crypto lib
-*
-*/
-function hash(source){
-	var shaObj = new jssha("SHA-256","TEXT")
-	shaObj.update(source);
-	return shaObj.getHash("HEX");
 }
 
 /*
@@ -339,7 +328,7 @@ async function connected(p) {
 				if (m.site) {
 					key = ListStore.siteItem(key);
 				} else {
-					key = ListStore.viewSourceItem(key) || key;
+					key = ListStore.inlineItem(key) || key;
 				}
 				await listManager[action](key);
 				update = true;

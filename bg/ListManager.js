@@ -50,7 +50,7 @@ class ListManager {
   */
   getStatus(key, defValue = "unknown") {
     let {blacklist, whitelist} = this.lists;
-    let inline = ListStore.viewSourceItem(key);
+    let inline = ListStore.inlineItem(key);
     if (inline) {
       return blacklist.contains(inline)
         ? "blacklisted"
