@@ -25,6 +25,9 @@
   to parse textual data through a decoder.
 */
 
+const BOM = [0xEF, 0xBB, 0xBF];
+const DECODER_PARAMS = {stream: true};
+
 class ResponseMetaData {
   constructor(request) {
     let {responseHeaders} = request;
@@ -37,7 +40,7 @@ class ResponseMetaData {
         this.headers[propertyName] = h;
       }
     }
-    this.forcedUTF8 = false;
+    this.computedCharset = "";
   }
 
   get charset() {
@@ -49,34 +52,54 @@ class ResponseMetaData {
       }
     }
     Object.defineProperty(this, "charset", { value: charset, writable: false, configurable: true });
-    return charset;
+    return this.computedCharset = charset;
   }
 
-  get isUTF8() {
-    return /^utf-?8$/i.test(this.charset);
-  }
+  decode(data) {
+    let charset = this.charset;
+    let decoder = this.createDecoder();
+    let text = decoder.decode(data, DECODER_PARAMS);
+    if (!charset && /html/i.test(this.contentType)) {
+      // missing HTTP charset, sniffing in content...
 
-  forceUTF8() {
-    if (!(this.forcedUTF8 || this.isUTF8)) {
-      let h = this.headers.contentType;
-      if (h) {
-        h.value = h.value.replace(/;\s*charset\s*=.*|$/, "; charset=utf8");
-        this.forcedUTF8 = true;
-      } // if the header doesn't exist the browser should default to UTF-8 anyway
+      if (data[0] === BOM[0] && data[1] === BOM[1] && data[2] === BOM[2]) {
+        // forced UTF-8, nothing to do
+        return text;
+      }
+
+      // let's try figuring out the charset from <meta> tags
+      let parser = new DOMParser();
+      let doc = parser.parseFromString(text, "text/html");
+      let meta = doc.querySelectorAll('meta[charset], meta[http-equiv="content-type"], meta[content*="charset"]');
+      for (let m of meta) {
+        charset = m.getAttribute("charset");
+        if (!charset) {
+          let match = m.getAttribute("content").match(/;\s*charset\s*=\s*([\w-]+)/i)
+          if (match) charset = match[1];
+        }
+        if (charset) {
+          decoder = this.createDecoder(charset, null);
+          if (decoder) {
+            this.computedCharset = charset;
+            return decoder.decode(data, DECODER_PARAMS);
+          }
+        }
+      }
     }
-    return this.forcedUTF8;
+    return text;
   }
 
-  createDecoder() {
-    if (this.charset) {
+  createDecoder(charset = this.charset, def = "latin1") {
+    if (charset) {
       try {
-        return new TextDecoder(this.charset);
+        return new TextDecoder(charset);
       } catch (e) {
         console.error(e);
       }
     }
-    return new TextDecoder("utf-8");
+    return def ? new TextDecoder(def) : null;
   }
 };
+ResponseMetaData.UTF8BOM = new Uint8Array(BOM);
 
 module.exports = { ResponseMetaData };

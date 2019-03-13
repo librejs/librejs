@@ -90,8 +90,6 @@ class ResponseTextFilter {
     };
 
     filter.onstop = async event => {
-
-      let params = {stream: true};
       // concatenate chunks
       let size = buffer.reduce((sum, chunk, n) => sum + chunk.byteLength, 0)
       let allBytes = new Uint8Array(size);
@@ -108,10 +106,10 @@ class ResponseTextFilter {
           response.text = await (await fetch(request.url, {cache: "reload", credentials: "include"})).text();
         } else {
           console.debug("It's a %s, trying to decode it as UTF-16.", request.type);
-          response.text = new TextDecoder("utf-16be").decode(allBytes);
+          response.text = new TextDecoder("utf-16be").decode(allBytes, {stream: true});
         }
       } else {
-        response.text = metaData.createDecoder().decode(allBytes, {stream: true});
+        response.text = metaData.decode(allBytes);
       }
       let editedText = null;
       try {
@@ -119,19 +117,19 @@ class ResponseTextFilter {
       } catch(e) {
         console.error(e);
       }
-      if (editedText !== null &&
-        (metaData.forcedUTF8 && request.type !== "script" ||
-          response.text !== editedText)) {
-        // if we changed the charset, the text or both, let's re-encode
-        filter.write(new TextEncoder().encode(editedText));
-      } else {
-        // ... otherwise pass all the raw bytes through
-        filter.write(allBytes);
+      if (editedText !== null) {
+        // we changed the content, let's re-encode
+        let encoded = new TextEncoder().encode(editedText);
+        // pre-pending the UTF-8 BOM will force the charset per HTML 5 specs
+        allBytes = new Uint8Array(encoded.byteLength + 3);
+        allBytes.set(ResponseMetaData.UTF8BOM, 0); // UTF-8 BOM
+        allBytes.set(encoded, 3);
       }
+      filter.write(allBytes);
       filter.close();
     }
 
-    return metaData.forceUTF8() ? {responseHeaders} : ResponseProcessor.ACCEPT;;
+    return ResponseProcessor.ACCEPT;
   }
 }
 
