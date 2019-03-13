@@ -111,9 +111,8 @@ button:disabled {
 
 button.toggle-source {
   color: #004;
-  margin-right: .5em;
-  width: 4em;
-  overflow: hide;
+  width: 5em;
+  text-align:center;
 }
 
 pre.source {
