@@ -106,10 +106,10 @@ class ResponseTextFilter {
           response.text = await (await fetch(request.url, {cache: "reload", credentials: "include"})).text();
         } else {
           console.debug("It's a %s, trying to decode it as UTF-16.", request.type);
-          response.text = new TextDecoder("utf-16be").decode(allBytes);
+          response.text = new TextDecoder("utf-16be").decode(allBytes, {stream: true});
         }
       } else {
-        response.text = metaData.createDecoder().decode(allBytes, {stream: true});
+        response.text = metaData.decode(allBytes);
       }
       let editedText = null;
       try {
@@ -122,7 +122,7 @@ class ResponseTextFilter {
         let encoded = new TextEncoder().encode(editedText);
         // pre-pending the UTF-8 BOM will force the charset per HTML 5 specs
         allBytes = new Uint8Array(encoded.byteLength + 3);
-        allBytes.set(new Uint8Array([0xEF, 0xBB, 0xBF]), 0); // UTF-8 BOM
+        allBytes.set(ResponseMetaData.UTF8BOM, 0); // UTF-8 BOM
         allBytes.set(encoded, 3);
       }
       filter.write(allBytes);
