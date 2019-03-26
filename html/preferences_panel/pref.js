@@ -40,6 +40,9 @@
 					error = "Only one single trailing path wildcard (/*) allowed";
 				}
 			} catch (e) {
+				if (/^https?:\/\/\*\./.test(url)) {
+					return this.malformedUrl(url.replace("*.", ""));
+				}
 				error = "Invalid URL";
 				if (url && !url.includes("://")) error += ": missing protocol, either http:// or https://";
 				else if (url.endsWith("://")) error += ": missing domain name";

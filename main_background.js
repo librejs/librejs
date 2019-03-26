@@ -326,7 +326,7 @@ async function connected(p) {
 			if (m[action]) {
 				let [key] = m[action];
 				if (m.site) {
-					key = ListStore.siteItem(key);
+					key = ListStore.siteItem(m.site);
 				} else {
 					key = ListStore.inlineItem(key) || key;
 				}
@@ -745,12 +745,12 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 	let scriptName = url.split("/").pop();
 	if (whitelisted) {
 		if (tabId !== -1) {
-			let site = ListStore.siteItem(url);
+			let site = ListManager.siteMatch(url, whitelist);
 			// Accept without reading script, it was explicitly whitelisted
-			let reason = whitelist.contains(site)
+			let reason = site
 				? `All ${site} whitelisted by user`
 				: "Address whitelisted by user";
-			addReportEntry(tabId, url, {"whitelisted": [url, reason], url});
+			addReportEntry(tabId, url, {"whitelisted": [site, reason], url});
 		}
 		if (response.startsWith("javascript:"))
 			return result(response);
@@ -855,7 +855,7 @@ var ResponseHandler = {
 		url = ListStore.urlItem(url);
 		let site = ListStore.siteItem(url);
 
-		let blacklistedSite = blacklist.contains(site);
+		let blacklistedSite = ListManager.siteMatch(site, blacklist);
 		let blacklisted = blacklistedSite || blacklist.contains(url);
 		let topUrl = request.frameAncestors && request.frameAncestors.pop() || documentUrl;
 
@@ -863,7 +863,7 @@ var ResponseHandler = {
 			if (type === "script") {
 				// abort the request before the response gets fetched
 				addReportEntry(tabId, url, {url: topUrl,
-					"blacklisted": [url, blacklistedSite ? `User blacklisted ${site}` : "Blacklisted by user"]});
+					"blacklisted": [url, blacklistedSite ? `User blacklisted ${blacklistedSite}` : "Blacklisted by user"]});
 				return ResponseProcessor.REJECT;
 			}
 			// use CSP to restrict JavaScript execution in the page
@@ -872,13 +872,13 @@ var ResponseHandler = {
 				value: `script-src '${blacklistedSite ? 'self' : 'none'}';`
 			});
 		} else {
-			let whitelistedSite = whitelist.contains(site);
+			let whitelistedSite = ListManager.siteMatch(site, whitelist);
 			let whitelisted = response.whitelisted = whitelistedSite || whitelist.contains(url);
 			if (type === "script") {
 				if (whitelisted) {
 					// accept the script and stop processing
 					addReportEntry(tabId, url, {url: topUrl,
-						"whitelisted": [url, whitelistedSite ? `User whitelisted ${site}` : "Whitelisted by user"]});
+						"whitelisted": [url, whitelistedSite ? `User whitelisted ${whitelistedSite}` : "Whitelisted by user"]});
 					return ResponseProcessor.ACCEPT;
 				} else {
 					let scriptInfo = await ExternalLicenses.check({url: fullUrl, tabId, frameId, documentUrl});

@@ -59,6 +59,7 @@ document.querySelector("#info").addEventListener("click", e => {
     setTimeout(close, 100);
     return;
   }
+  if (!button.tagName === "BUTTON") button = button.closest("button");
   if (button.matches(".toggle-source")) {
     let parent = button.parentNode;
     if (!parent.querySelector(".source").textContent) {
@@ -69,10 +70,13 @@ document.querySelector("#info").addEventListener("click", e => {
     return;
   }
 	if (!button.matches(".buttons > button")) return;
+  let domain = button.querySelector(".domain");
+
 	let li = button.closest("li");
 	let entry = li && li._scriptEntry || [currentReport.url, "Page's site"];
 	let action = button.className;
-  let site = button.name === "*";
+  let site = domain ? domain.textContent : button.name === "*" ? currentReport.site : "";
+
   if (site) {
     ([action] = action.split("-"));
   }
