@@ -1208,6 +1208,7 @@ async function init_addon() {
 			editHtml,
 			handle_script,
 			ExternalLicenses,
+			ListManager, ListStore, Storage,
 		};
 		// create or focus the autotest tab if it's a debugging session
 		if ((await browser.management.getSelf()).installType === "development") {

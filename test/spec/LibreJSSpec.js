@@ -38,14 +38,52 @@ describe("LibreJS' components", () => {
   let licensed = `// @license ${license.magnet} ${license.id}\n${nontrivial}\n// @license-end`;
   let unknownLicensed = `// @license ${unknownLicense.magnet} ${unknownLicense.id}\n${nontrivial}\n// @license-end`;
   let malformedLicensed = `// @license\n${nontrivial}`;
-
   let tab, documentUrl;
 
   beforeAll(async () => {
     let url = browser.extension.getURL("/test/resources/index.html");
     tab = (await browser.tabs.query({url}))[0] || (await browser.tabs.create({url}));
     documentUrl = url;
+
   });
+
+  describe("The whitelist/blacklist manager", () => {
+    let {ListManager, ListStore, Storage} = LibreJS;
+    let lm = new ListManager(new ListStore("_test.whitelist", Storage.CSV), new ListStore("_test.blacklist", Storage.CSV), new Set());
+    let forgot = ["http://formerly.whitelist.ed/", "http://formerly.blacklist.ed/"];
+
+    beforeAll(async () => {
+      await lm.whitelist("https://fsf.org/*", "https://*.gnu.org/*", forgot[0]);
+      await lm.blacklist("https://*.evil.gnu.org/*", "https://verybad.com/*", forgot[1]);
+    });
+
+    it("Should handle basic CRUD operations", async () => {
+       expect(lm.getStatus(forgot[0])).toBe("whitelisted");
+       expect(lm.getStatus(forgot[1])).toBe("blacklisted");
+
+       await lm.forget(...forgot);
+
+       for (let url of forgot) {
+         expect(lm.getStatus(url)).toBe("unknown");
+       }
+    });
+
+    it("Should support full path wildcards", () => {
+      expect(lm.getStatus("https://unknown.org")).toBe("unknown");
+      expect(lm.getStatus("https://fsf.org/some/path")).toBe("whitelisted");
+      expect(lm.getStatus("https://fsf.org/")).toBe("whitelisted");
+      expect(lm.getStatus("https://fsf.org")).toBe("whitelisted");
+      expect(lm.getStatus("https://subdomain.fsf.org")).toBe("unknown");
+      expect(lm.getStatus("https://verybad.com/some/other/path?with=querystring")).toBe("blacklisted");
+    });
+    it("Should support subdomain wildcards", () => {
+      expect(lm.getStatus("https://gnu.org")).toBe("whitelisted");
+      expect(lm.getStatus("https://www.gnu.org")).toBe("whitelisted");
+      expect(lm.getStatus("https://evil.gnu.org")).toBe("blacklisted");
+      expect(lm.getStatus("https://more.evil.gnu.org")).toBe("blacklisted");
+      expect(lm.getStatus("https://more.evil.gnu.org/some/evil/path?too")).toBe("blacklisted");
+    });
+  })
 
   describe("The external script source processor", () => {
     let url = "https://www.gnu.org/mock-script.js";
