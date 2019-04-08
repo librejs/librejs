@@ -134,6 +134,10 @@ async function createReport(initializer) {
 	template.url = url;
 	template.site = ListStore.siteItem(url);
 	template.siteStatus = listManager.getStatus(template.site);
+	let list = {"whitelisted": whitelist, "blacklisted": blacklist}[template.siteStatus];
+	if (list) {
+		template.listedSite = ListManager.siteMatch(template.site, list);
+	}
 	return template;
 }
 
@@ -750,7 +754,7 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
 			let reason = site
 				? `All ${site} whitelisted by user`
 				: "Address whitelisted by user";
-			addReportEntry(tabId, url, {"whitelisted": [site, reason], url});
+			addReportEntry(tabId, url, {"whitelisted": [site || url, reason], url});
 		}
 		if (response.startsWith("javascript:"))
 			return result(response);

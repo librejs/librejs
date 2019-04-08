@@ -173,8 +173,8 @@ function createList(data, group){
 */
 function refreshUI(report) {
   currentReport = report;
-
-  document.querySelector("#site").className = report.siteStatus || "";
+  let {siteStatus, listedSite} = report;
+  document.querySelector("#site").className = siteStatus || "";
   document.querySelector("#site h2").textContent =
     `This site ${report.site}`;
 
@@ -196,6 +196,15 @@ function refreshUI(report) {
      .whitelisted .whitelist, .blacklisted .blacklist`
    )) {
     b.disabled = true;
+  }
+
+  if (siteStatus && siteStatus !== "unknown") {
+    let statusLabel = siteStatus;
+    if (listedSite && listedSite !== report.site) statusLabel += ` via ${listedSite}`;
+    let status = document.querySelector("#site .status");
+    status.classList.add(siteStatus);
+    document.querySelector("#site .status").textContent = statusLabel;
+    document.querySelector("#site .forget").disabled = true;
   }
 
   let noscript = scriptsCount === 0;
