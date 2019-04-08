@@ -133,7 +133,6 @@ class ListStore {
   }
 }
 
-var jssha = require('jssha');
 function hash(source){
 	var shaObj = new jssha("SHA-256","TEXT")
 	shaObj.update(source);
@@ -142,4 +141,5 @@ function hash(source){
 
 if (typeof module === "object") {
   module.exports = { ListStore, Storage, hash };
+  var jssha = require('jssha');
 }
