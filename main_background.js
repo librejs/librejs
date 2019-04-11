@@ -805,41 +805,27 @@ function updateBadge(tabId, report = null, forceRed = false) {
 	}
 }
 
-/**
-* 	Tests if a request is google analytics or not
-*/
-function test_GA(a){ // TODO: DRY me
-	// This is just an HTML page
-	if(a.url == 'https://www.google.com/analytics/#?modal_active=none'){
-		return false;
+function blockGoogleAnalytics(request) {
+	let {url} = request;
+	let res = {};
+	if (url === 'https://www.google-analytics.com/analytics.js' ||
+		/^https:\/\/www\.google\.com\/analytics\/[^#]/.test(url)
+	) {
+		res.cancel = true;
 	}
-	else if(a.url.match(/https:\/\/www\.google\.com\/analytics\//g)){
-		dbg_print("%c Google analytics (1)","color:red");
-		return {cancel: true};
-	}
-	else if(a.url == 'https://www.google-analytics.com/analytics.js'){
-		dbg_print("%c Google analytics (2)","color:red");
-		return {cancel: true};
-	}
-	else if(a.url == 'https://www.google.com/analytics/js/analytics.min.js'){
-		dbg_print("%c Google analytics (3)","color:red");
-		return {cancel: true};
-	}
-	else return false;
+	return res;
 }
 
-/**
-*	A callback that every type of request invokes.
-*/
-function block_ga(a){
-	var GA = test_GA(a);
-	if(GA != false){
-		return GA;
-	}
-	else return {};
+async function blockBlacklistedScripts(request)  {
+	let {url, tabId, documentUrl} = request;
+	url = ListStore.urlItem(url);
+	let status = listManager.getStatus(url);
+	if (status !== "blacklisted") return {};
+	let blacklistedSite = ListManager.siteMatch(url, blacklist);
+	await addReportEntry(tabId, url, {url: documentUrl,
+		"blacklisted": [url, /\*/.test(blacklistedSite) ? `User blacklisted ${blacklistedSite}` : "Blacklisted by user"]});
+	return {cancel: true};
 }
-
-
 
 /**
 *	This listener gets called as soon as we've got all the HTTP headers, can guess
@@ -861,20 +847,27 @@ var ResponseHandler = {
 
 		let blacklistedSite = ListManager.siteMatch(site, blacklist);
 		let blacklisted = blacklistedSite || blacklist.contains(url);
-		let topUrl = request.frameAncestors && request.frameAncestors.pop() || documentUrl;
+		let topUrl = type === "sub_frame" && request.frameAncestors && request.frameAncestors.pop() || documentUrl;
 
 		if (blacklisted) {
 			if (type === "script") {
-				// abort the request before the response gets fetched
-				addReportEntry(tabId, url, {url: topUrl,
-					"blacklisted": [url, blacklistedSite ? `User blacklisted ${blacklistedSite}` : "Blacklisted by user"]});
+				// this shouldn't happen, because we intercept earlier in blockBlacklistedScripts()
 				return ResponseProcessor.REJECT;
+			}
+			if (type === "main_frame") { // we handle the page change here too, since we won't call edit_html()
+				activityReports[tabId] = await createReport({url: fullUrl, tabId});
+				// Go on without parsing the page: it was explicitly blacklisted
+				let reason = blacklistedSite
+					? `All ${blacklistedSite} blacklisted by user`
+					: "Address blacklisted by user";
+				await addReportEntry(tabId, url, {"blacklisted": [blacklistedSite || url, reason], url: fullUrl});
 			}
 			// use CSP to restrict JavaScript execution in the page
 			request.responseHeaders.unshift({
 				name: `Content-security-policy`,
-				value: `script-src '${blacklistedSite ? 'self' : 'none'}';`
+				value: `script-src 'none';`
 			});
+			return {responseHeaders: request.responseHeaders}; // let's skip the inline script parsing, since we block by CSP
 		} else {
 			let whitelistedSite = ListManager.siteMatch(site, whitelist);
 			let whitelisted = response.whitelisted = whitelistedSite || whitelist.contains(url);
@@ -1193,11 +1186,21 @@ async function init_addon() {
 		"web_manifest", "websocket", "xbl", "xml_dtd", "xmlhttprequest", "xslt",
 		"other"
 	];
-	browser.webRequest.onBeforeRequest.addListener(
-		block_ga,
+	browser.webRequest.onBeforeRequest.addListener(blockGoogleAnalytics,
 		{urls: ["<all_urls>"], types: all_types},
 		["blocking"]
 	);
+	browser.webRequest.onBeforeRequest.addListener(blockBlacklistedScripts,
+		{urls: ["<all_urls>"], types: ["script"]},
+		["blocking"]
+	);
+	browser.webRequest.onResponseStarted.addListener(request => {
+		let {tabId} = request;
+		let report = activityReports[tabId];
+		if (report) {
+			updateBadge(tabId, activityReports[tabId]);
+		}
+	}, {urls: ["<all_urls>"], types: ["main_frame"]});
 
 	// Analyzes all the html documents and external scripts as they're loaded
 	ResponseProcessor.install(ResponseHandler);

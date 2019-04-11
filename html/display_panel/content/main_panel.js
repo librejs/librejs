@@ -59,7 +59,7 @@ document.querySelector("#info").addEventListener("click", e => {
     setTimeout(close, 100);
     return;
   }
-  if (!button.tagName === "BUTTON") button = button.closest("button");
+  if (button.tagName !== "BUTTON") button = button.closest("button");
   if (button.matches(".toggle-source")) {
     let parent = button.parentNode;
     if (!parent.querySelector(".source").textContent) {
@@ -199,12 +199,17 @@ function refreshUI(report) {
   }
 
   if (siteStatus && siteStatus !== "unknown") {
+    let siteContainer = document.querySelector("#site");
     let statusLabel = siteStatus;
-    if (listedSite && listedSite !== report.site) statusLabel += ` via ${listedSite}`;
-    let status = document.querySelector("#site .status");
+    if (listedSite && listedSite !== report.site) {
+      statusLabel += ` via ${listedSite}`;
+      siteContainer.querySelector(".forget").disabled = true;
+    }
+    let status = siteContainer.querySelector(".status");
     status.classList.add(siteStatus);
-    document.querySelector("#site .status").textContent = statusLabel;
-    document.querySelector("#site .forget").disabled = true;
+    status.textContent = statusLabel;
+  } else {
+    document.querySelector("#site .status").textContent = "";
   }
 
   let noscript = scriptsCount === 0;
