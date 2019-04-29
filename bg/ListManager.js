@@ -36,13 +36,13 @@ class ListManager {
   }
 
   async whitelist(...keys) {
-    ListManager.move(this.lists.blacklist, this.lists.whitelist, ...keys);
+    await ListManager.move(this.lists.blacklist, this.lists.whitelist, ...keys);
   }
   async blacklist(...keys) {
-    ListManager.move(this.lists.whitelist, this.lists.blacklist, ...keys);
+    await ListManager.move(this.lists.whitelist, this.lists.blacklist, ...keys);
   }
   async forget(...keys) {
-    await Promise.all(Object.values(this.lists).map(l => l.remove(...keys)));
+    await Promise.all(Object.values(this.lists).map(async l => await l.remove(...keys)));
   }
   /* key is a string representing either a URL or an optional path
     with a trailing (hash).
@@ -62,10 +62,11 @@ class ListManager {
     if (!match) {
       let url = ListStore.urlItem(key);
       let site = ListStore.siteItem(key);
-      return (blacklist.contains(url) || blacklist.contains(site))
+      return (blacklist.contains(url) || ListManager.siteMatch(site, blacklist)
         ? "blacklisted"
-        : whitelist.contains(url) || whitelist.contains(site)
-        ? "whitelisted" : defValue;
+        : whitelist.contains(url) || ListManager.siteMatch(site, whitelist)
+        ? "whitelisted" : defValue
+      );
     }
 
   	let [hashItem, srcHash] = match; // (hash), hash
@@ -74,6 +75,28 @@ class ListManager {
         ? "whitelisted"
   			: defValue;
   	}
+
+    /*
+      Matches by whole site ("http://some.domain.com/*") supporting also
+      wildcarded subdomains ("https://*.domain.com/*").
+    */
+    static siteMatch(url, list) {
+      let site = ListStore.siteItem(url);
+      if (list.contains(site)) {
+        return site;
+      }
+      site = site.replace(/^([\w-]+:\/\/)?(\w)/, "$1*.$2");
+      for (;;) {
+        if (list.contains(site)) {
+          return site;
+        }
+        let oldKey = site;
+        site = site.replace(/(?:\*\.)*\w+(?=\.)/, "*");
+        if (site === oldKey) {
+          return null;
+        }
+      }
+    }
 }
 
 module.exports = { ListManager };

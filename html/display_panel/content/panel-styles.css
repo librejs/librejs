@@ -94,11 +94,14 @@ ul {
   display: initial;
 }
 
+.status {
+  margin: .2em;
+}
 
-button.whitelist {
+button.whitelist, .status.whitelisted {
   color: #080;
 }
-button.blacklist {
+button.blacklist, .status.blacklisted {
   color: #800;
 }
 button.forget {

@@ -45,10 +45,10 @@
         <h3>Settings</h3>
     </div>
     <div id="widgets">
-      <fieldset id="section-lists"><legend>Allow or block scripts matching the following URLs ("*" matches any path)</legend>
+      <fieldset id="section-lists"><legend>Allow or block scripts matching the following URLs ("*."" matches any subdomain, "/*" matches any path)</legend>
         <label>Type a new whitelist / blacklist entry:</label>
         <div id="new-site">
-          <input type="text" id="site" value="" placeholder="https://www.gnu.org/*">
+          <input type="text" id="site" value="" placeholder="https://*.gnu.org/*">
           <button id="cmd-whitelist-site" class="white" title="Whitelist this site" default>Whitelist</button>
           <button id="cmd-blacklist-site" class="red" title="Blacklist this site">Blacklist</button>
         </div>

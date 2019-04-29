@@ -78,7 +78,7 @@ class ResponseTextFilter {
       let res = await handler.pre(response);
       if (res) return res;
       if (handler.post) handler = handler.post;
-      if (typeof handler !== "function") ResponseProcessor.ACCEPT;
+      if (typeof handler !== "function") return ResponseProcessor.ACCEPT;
     }
 
     let {requestId, responseHeaders} = request;
