@@ -98,13 +98,14 @@ document.querySelector("#open-options").onclick = e => {
   close();
 }
 
-document.querySelector("#reload").onclick = async e => {
+document.body.addEventListener("click", async e => {
+  if (!e.target.matches(".reload")) return;
   let {tabId} = currentReport;
   if (tabId) {
     await browser.tabs.reload(tabId);
     myPort.postMessage({"update": true, tabId});
   }
-};
+});
 
 /*
 *	Takes in the [[file_id, reason],...] array and the group name for one group
