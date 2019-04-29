@@ -20,7 +20,9 @@
 @import url("/html/common.css");
 
 body {
-  width: 500px;
+  max-width: 600px;
+  min-width: 500px;
+  -moz-user-select: text !important;
 }
 #header{
 display: block;
@@ -124,7 +126,7 @@ pre.source {
   border: 1px solid #444;
   padding: .5em;
   overflow: auto;
-  max-height: 8em;
+  max-height: 20em;
   white-space: pre-wrap;
 }
 
