@@ -222,6 +222,30 @@ describe("LibreJS' components", () => {
       expect(processed).toContain(trivialAsUrl);
       expect(processed).not.toContain(nontrivialAsUrl);
     });
+
+    it("should force displaying NOSCRIPT elements (except those with @data-librejs-nodisplay) where scripts have been blocked", async () => {
+      let noscriptContent = "I'm NOSCRIPT content";
+      let asNoscript = `<noscript>${noscriptContent}</noscript>`;
+      let asNodisplay = `<noscript data-librejs-nodisplay>${noscriptContent}</noscript>`;
+      let asSpan = `<span>${noscriptContent}</span>`;
+      let page = addToBody(addToBody(nontrivialInHtml, asNoscript), asNodisplay);
+      let processed = await processHtml(page);
+      expect(processed).not.toContain(asNoscript);
+      expect(processed).toContain(asSpan);
+      expect(processed).not.toContain(asNodisplay);
+    });
+
+    it("should always force displaying @data-librejs-display elements", async () => {
+      let content = "I'm FORCED content";
+      let asDisplay = `<span data-librejs-display>${content}</span>`;
+      let asSpan = `<span>${content}</span>`;
+      for (let page of [nontrivialInHtml, "<body></body>"]) {
+        page = addToBody(page, asDisplay);
+        let processed = await processHtml(page);
+        expect(processed).not.toContain(asDisplay);
+        expect(processed).not.toContain(asSpan);
+      }
+    });
   });
 
   describe("The external (Web Labels) license checker", () => {

@@ -938,16 +938,55 @@ function doc2HTML(doc) {
 }
 
 /**
-*	Removes noscript tags with name "librejs-path" leaving the inner content to load.
+* Shortcut to create a correctly namespaced DOM HTML elements
 */
-function remove_noscripts(html_doc){
-	for(var i = 0; i < html_doc.getElementsByName("librejs-path").length; i++){
-		if(html_doc.getElementsByName("librejs-path")[i].tagName == "NOSCRIPT"){
-			html_doc.getElementsByName("librejs-path")[i].outerHTML = html_doc.getElementsByName("librejs-path")[i].innerHTML;
-		}
-	}
+function createHTMLElement(doc, name) {
+  return doc.createElementNS("http://www.w3.org/1999/xhtml", name);
+}
 
-	return doc2HTML(html_doc);
+/**
+* Replace any element with a span having the same content (useful to force
+* NOSCRIPT elements to visible the same way as NoScript and uBlock do)
+*/
+function forceElement(doc, element) {
+	let replacement = createHTMLElement(doc, "span");
+	replacement.innerHTML = element.innerHTML;
+	element.replaceWith(replacement);
+	return replacement;
+}
+
+/**
+*	Forces displaying any element having the "data-librejs-display" attribute and
+* <noscript> elements on pages where LibreJS disabled inline scripts (unless
+* they have the "data-librejs-nodisplay" attribute).
+*/
+function forceNoscriptElements(doc) {
+	let shown = 0;
+	// inspired by NoScript's onScriptDisabled.js
+	for (let noscript of doc.querySelectorAll("noscript:not([data-librejs-nodisplay])")) {
+    let replacement = forceElement(doc, noscript);
+    // emulate meta-refresh
+    let meta = replacement.querySelector('meta[http-equiv="refresh"]');
+    if (meta) {
+      refresh = true;
+      doc.head.appendChild(meta);
+    }
+		shown++;
+  }
+	return shown;
+}
+/**
+*	Forces displaying any element having the "data-librejs-display" attribute and
+* <noscript> elements on pages where LibreJS disabled inline scripts (unless
+* they have the "data-librejs-nodisplay" attribute).
+*/
+function showConditionalElements(doc) {
+	let shown = 0;
+	for (let element of document.querySelectorAll("[data-librejs-display]")) {
+		forceElement(doc, element);
+		shown++;
+	}
+	return shown;
 }
 
 /**
@@ -1113,10 +1152,13 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted){
 				}
 			}
 		}
+
+		modified = showConditionalElements(html_doc) > 0 || modified;
 		if (modified) {
-			return modifiedInline
-				? await remove_noscripts(html_doc)
-				: doc2HTML(html_doc);
+			if (modifiedInline) {
+				forceNoscriptElements(html_doc);
+			}
+			return doc2HTML(html_doc);
 		}
 	}
 	return null;
