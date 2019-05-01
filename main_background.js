@@ -239,7 +239,6 @@ async function addReportEntry(tabId, scriptHashOrUrl, action) {
 	let report = activityReports[tabId];
 	if (!report) report = activityReports[tabId] =
 			await createReport({tabId});
-
 	let type, actionValue;
 	for (type of ["accepted", "blocked", "whitelisted", "blacklisted"]) {
 		if (type in action) {
@@ -618,21 +617,28 @@ function validateLicense(matches) {
 	}
 	let [all, tag, link, id] = matches;
 	let license = null;
-	if (licenses[id])
+	// The match contains a link: @license [magnet|http;//....] LicenseID
+	if (licenses[id]) {
 		license = licenses[id];
-	for (let key in licenses){
-		if (licenses[key]["Magnet link"] === link)
-			license = licenses[key];
-		if (licenses[key]["URL"] === link)
-			license = licenses[key];
+		for (let key in licenses){
+			if (licenses[key]["Magnet link"] === link)
+				license = licenses[key];
+			if (licenses[key]["URL"] === link)
+				license = licenses[key];
+		}
+		if (!(license["Magnet link"] === link || license["URL"] === link)){
+			return [false, `License magnet link does not match for "${id}".`];
+		}
+	}
+	// The match does not contain a link: @license LicenseID
+	if (licenses[link]) {
+                license = licenses[link];
+                id = link;
 	}
 	if(!license){
 		return [false, `Unrecognized license "${id}"`];
 	}
-	if (!(license["Magnet link"] === link || license["URL"] === link)){
-		return [false, `License magnet link does not match for "${id}".`];
-	}
-	return [true, `Recognized license: "${id}".`];
+	return [true, `Recognized license: "${license['Name']}".`];
 }
 /**
 *
