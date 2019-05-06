@@ -610,36 +610,29 @@ function evaluate(script,name){
 }
 
 
-
 function validateLicense(matches) {
 	if (!(Array.isArray(matches) && matches.length >= 4)){
 		return [false, "Malformed or unrecognized license tag."];
 	}
-	let [all, tag, link, id] = matches;
-	let license = null;
-	// The match contains a link: @license [magnet|http;//....] LicenseID
-	if (licenses[id]) {
-		license = licenses[id];
-		for (let key in licenses){
-			if (licenses[key]["Magnet link"] === link)
-				license = licenses[key];
-			if (licenses[key]["URL"] === link)
-				license = licenses[key];
+
+	let [all, tag, first, second] = matches;
+
+	for (let key in licenses){
+		// Match by id on first or second parameter, ignoring case
+		if (key.toLowerCase() === first.toLowerCase() ||
+			key.toLowerCase() === second.toLowerCase()) {
+			return [true, `Recognized license: "${licenses[key]['Name']}" `];
 		}
-		if (!(license["Magnet link"] === link || license["URL"] === link)){
-			return [false, `License magnet link does not match for "${id}".`];
+		// Match by link on first parameter (legacy)
+		if (licenses[key]["Magnet link"] === first.replace("&amp;","&") ||
+		    licenses[key]["URL"] === first.replace("&amp;","&")) {
+			return [true, `Recognized license: "${licenses[key]['Name']}".`];
 		}
 	}
-	// The match does not contain a link: @license LicenseID
-	if (licenses[link]) {
-                license = licenses[link];
-                id = link;
-	}
-	if(!license){
-		return [false, `Unrecognized license "${id}"`];
-	}
-	return [true, `Recognized license: "${license['Name']}".`];
+	return [false, `Unrecognized license tag: "${all}"`];
 }
+
+
 /**
 *
 *	Evaluates the content of a script (license, if it is non-trivial)
