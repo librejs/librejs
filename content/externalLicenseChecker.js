@@ -42,7 +42,7 @@
       }
       let link = a => ({ url: a.href, label: a.textContent });
       let firstLink = parent => link(parent.querySelector("a"));
-      let allLinks = parent => Array.map(parent.querySelectorAll("a"), link);
+      let allLinks = parent => Array.prototype.map.call(parent.querySelectorAll("a"), link);
       for (let row of doc.querySelectorAll("table#jslicense-labels1 > tbody > tr")) {
         try {
           let cols = row.querySelectorAll("td");

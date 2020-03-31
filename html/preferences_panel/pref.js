@@ -139,7 +139,7 @@
 		},
 		async swapSelection(list) {
 			let origin = list === Model.lists.black ? "white" : "black";
-		  await this.addToList(list, ...Array.map(
+		  await this.addToList(list, ...Array.prototype.map.call(
 				document.querySelectorAll(`select#${origin} option:checked`),
 				option => option.value)
 			);
@@ -189,7 +189,7 @@
 		async deleteSelection() {
 			for (let id of ["black", "white"]) {
 				let selection = document.querySelectorAll(`select#${id} option:checked`);
-				await Model.lists[id].remove(...Array.map(selection, option => option.value));
+				await Model.lists[id].remove(...Array.prototype.map.call(selection, option => option.value));
 			}
 			this.populateListUI();
 			this.syncAll();
