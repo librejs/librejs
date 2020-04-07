@@ -117,7 +117,7 @@ class ResponseTextFilter {
       } catch (e) {
         console.error(e);
       }
-      if (editedText !== null) {
+      if (editedText !== null && editedText.indexOf('/* LibreJS: script accepted') !== 0) {
         // we changed the content, let's re-encode
         let encoded = new TextEncoder().encode(editedText);
         // pre-pending the UTF-8 BOM will force the charset per HTML 5 specs
