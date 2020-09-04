@@ -625,7 +625,8 @@ function validateLicense(matches) {
 		}
 		// Match by link on first parameter (legacy)
 		if (licenses[key]["Magnet link"] === first.replace("&amp;","&") ||
-		    licenses[key]["URL"] === first.replace("&amp;","&")) {
+			licenses[key]["URL"] === first.replace("&amp;","&") ||
+			licenses[key]["URL"].replace("http://", "https://") === first.replace("&amp;","&")) {
 			return [true, `Recognized license: "${licenses[key]['Name']}".`];
 		}
 	}
