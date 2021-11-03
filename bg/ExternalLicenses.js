@@ -103,7 +103,7 @@ var ExternalLicenses = {
   * modify the rendered HTML but rather feed the content script on demand.
   * Returns true if the document has been actually modified, false otherwise.
   */
-  optimizeDocument(document, cachePointer) {
+  optimizeDocument(doc, cachePointer) {
     let cache = {};
     let {tabId, frameId, documentUrl} = cachePointer;
     let frameCache = cachedHrefs.get(tabId);
@@ -112,12 +112,12 @@ var ExternalLicenses = {
     }
     frameCache.set(frameId, new Map([[documentUrl, cache]]));
 
-    let link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
+    let link = doc.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
     if (link) {
       let href = link.getAttribute("href");
       cache.webLabels = {href};
-      let move = () => !!document.head.insertBefore(link, document.head.firstChild);
-      if (link.parentNode === document.head) {
+      let move = () => !!doc.head.insertBefore(link, doc.head.firstChild);
+      if (link.parentNode === doc.head) {
         for (let node; node = link.previousElementSibling;) {
           if (node.tagName.toUpperCase() === "SCRIPT") {
             return move();
@@ -125,7 +125,7 @@ var ExternalLicenses = {
         }
       } else { // the reference is only in the body
         if (link.tagName.toUpperCase() === "A") {
-          let newLink = document.createElement("link");
+          let newLink = doc.createElement("link");
           newLink.rel = "jslicense";
           newLink.setAttribute("href", href);
           link = newLink;
