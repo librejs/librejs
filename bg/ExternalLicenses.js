@@ -118,7 +118,7 @@ var ExternalLicenses = {
       cache.webLabels = {href};
       let move = () => !!doc.head.insertBefore(link, doc.head.firstChild);
       if (link.parentNode === doc.head) {
-        for (let node; node = link.previousElementSibling;) {
+        for (let node = link; node = node.previousElementSibling;) {
           if (node.tagName.toUpperCase() === "SCRIPT") {
             return move();
           }
