@@ -1,0 +1,4 @@
+New in 7.20.3
+
+    * Fix build by updating json files
+    * Fix hanging on certain websites

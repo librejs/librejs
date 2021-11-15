@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "GNU LibreJS",
   "short_name": "LibreJS",
-  "version": "7.20.2",
+  "version": "7.20.3",
   "author": "various",
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
