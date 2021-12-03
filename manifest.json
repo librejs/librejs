@@ -7,32 +7,32 @@
   "description": "Only allows free and/or trivial Javascript to run.",
   "applications": {
     "gecko": {
-	  "id": "jid1-KtlZuoiikVfFew@jetpack",
-	  "strict_min_version": "60.0"
+      "id": "jid1-KtlZuoiikVfFew@jetpack",
+      "strict_min_version": "60.0"
     }
   },
-  "icons":{
+  "icons": {
     "64": "icons/librejs.png"
   },
   "permissions": [
-	"contextMenus",
-	"webRequest",
-	"webRequestBlocking",
-	"activeTab",
-	"notifications",
-	"sessions",
-	"storage",
-	"tabs",
-	"<all_urls>"
+    "contextMenus",
+    "webRequest",
+    "webRequestBlocking",
+    "activeTab",
+    "notifications",
+    "sessions",
+    "storage",
+    "tabs",
+    "<all_urls>"
   ],
   "browser_action": {
     "browser_style": true,
-	"default_icon": {
-    "64": "icons/librejs.png"
-		},
-		"default_title": "LibreJS",
-		"default_popup": "html/display_panel/content/display-panel.html"
- 	},
+    "default_icon": {
+      "64": "icons/librejs.png"
+    },
+    "default_title": "LibreJS",
+    "default_popup": "html/display_panel/content/display-panel.html"
+  },
   "options_ui": {
     "page": "html/preferences_panel/preferences_panel.html",
     "open_in_tab": true
@@ -41,12 +41,16 @@
     "html/report_page/report.html"
   ],
   "background": {
-    "scripts": ["bundle.js"]
+    "scripts": [
+      "bundle.js"
+    ]
   },
   "content_scripts": [
     {
       "run_at": "document_start",
-      "matches": ["<all_urls>"],
+      "matches": [
+        "<all_urls>"
+      ],
       "match_about_blank": true,
       "all_frames": true,
       "js": [
