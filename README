@@ -40,7 +40,7 @@ UI by clicking the [Automated self test...] button.
 
 HEADLESS TESTS:
 
-To launch the test suite from the command line, ensure the extension
+To launch the test suite from the command line, ensure the xpi package
 has been built with automated test suite. Then install
 selenium-webdriver and geckodriver, and ensure the latter is in $PATH:
   $ npm install selenium-webdriver
@@ -59,7 +59,7 @@ Optionally you can also test with a chosen seed
 HEADLESS COMPLIANCE CHECK:
 
 To check whether a webpage is LibreJS-compliant from the command line,
-ensure that the extension has NOT been built with automated test
+ensure that the xpi package has been built WITHOUT the automated test
 suite. Then install selenium-webdriver and geckodriver, and ensure the
 latter is in $PATH:
   $ npm install selenium-webdriver
