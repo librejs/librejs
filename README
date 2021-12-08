@@ -29,12 +29,32 @@ To debug this add-on on IceCat and other Firefox derivatives, browse to the spec
 
 LibreJS should work with other WebExtensions-compliant browsers; but currently, none of them meet the freedom standards of GNU, so no help will be provided for their usage.
 
+
 TEST:
 
 An automated test suite runs automatically in its own tab whenever the extension
 is loaded as a "temporary add-on" from about:debugging.
 Otherwise (if included in the xpi, see BUILD above) it can be launched from the
 UI by clicking the [Automated self test...] button.
+
+To launch the test in command line, ensure the extension has been
+built with automated test suite. Then install selenium-webdriver and
+geckodriver, and ensure the latter is in $PATH:
+
+  $ npm install selenium-webdriver
+  $ npm install geckodriver
+  $ export PATH=$PATH:./node_modules/.bin
+
+Now you can invoke the test with
+
+  $ node ./test.js
+
+which will print out a summary of test results.
+
+Optionally you can also test with a chosen seed
+
+  $ node ./test.js 12345
+
 
 CONTACT:
 
