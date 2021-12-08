@@ -20,33 +20,47 @@
  */
 
 /**
- * A node script that runs tests in a headless browser. 
- * Usage:
- * node ./test.js [seed-number]
+ * A node script that opens the supplied url and outputs librejs
+ * compliance.
+ *
+ * Usage: node ./compliance.js <url>
+ *
+ * It opens the url, saves a screenshot, and outputs text from the
+ * LibreJS display panel about the webpage compliance.
  */
 
-(function libreJSTest() {
+var fs = require('fs');
+
+(function libreJSCompliance() {
   const webdriver = require('selenium-webdriver');
   const firefox = require('selenium-webdriver/firefox');
   new webdriver.Builder().forBrowser('firefox')
     .setFirefoxOptions(new firefox.Options()
 		       // Uncomment this line to test using icecat
 //		       .setBinary("/usr/bin/icecat")
-		       .headless()).build()
+		       .headless())
+    .build()
     .then(driver =>
       driver.installAddon("./librejs.xpi", /*isTemporary=*/true)
 	.then(driver.get("about:debugging#/runtime/this-firefox"))
 	.then(_ => driver.findElements(webdriver.By.css('.fieldpair dd')))
 	.then(es => es[2].getText())
 	.then(uuid =>
-	  driver.get('moz-extension://'
-		     + uuid + '/test/SpecRunner.html'
-		     + (process.argv[2] ? '?seed=' + process.argv[2] : '') ))
-	.then(_ => driver.wait(_ =>
- 	  driver.findElement(webdriver.By.css('.jasmine-alert'))
-	    .then(e => e.getText()), 10000))
-	.then(_ => driver.findElement(webdriver.By.css('.jasmine-alert')))
-	.then(e => e.getText())
-	.then(console.log)
+	  driver.get(process.argv[2])
+	  // Wait for the webpage to load
+	    .then(_ => driver.sleep(5000))
+	    .then(_ => driver.takeScreenshot())
+	    .then(s => fs.writeFile(
+	      "/tmp/screen.png", Buffer.from(s, 'base64'), "binary",
+	      err => err ? console.log(err) : console.log("Screenshot saved to /tmp/screen.png")))
+	    .then(_ => driver.executeScript("window.open('');"))
+	    .then(_ => driver.getAllWindowHandles())
+	    .then(handles => driver.switchTo().window(handles[1]))
+	    .then(_ => driver.get('moz-extension://'
+			     + uuid
+			     + '/html/display_panel/content/display-panel.html#fromTab=1'))
+	    .then(_ => driver.findElement(webdriver.By.css('div#info')))
+	    .then(e => e.getText())
+	    .then(console.log))
 	.then(_ => driver.quit()));
 })();
