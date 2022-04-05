@@ -615,14 +615,9 @@ function validateLicense(matches) {
     return [false, "Malformed or unrecognized license tag."];
   }
 
-  let [all, tag, first, second] = matches;
+  const [all, first] = [matches[0], matches[2]];
 
   for (let key in licenses) {
-    // Match by id on first or second parameter, ignoring case
-    if (key.toLowerCase() === first.toLowerCase() ||
-      key.toLowerCase() === second.toLowerCase()) {
-      return [true, `Recognized license: "${licenses[key]['Name']}" `];
-    }
     // Match by link on first parameter (legacy)
     if (licenses[key]["Magnet link"] === first.replace("&amp;", "&") ||
       licenses[key]["URL"] === first.replace("&amp;", "&") ||
@@ -647,7 +642,7 @@ function validateLicense(matches) {
 */
 function license_read(scriptSrc, name, external = false) {
 
-  let license = legacy_license_lib.check(scriptSrc);
+  const license = legacy_license_lib.check(scriptSrc);
   if (license) {
     return [true, scriptSrc, `Licensed under: ${license}`];
   }
@@ -665,7 +660,7 @@ function license_read(scriptSrc, name, external = false) {
     if (!s.trim()) {
       return true; // empty, ignore it
     }
-    let [trivial, message] = external ?
+    const [trivial, message] = external ?
       [false, "External script with no known license"]
       : evaluate(s, name);
     if (trivial) {
@@ -683,13 +678,13 @@ function license_read(scriptSrc, name, external = false) {
   }
 
   while (uneditedSrc) {
-    let openingMatch = /\/[\/\*]\s*?(@license)\s+(\S+)\s+(\S+)\s*$/mi.exec(uneditedSrc);
+    const openingMatch = /\/[\/\*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi.exec(uneditedSrc);
     if (!openingMatch) { // no license found, check for triviality
       checkTriviality(uneditedSrc);
       break;
     }
 
-    let openingIndex = openingMatch.index;
+    const openingIndex = openingMatch.index;
     if (openingIndex) {
       // let's check the triviality of the code before the license tag, if any
       checkTriviality(uneditedSrc.substring(0, openingIndex));
@@ -697,19 +692,19 @@ function license_read(scriptSrc, name, external = false) {
     // let's check the actual license
     uneditedSrc = uneditedSrc.substring(openingIndex);
 
-    let closureMatch = /\/([*/])\s*@license-end\b[^*/\n]*/i.exec(uneditedSrc);
+    const closureMatch = /\/([*/])\s*@license-end\b[^*/\n]*/i.exec(uneditedSrc);
     if (!closureMatch) {
-      let msg = "ERROR: @license with no @license-end";
+      const msg = "ERROR: @license with no @license-end";
       return [false, `\n/*\n ${msg} \n*/\n`, msg];
     }
 
-    let closureEndIndex = closureMatch.index + closureMatch[0].length;
-    let commentEndOffset = uneditedSrc.substring(closureEndIndex).indexOf(closureMatch[1] === "*" ? "*/" : "\n");
+    const closureEndIndex = closureMatch.index + closureMatch[0].length;
+    const commentEndOffset = uneditedSrc.substring(closureEndIndex).indexOf(closureMatch[1] === "*" ? "*/" : "\n");
     if (commentEndOffset !== -1) {
       closureEndIndex += commentEndOffset;
     }
 
-    let [licenseOK, message] = validateLicense(openingMatch);
+    const [licenseOK, message] = validateLicense(openingMatch);
     if (licenseOK) {
       editedSrc += uneditedSrc.substr(0, closureEndIndex);
       partsAccepted = true;
