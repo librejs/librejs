@@ -64,7 +64,7 @@ function dbg_print(a, b) {
   - "// @license [magnet link] [identifier]" then "// @license-end" (may also use /* comments)
   - Automatic whitelist: (http://bzr.savannah.gnu.org/lh/librejs/dev/annotate/head:/data/script_libraries/script-libraries.json_
 */
-var licenses = require("./licenses.json").licenses;
+const { licenses } = require("./license_definitions");
 
 // These are objects that it will search for in an initial regex pass over non-free scripts.
 var reserved_objects = [
@@ -615,14 +615,14 @@ function validateLicense(matches) {
     return [false, "Malformed or unrecognized license tag."];
   }
 
-  const [all, first] = [matches[0], matches[2]];
+  const [all, first] = [matches[0], matches[2].replace("&amp;", "&")];
 
-  for (let key in licenses) {
+  for (const key in licenses) {
     // Match by link on first parameter (legacy)
-    if (licenses[key]["Magnet link"] === first.replace("&amp;", "&") ||
-      licenses[key]["URL"] === first.replace("&amp;", "&") ||
-      licenses[key]["URL"].replace("http://", "https://") === first.replace("&amp;", "&")) {
-      return [true, `Recognized license: "${licenses[key]['Name']}".`];
+    for (const url of licenses[key].canonicalUrl) {
+      if (first === url || first === url.replace("^http://", "https://")) {
+        return [true, `Recognized license: "${licenses[key].licenseName}".`];
+      }
     }
   }
   return [false, `Unrecognized license tag: "${all}"`];
@@ -1026,12 +1026,13 @@ function read_metadata(meta_element) {
   parts[0] = parts[0].replace(/&amp;/g, '&');
 
   try {
-    if (licenses[parts[1]]["Magnet link"] == parts[0]) {
-      return true;
-    } else {
-      console.log("invalid (doesn't match licenses)");
-      return false;
+    for (const url of licenses[part[1]].canonicalUrl) {
+      if (url.startsWith("magnet:") && url == parts[0]) {
+        return true;
+      }
     }
+    console.log("invalid (doesn't match licenses)");
+    return false;
   } catch (error) {
     console.log("invalid (threw error, key didn't exist)");
     return false;

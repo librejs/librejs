@@ -233,6 +233,8 @@ exports.licenses = {
 
   'GNU-All-Permissive': {
     licenseName: 'GNU All-Permissive License',
+    identifier: 'GNU-All-Permissive',
+    canonicalUrl: [],
     licenseFragments: [{ text: "Copying and distribution of this file, with or without modification, are permitted in any medium without royalty provided the copyright notice and this notice are preserved. This file is offered as-is, without any warranty.", type: type.SHORT }]
   },
 
@@ -272,6 +274,8 @@ exports.licenses = {
 
   'jQueryTools': {
     licenseName: "jQuery Tools",
+    identifier: 'jQueryTools',
+    canonicalUrl: [],
     licenseFragments: [{
       text: 'NO COPYRIGHTS OR LICENSES. DO WHAT YOU LIKE.',
       type: type.SHORT
@@ -309,7 +313,8 @@ exports.licenses = {
   },
 
   'PublicDomain': {
-    licenseName: "Public Domain",
+    licenseName: 'Public Domain',
+    identifier: 'PublicDomain',
     canonicalUrl: [
       'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
     ],
