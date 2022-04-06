@@ -29,14 +29,12 @@ exports.patternUtils = {
    *
    */
   removeNonalpha: function(str) {
-    var regex = /[^a-z0-9<>@]+/gi;
-    return str.replace(regex, '');
+    return str.replace(/[^a-z0-9<>@]+/gi, '');
   },
   removeWhitespace: function(str) {
     return str.replace(/\/\//gmi, '').replace(/\*/gmi, '').replace(/\s+/gmi, '');
   },
   replaceTokens: function(str) {
-    var regex = /<.*?>/gi;
-    return str.replace(regex, '.*?');
+    return str.replace(/<.*?>/gi, '.*?');
   }
 };

@@ -19,10 +19,10 @@
 * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-var data = require("./license_definitions.js");
-var match_utils = require("./pattern_utils.js").patternUtils;
+const { licenses } = require('./license_definitions.js');
+const { patternUtils } = require('./pattern_utils.js');
 
-var licStartLicEndRe = /@licstartThefollowingistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)(.*)?@licendTheaboveistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)/mi;
+const licStartLicEndRe = /@licstartThefollowingistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)(.*)?@licendTheaboveistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)/mi;
 
 
 /**
@@ -33,26 +33,19 @@ var licStartLicEndRe = /@licstartThefollowingistheentirelicensenoticefortheJavaS
  * hardcoded in license_definitions.js
  *
  */
-var stripLicenseToRegexp = function(license) {
-  var max = license.licenseFragments.length;
-  var item;
-  for (var i = 0; i < max; i++) {
-    item = license.licenseFragments[i];
-    item.regex = match_utils.removeNonalpha(item.text);
-    item.regex = new RegExp(
-      match_utils.replaceTokens(item.regex), '');
+const stripLicenseToRegexp = function(license) {
+  for (const frag of license.licenseFragments) {
+    frag.regex = patternUtils.removeNonalpha(frag.text);
+    frag.regex = new RegExp(
+      patternUtils.replaceTokens(frag.regex), '');
   }
-  return license;
 };
 
-var license_regexes = [];
-
-var init = function() {
-  console.log("initializing regexes");
-  for (var item in data.licenses) {
-    license_regexes.push(stripLicenseToRegexp(data.licenses[item]));
+const init = function() {
+  console.log('initializing regexes');
+  for (const key in licenses) {
+    stripLicenseToRegexp(licenses[key]);
   }
-  //console.log(license_regexes);
 }
 
 module.exports.init = init;
@@ -62,24 +55,18 @@ module.exports.init = init;
 *	Takes in the declaration that has been preprocessed and 
 *	tests it against regexes in our table.
 */
-var search_table = function(stripped_comment) {
-  var stripped = match_utils.removeNonalpha(stripped_comment);
-  //stripped = stripped.replaceTokens(stripped_comment); 
-
-  //console.log("Looking up license");
-  //console.log(stripped);
-
-  for (license in data.licenses) {
-    frag = data.licenses[license].licenseFragments;
-    max_i = data.licenses[license].licenseFragments.length;
-    for (i = 0; i < max_i; i++) {
-      if (frag[i].regex.test(stripped)) {
-        //console.log(data.licenses[license].licenseName);
-        return data.licenses[license].licenseName;
+const searchTable = function(strippedComment) {
+  const stripped = patternUtils.removeNonalpha(strippedComment);
+  // looking up license
+  for (const key in licenses) {
+    const license = licenses[key];
+    for (const frag of license.licenseFragments) {
+      if (frag.regex.test(stripped)) {
+        return license.licenseName;
       }
     }
   }
-  console.log("No global license found.");
+  console.log('No global license found.');
   return false;
 
 }
@@ -88,26 +75,20 @@ var search_table = function(stripped_comment) {
 *	Takes the "first comment available on the page"
 *	returns true for "free" and false for anything else	
 */
-var check = function(license_text) {
-  //console.log("checking...");
-  //console.log(license_text);
-
-  if (license_text === undefined || license_text === null || license_text == "") {
-    //console.log("Was not an inline script");
+const check = function(licenseText) {
+  if (licenseText === undefined || licenseText === null || licenseText == '') {
+    // not an inline script
     return false;
   }
   // remove whitespace
-  var stripped = match_utils.removeWhitespace(license_text);
+  const stripped = patternUtils.removeWhitespace(licenseText);
   // Search for @licstart/@licend
   // This assumes that there isn't anything before the comment
-  var matches = stripped.match(licStartLicEndRe);
+  const matches = stripped.match(licStartLicEndRe);
   if (matches == null) {
     return false;
   }
-  var declaration = matches[0];
-
-  return search_table(declaration);
-
+  return searchTable(matches[0]);
 };
 
 module.exports.check = check;

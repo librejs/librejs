@@ -32,7 +32,8 @@
     .setFirefoxOptions(new firefox.Options()
       // Uncomment this line to test using icecat
       //		       .setBinary("/usr/bin/icecat")
-      .headless()).build()
+      .headless()
+    ).build()
     .then(driver =>
       driver.installAddon("./librejs.xpi", /*isTemporary=*/true)
         .then(driver.get("about:debugging#/runtime/this-firefox"))
@@ -48,5 +49,6 @@
         .then(_ => driver.findElement(webdriver.By.css('.jasmine-alert')))
         .then(e => e.getText())
         .then(console.log)
-        .then(_ => driver.quit()));
+        .then(_ => driver.quit())
+    );
 })();
