@@ -24,22 +24,22 @@
   only the "interesting" HTML and script requests and leaving the other alone
 */
 
-let { ResponseMetaData } = require("./ResponseMetaData");
+let { ResponseMetaData } = require('./ResponseMetaData');
 
 let listeners = new WeakMap();
 let webRequestEvent = browser.webRequest.onHeadersReceived;
 
 class ResponseProcessor {
 
-  static install(handler, types = ["main_frame", "sub_frame", "script"]) {
+  static install(handler, types = ['main_frame', 'sub_frame', 'script']) {
     if (listeners.has(handler)) return false;
     let listener =
       async request => await new ResponseTextFilter(request).process(handler);
     listeners.set(handler, listener);
     webRequestEvent.addListener(
       listener,
-      { urls: ["<all_urls>"], types },
-      ["blocking", "responseHeaders"]
+      { urls: ['<all_urls>'], types },
+      ['blocking', 'responseHeaders']
     );
     return true;
   }
@@ -67,21 +67,21 @@ class ResponseTextFilter {
     this.canProcess = // we want to process html documents and scripts only
       (statusCode < 300 || statusCode >= 400) && // skip redirections
       !md.disposition && // skip forced downloads
-      (type === "script" || /\bhtml\b/i.test(md.contentType));
+      (type === 'script' || /\bhtml\b/i.test(md.contentType));
   }
 
   async process(handler) {
     if (!this.canProcess) return ResponseProcessor.ACCEPT;
     let { metaData, request } = this;
     let response = { request, metaData }; // we keep it around allowing callbacks to store state
-    if (typeof handler.pre === "function") {
+    if (typeof handler.pre === 'function') {
       let res = await handler.pre(response);
       if (res) return res;
       if (handler.post) handler = handler.post;
-      if (typeof handler !== "function") return ResponseProcessor.ACCEPT;
+      if (typeof handler !== 'function') return ResponseProcessor.ACCEPT;
     }
 
-    let { requestId, responseHeaders } = request;
+    let { requestId } = request;
     let filter = browser.webRequest.filterResponseData(requestId);
     let buffer = [];
 
@@ -89,9 +89,9 @@ class ResponseTextFilter {
       buffer.push(event.data);
     };
 
-    filter.onstop = async event => {
+    filter.onstop = async unused => {
       // concatenate chunks
-      let size = buffer.reduce((sum, chunk, n) => sum + chunk.byteLength, 0)
+      let size = buffer.reduce((sum, chunk) => sum + chunk.byteLength, 0)
       let allBytes = new Uint8Array(size);
       let pos = 0;
       for (let chunk of buffer) {
@@ -100,13 +100,13 @@ class ResponseTextFilter {
       }
       buffer = null; // allow garbage collection
       if (allBytes.indexOf(0) !== -1) {
-        console.debug("Warning: zeroes in bytestream, probable cached encoding mismatch.", request);
-        if (request.type === "script") {
-          console.debug("It's a script, trying to refetch it.");
-          response.text = await (await fetch(request.url, { cache: "reload", credentials: "include" })).text();
+        console.debug('Warning: zeroes in bytestream, probable cached encoding mismatch.', request);
+        if (request.type === 'script') {
+          console.debug('It\'s a script, trying to refetch it.');
+          response.text = await (await fetch(request.url, { cache: 'reload', credentials: 'include' })).text();
         } else {
-          console.debug("It's a %s, trying to decode it as UTF-16.", request.type);
-          response.text = new TextDecoder("utf-16be").decode(allBytes, { stream: true });
+          console.debug('It\'s a %s, trying to decode it as UTF-16.', request.type);
+          response.text = new TextDecoder('utf-16be').decode(allBytes, { stream: true });
         }
       } else {
         response.text = metaData.decode(allBytes);

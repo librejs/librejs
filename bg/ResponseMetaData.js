@@ -34,24 +34,24 @@ class ResponseMetaData {
     this.headers = {};
     for (let h of responseHeaders) {
       if (/^\s*Content-(Type|Disposition)\s*$/i.test(h.name)) {
-        let propertyName = h.name.split("-")[1].trim();
+        let propertyName = h.name.split('-')[1].trim();
         propertyName = `content${propertyName.charAt(0).toUpperCase()}${propertyName.substring(1).toLowerCase()}`;
         this[propertyName] = h.value;
         this.headers[propertyName] = h;
       }
     }
-    this.computedCharset = "";
+    this.computedCharset = '';
   }
 
   get charset() {
-    let charset = "";
+    let charset = '';
     if (this.contentType) {
       let m = this.contentType.match(/;\s*charset\s*=\s*(\S+)/);
       if (m) {
         charset = m[1];
       }
     }
-    Object.defineProperty(this, "charset", { value: charset, writable: false, configurable: true });
+    Object.defineProperty(this, 'charset', { value: charset, writable: false, configurable: true });
     return this.computedCharset = charset;
   }
 
@@ -69,12 +69,12 @@ class ResponseMetaData {
 
       // let's try figuring out the charset from <meta> tags
       let parser = new DOMParser();
-      let doc = parser.parseFromString(text, "text/html");
+      let doc = parser.parseFromString(text, 'text/html');
       let meta = doc.querySelectorAll('meta[charset], meta[http-equiv="content-type"], meta[content*="charset"]');
       for (let m of meta) {
-        charset = m.getAttribute("charset");
+        charset = m.getAttribute('charset');
         if (!charset) {
-          let match = m.getAttribute("content").match(/;\s*charset\s*=\s*([\w-]+)/i)
+          let match = m.getAttribute('content').match(/;\s*charset\s*=\s*([\w-]+)/i)
           if (match) charset = match[1];
         }
         if (charset) {
@@ -89,7 +89,7 @@ class ResponseMetaData {
     return text;
   }
 
-  createDecoder(charset = this.charset, def = "latin1") {
+  createDecoder(charset = this.charset, def = 'latin1') {
     if (charset) {
       try {
         return new TextDecoder(charset);
@@ -99,7 +99,7 @@ class ResponseMetaData {
     }
     return def ? new TextDecoder(def) : null;
   }
-};
+}
 ResponseMetaData.UTF8BOM = new Uint8Array(BOM);
 
 module.exports = { ResponseMetaData };

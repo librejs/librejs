@@ -23,7 +23,7 @@
   A class to manage whitelist/blacklist operations
 */
 
-let { ListStore } = require("../common/Storage");
+let { ListStore } = require('../common/Storage');
 
 class ListManager {
   constructor(whitelist, blacklist, builtInHashes) {
@@ -48,13 +48,13 @@ class ListManager {
     with a trailing (hash).
     Returns "blacklisted", "whitelisted" or defValue
   */
-  getStatus(key, defValue = "unknown") {
+  getStatus(key, defValue = 'unknown') {
     let { blacklist, whitelist } = this.lists;
     let inline = ListStore.inlineItem(key);
     if (inline) {
       return blacklist.contains(inline)
-        ? "blacklisted"
-        : whitelist.contains(inline) ? "whitelisted"
+        ? 'blacklisted'
+        : whitelist.contains(inline) ? 'whitelisted'
           : defValue;
     }
 
@@ -63,16 +63,16 @@ class ListManager {
       let url = ListStore.urlItem(key);
       let site = ListStore.siteItem(key);
       return (blacklist.contains(url) || ListManager.siteMatch(site, blacklist)
-        ? "blacklisted"
+        ? 'blacklisted'
         : whitelist.contains(url) || ListManager.siteMatch(site, whitelist)
-          ? "whitelisted" : defValue
+          ? 'whitelisted' : defValue
       );
     }
 
     let [hashItem, srcHash] = match; // (hash), hash
-    return blacklist.contains(hashItem) ? "blacklisted"
+    return blacklist.contains(hashItem) ? 'blacklisted'
       : this.builtInHashes.has(srcHash) || whitelist.contains(hashItem)
-        ? "whitelisted"
+        ? 'whitelisted'
         : defValue;
   }
 
@@ -85,13 +85,13 @@ class ListManager {
     if (list.contains(site)) {
       return site;
     }
-    site = site.replace(/^([\w-]+:\/\/)?(\w)/, "$1*.$2");
+    site = site.replace(/^([\w-]+:\/\/)?(\w)/, '$1*.$2');
     for (; ;) {
       if (list.contains(site)) {
         return site;
       }
       let oldKey = site;
-      site = site.replace(/(?:\*\.)*\w+(?=\.)/, "*");
+      site = site.replace(/(?:\*\.)*\w+(?=\.)/, '*');
       if (site === oldKey) {
         return null;
       }

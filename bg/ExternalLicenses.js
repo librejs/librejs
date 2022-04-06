@@ -23,12 +23,12 @@
   Singleton to handle external licenses, e.g. WebLabels
 */
 
-"use strict";
+'use strict';
 
 let licensesByLabel = new Map();
 let licensesByUrl = new Map();
 {
-  let { licenses } = require("../license_definitions");
+  let { licenses } = require('../license_definitions');
   let mapByLabel = (label, license) => licensesByLabel.set(label.toUpperCase(), license);
   for (let [id, l] of Object.entries(licenses)) {
     let { identifier, canonicalUrl, licenseName } = l;
@@ -64,7 +64,7 @@ var ExternalLicenses = {
     let frameCache = tabCache && tabCache.get(frameId);
     let cache = frameCache && frameCache.get(documentUrl);
     let scriptInfo = await browser.tabs.sendMessage(tabId, {
-      action: "checkLicensedScript",
+      action: 'checkLicensedScript',
       url,
       cache,
     }, { frameId });
@@ -74,10 +74,10 @@ var ExternalLicenses = {
     }
     scriptInfo.licenses = new Set();
     scriptInfo.toString = function() {
-      let licenseIds = [...this.licenses].map(l => l.identifier).sort().join(", ");
+      let licenseIds = [...this.licenses].map(l => l.identifier).sort().join(', ');
       return licenseIds
-        ? `Free license${this.licenses.size > 1 ? "s" : ""} (${licenseIds})`
-        : "Unknown license(s)";
+        ? `Free license${this.licenses.size > 1 ? 's' : ''} (${licenseIds})`
+        : 'Unknown license(s)';
     }
     let match = (map, key) => {
       if (map.has(key)) {
@@ -112,22 +112,23 @@ var ExternalLicenses = {
     }
     frameCache.set(frameId, new Map([[documentUrl, cache]]));
 
-    let link = doc.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
+    let link = doc.querySelector('link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]');
     if (link) {
-      let href = link.getAttribute("href");
+      let href = link.getAttribute('href');
       cache.webLabels = { href };
       let move = () => !!doc.head.insertBefore(link, doc.head.firstChild);
       if (link.parentNode === doc.head) {
-        for (let node = link; node = node.previousElementSibling;) {
-          if (node.tagName.toUpperCase() === "SCRIPT") {
+        let node = link.previousElementSibling;
+        for (; node; node = node.previousElementSibling) {
+          if (node.tagName.toUpperCase() === 'SCRIPT') {
             return move();
           }
         }
       } else { // the reference is only in the body
-        if (link.tagName.toUpperCase() === "A") {
-          let newLink = doc.createElement("link");
-          newLink.rel = "jslicense";
-          newLink.setAttribute("href", href);
+        if (link.tagName.toUpperCase() === 'A') {
+          let newLink = doc.createElement('link');
+          newLink.rel = 'jslicense';
+          newLink.setAttribute('href', href);
           link = newLink;
         }
         return move();

@@ -23,7 +23,7 @@
  A tiny wrapper around extensions storage API, supporting CSV serialization for
  retro-compatibility
 */
-"use strict";
+'use strict';
 
 var Storage = {
   ARRAY: {
@@ -45,7 +45,7 @@ var Storage = {
     },
 
     async save(key, list) {
-      return await browser.storage.local.set({ [key]: [...list].join(",") });
+      return await browser.storage.local.set({ [key]: [...list].join(',') });
     }
   }
 };
@@ -68,20 +68,20 @@ class ListStore {
 
   static inlineItem(url) {
     // here we simplify and hash inline script references
-    return url.startsWith("inline:") ? url
-      : url.startsWith("view-source:")
-      && url.replace(/^view-source:[\w-+]+:\/+([^/]+).*#line\d+/, "inline://$1#")
-        .replace(/\n[^]*/, s => s.replace(/\s+/g, ' ').substring(0, 16) + "…" + hash(s.trim()));
+    return url.startsWith('inline:') ? url
+      : url.startsWith('view-source:')
+      && url.replace(/^view-source:[\w-+]+:\/+([^/]+).*#line\d+/, 'inline://$1#')
+        .replace(/\n[^]*/, s => s.replace(/\s+/g, ' ').substring(0, 16) + '…' + hash(s.trim()));
   }
   static hashItem(hash) {
-    return hash.startsWith("(") ? hash : `(${hash})`;
+    return hash.startsWith('(') ? hash : `(${hash})`;
   }
   static urlItem(url) {
-    let queryPos = url.indexOf("?");
+    let queryPos = url.indexOf('?');
     return queryPos === -1 ? url : url.substring(0, queryPos);
   }
   static siteItem(url) {
-    if (url.endsWith("/*")) return url;
+    if (url.endsWith('/*')) return url;
     try {
       return `${new URL(url).origin}/*`;
     } catch (e) {
@@ -134,12 +134,12 @@ class ListStore {
 }
 
 function hash(source) {
-  var shaObj = new jssha("SHA-256", "TEXT")
+  var shaObj = new jssha('SHA-256', 'TEXT')
   shaObj.update(source);
-  return shaObj.getHash("HEX");
+  return shaObj.getHash('HEX');
 }
 
-if (typeof module === "object") {
+if (typeof module === 'object') {
   module.exports = { ListStore, Storage, hash };
   var jssha = require('jssha');
 }
