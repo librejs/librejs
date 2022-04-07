@@ -21,22 +21,22 @@
  */
 
 exports.patternUtils = {
-    /**
-     * removeNonalpha
-     *
-     * Remove all nonalphanumeric values, except for
-     * < and >, since they are what we use for tokens.
-     *
-     */
-    removeNonalpha: function (str) {
-	    var regex = /[^a-z0-9<>@]+/gi;
-	    return str.replace(regex, '');
-    },
-    removeWhitespace: function (str) {
-	    return str.replace(/\/\//gmi, '').replace(/\*/gmi, '').replace(/\s+/gmi, '');
-    },
-    replaceTokens: function (str) {
-	    var regex = /<.*?>/gi;
-	    return str.replace(regex, '.*?');
-    }
+  /**
+   * removeNonalpha
+   *
+   * Remove all nonalphanumeric values, except for
+   * < and >, since they are what we use for tokens.
+   *
+   */
+  removeNonalpha: function(str) {
+    var regex = /[^a-z0-9<>@]+/gi;
+    return str.replace(regex, '');
+  },
+  removeWhitespace: function(str) {
+    return str.replace(/\/\//gmi, '').replace(/\*/gmi, '').replace(/\s+/gmi, '');
+  },
+  replaceTokens: function(str) {
+    var regex = /<.*?>/gi;
+    return str.replace(regex, '.*?');
+  }
 };

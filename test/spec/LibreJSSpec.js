@@ -42,13 +42,13 @@ describe("LibreJS' components", () => {
 
   beforeAll(async () => {
     let url = browser.extension.getURL("/test/resources/index.html");
-    tab = (await browser.tabs.query({url}))[0] || (await browser.tabs.create({url}));
+    tab = (await browser.tabs.query({ url }))[0] || (await browser.tabs.create({ url }));
     documentUrl = url;
 
   });
 
   describe("The whitelist/blacklist manager", () => {
-    let {ListManager, ListStore, Storage} = LibreJS;
+    let { ListManager, ListStore, Storage } = LibreJS;
     let lm = new ListManager(new ListStore("_test.whitelist", Storage.CSV), new ListStore("_test.blacklist", Storage.CSV), new Set());
     let forgot = ["http://formerly.whitelist.ed/", "http://formerly.blacklist.ed/"];
 
@@ -58,14 +58,14 @@ describe("LibreJS' components", () => {
     });
 
     it("Should handle basic CRUD operations", async () => {
-       expect(lm.getStatus(forgot[0])).toBe("whitelisted");
-       expect(lm.getStatus(forgot[1])).toBe("blacklisted");
+      expect(lm.getStatus(forgot[0])).toBe("whitelisted");
+      expect(lm.getStatus(forgot[1])).toBe("blacklisted");
 
-       await lm.forget(...forgot);
+      await lm.forget(...forgot);
 
-       for (let url of forgot) {
-         expect(lm.getStatus(url)).toBe("unknown");
-       }
+      for (let url of forgot) {
+        expect(lm.getStatus(url)).toBe("unknown");
+      }
     });
 
     it("Should support full path wildcards", () => {
@@ -91,7 +91,7 @@ describe("LibreJS' components", () => {
     let processScript = async (source, whitelisted = false) =>
       await LibreJS.handle_script({
         text: source,
-        request: {url, tabId: tab.id, documentUrl, frameId: 0},
+        request: { url, tabId: tab.id, documentUrl, frameId: 0 },
       }, whitelisted);
 
     it("should accept whitelisted scripts", async () => {
@@ -249,13 +249,13 @@ describe("LibreJS' components", () => {
   });
 
   describe("The external (Web Labels) license checker", () => {
-    let {ExternalLicenses} = LibreJS;
+    let { ExternalLicenses } = LibreJS;
     let check;
 
     beforeAll(async () => {
-      let args = {tabId: tab.id, frameId: 0, documentUrl};
+      let args = { tabId: tab.id, frameId: 0, documentUrl };
       let resolve = url => new URL(url, documentUrl).href;
-      check = async url => await ExternalLicenses.check(Object.assign({url: resolve(url)}, args));
+      check = async url => await ExternalLicenses.check(Object.assign({ url: resolve(url) }, args));
       await browser.tabs.executeScript(tab.id, {
         file: "/content/externalLicenseChecker.js"
       });
@@ -284,6 +284,6 @@ describe("LibreJS' components", () => {
   });
   afterAll(async () => {
     await browser.tabs.remove(tab.id);
-    browser.tabs.update((await browser.tabs.getCurrent()).id, {active: true});
+    browser.tabs.update((await browser.tabs.getCurrent()).id, { active: true });
   });
 });

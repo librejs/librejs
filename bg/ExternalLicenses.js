@@ -28,10 +28,10 @@
 let licensesByLabel = new Map();
 let licensesByUrl = new Map();
 {
-  let {licenses} = require("../license_definitions");
+  let { licenses } = require("../license_definitions");
   let mapByLabel = (label, license) => licensesByLabel.set(label.toUpperCase(), license);
   for (let [id, l] of Object.entries(licenses)) {
-    let {identifier, canonicalUrl, licenseName} = l;
+    let { identifier, canonicalUrl, licenseName } = l;
     if (identifier) {
       mapByLabel(identifier, l);
     } else {
@@ -59,7 +59,7 @@ var ExternalLicenses = {
   },
 
   async check(script) {
-    let {url, tabId, frameId, documentUrl} = script;
+    let { url, tabId, frameId, documentUrl } = script;
     let tabCache = cachedHrefs.get(tabId);
     let frameCache = tabCache && tabCache.get(frameId);
     let cache = frameCache && frameCache.get(documentUrl);
@@ -67,7 +67,7 @@ var ExternalLicenses = {
       action: "checkLicensedScript",
       url,
       cache,
-    }, {frameId});
+    }, { frameId });
 
     if (!(scriptInfo && scriptInfo.licenseLinks.length)) {
       return null;
@@ -76,8 +76,8 @@ var ExternalLicenses = {
     scriptInfo.toString = function() {
       let licenseIds = [...this.licenses].map(l => l.identifier).sort().join(", ");
       return licenseIds
-         ? `Free license${this.licenses.size > 1 ? "s" : ""} (${licenseIds})`
-         : "Unknown license(s)";
+        ? `Free license${this.licenses.size > 1 ? "s" : ""} (${licenseIds})`
+        : "Unknown license(s)";
     }
     let match = (map, key) => {
       if (map.has(key)) {
@@ -87,7 +87,7 @@ var ExternalLicenses = {
       return false;
     };
 
-    for (let {label, url} of scriptInfo.licenseLinks) {
+    for (let { label, url } of scriptInfo.licenseLinks) {
       match(licensesByLabel, label = label.trim().toUpperCase()) ||
         match(licensesByUrl, url) ||
         match(licensesByLabel, label.replace(/^GNU-|-(?:OR-LATER|ONLY)$/, ''));
@@ -105,7 +105,7 @@ var ExternalLicenses = {
   */
   optimizeDocument(doc, cachePointer) {
     let cache = {};
-    let {tabId, frameId, documentUrl} = cachePointer;
+    let { tabId, frameId, documentUrl } = cachePointer;
     let frameCache = cachedHrefs.get(tabId);
     if (!frameCache) {
       cachedHrefs.set(tabId, frameCache = new Map());
@@ -115,7 +115,7 @@ var ExternalLicenses = {
     let link = doc.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
     if (link) {
       let href = link.getAttribute("href");
-      cache.webLabels = {href};
+      cache.webLabels = { href };
       let move = () => !!doc.head.insertBefore(link, doc.head.firstChild);
       if (link.parentNode === doc.head) {
         for (let node = link; node = node.previousElementSibling;) {

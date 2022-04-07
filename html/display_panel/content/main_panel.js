@@ -29,11 +29,11 @@ if (fromTab) {
   document.documentElement.classList.add("tab");
 }
 
-var myPort = browser.runtime.connect({name: "port-from-cs"});
+var myPort = browser.runtime.connect({ name: "port-from-cs" });
 var currentReport;
 
 // Sends a message that tells the background script the window is open
-myPort.postMessage({"update": true, tabId: parseInt(currentReport && currentReport.tabId || fromTab) || ""});
+myPort.postMessage({ "update": true, tabId: parseInt(currentReport && currentReport.tabId || fromTab) || "" });
 
 // Display the actual extension version Number
 document.querySelector("#version").textContent = browser.runtime.getManifest().version;
@@ -54,7 +54,7 @@ var liTemplate = document.querySelector("#li-template");
 liTemplate.remove();
 
 document.querySelector("#info").addEventListener("click", e => {
-	let button = e.target;
+  let button = e.target;
   if (button.tagName === "A") {
     setTimeout(close, 100);
     return;
@@ -69,27 +69,27 @@ document.querySelector("#info").addEventListener("click", e => {
     }
     return;
   }
-	if (!button.matches(".buttons > button")) return;
+  if (!button.matches(".buttons > button")) return;
   let domain = button.querySelector(".domain");
 
-	let li = button.closest("li");
-	let entry = li && li._scriptEntry || [currentReport.url, "Page's site"];
-	let action = button.className;
+  let li = button.closest("li");
+  let entry = li && li._scriptEntry || [currentReport.url, "Page's site"];
+  let action = button.className;
   let site = domain ? domain.textContent : button.name === "*" ? currentReport.site : "";
 
   if (site) {
     ([action] = action.split("-"));
   }
-	myPort.postMessage({[action]: entry, site, tabId: currentReport.tabId});
+  myPort.postMessage({ [action]: entry, site, tabId: currentReport.tabId });
 });
 
 document.querySelector("#report-tab").onclick = e => {
-  myPort.postMessage({report_tab: currentReport});
+  myPort.postMessage({ report_tab: currentReport });
   close();
 }
 
 document.querySelector("#complain").onclick = e => {
-  myPort.postMessage({invoke_contact_finder: currentReport});
+  myPort.postMessage({ invoke_contact_finder: currentReport });
   close();
 }
 
@@ -100,10 +100,10 @@ document.querySelector("#open-options").onclick = e => {
 
 document.body.addEventListener("click", async e => {
   if (!e.target.matches(".reload")) return;
-  let {tabId} = currentReport;
+  let { tabId } = currentReport;
   if (tabId) {
     await browser.tabs.reload(tabId);
-    myPort.postMessage({"update": true, tabId});
+    myPort.postMessage({ "update": true, tabId });
   }
 });
 
@@ -112,49 +112,49 @@ document.body.addEventListener("click", async e => {
 * of scripts found in this tab, rendering it as a list with management buttons.
 *	Groups are "unknown", "blacklisted", "whitelisted", "accepted", and "blocked".
 */
-function createList(data, group){
- var {url} = data;
- let entries = data[group];
- let container = document.getElementById(group);
- let heading = container.querySelector("h2");
- var list = container.querySelector("ul");
- list.classList.toggle(group, true);
- if (Array.isArray(entries) && entries.length) {
-	 heading.innerHTML = `<span class="type-name">${group}</span> scripts in ${url}:`;
-   container.classList.remove("empty");
- } else {
-	 // default message
-	 list.innerHTML = `<li>No <span class="type-name">${group}</span> scripts on this page.</li>`
-	 entries = data[group] = [];
-   container.classList.add("empty");
- }
- // generate list
- let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\)[^]*/;
- for (let entry of entries) {
-   let [scriptId, reason] = entry;
-	 let li = liTemplate.cloneNode(true);
-	 let a = li.querySelector("a");
-	 a.href = scriptId.split("(")[0];
-   if (scriptId.startsWith("view-source:")) {
-     a.target ="LibreJS-ViewSource";
-     let source = scriptId.match(/\n([^]*)/);
-     if (source)  {
-       li.querySelector(".source").textContent = source[1];
-       li.querySelector(".toggle-source").style.display = "inline";
-     }
-     scriptId = scriptId.replace(viewSourceToHuman, "$3 at line $2 of $1");
-   }
-   a.textContent = scriptId;
-	 li.querySelector(".reason").textContent = reason;
-   let bySite = !!reason.match(/https?:\/\/[^/]+\/\*/);
-   li.classList.toggle("by-site", bySite);
-   if (bySite) {
-     let domain = li.querySelector(".forget .domain");
-     if (domain) domain.textContent = RegExp.lastMatch;
-   }
-	 li._scriptEntry = entry;
-	 list.appendChild(li);
- }
+function createList(data, group) {
+  var { url } = data;
+  let entries = data[group];
+  let container = document.getElementById(group);
+  let heading = container.querySelector("h2");
+  var list = container.querySelector("ul");
+  list.classList.toggle(group, true);
+  if (Array.isArray(entries) && entries.length) {
+    heading.innerHTML = `<span class="type-name">${group}</span> scripts in ${url}:`;
+    container.classList.remove("empty");
+  } else {
+    // default message
+    list.innerHTML = `<li>No <span class="type-name">${group}</span> scripts on this page.</li>`
+    entries = data[group] = [];
+    container.classList.add("empty");
+  }
+  // generate list
+  let viewSourceToHuman = /^view-source:(.*)#line(\d+)\(([^)]*)\)[^]*/;
+  for (let entry of entries) {
+    let [scriptId, reason] = entry;
+    let li = liTemplate.cloneNode(true);
+    let a = li.querySelector("a");
+    a.href = scriptId.split("(")[0];
+    if (scriptId.startsWith("view-source:")) {
+      a.target = "LibreJS-ViewSource";
+      let source = scriptId.match(/\n([^]*)/);
+      if (source) {
+        li.querySelector(".source").textContent = source[1];
+        li.querySelector(".toggle-source").style.display = "inline";
+      }
+      scriptId = scriptId.replace(viewSourceToHuman, "$3 at line $2 of $1");
+    }
+    a.textContent = scriptId;
+    li.querySelector(".reason").textContent = reason;
+    let bySite = !!reason.match(/https?:\/\/[^/]+\/\*/);
+    li.classList.toggle("by-site", bySite);
+    if (bySite) {
+      let domain = li.querySelector(".forget .domain");
+      if (domain) domain.textContent = RegExp.lastMatch;
+    }
+    li._scriptEntry = entry;
+    list.appendChild(li);
+  }
 
 }
 
@@ -174,18 +174,18 @@ function createList(data, group){
 */
 function refreshUI(report) {
   currentReport = report;
-  let {siteStatus, listedSite} = report;
+  let { siteStatus, listedSite } = report;
   document.querySelector("#site").className = siteStatus || "";
   document.querySelector("#site h2").textContent =
     `This site ${report.site}`;
 
   for (let toBeErased of document.querySelectorAll("#info h2:not(.site) > *, #info ul > *")) {
-  	toBeErased.remove();
+    toBeErased.remove();
   }
 
   let scriptsCount = 0;
   for (let group of ["unknown", "accepted", "whitelisted", "blocked", "blacklisted"]) {
-  	if (group in report) createList(report, group);
+    if (group in report) createList(report, group);
     scriptsCount += report[group].length;
   }
 
@@ -195,7 +195,7 @@ function refreshUI(report) {
   for (let b of document.querySelectorAll(
     `.unknown .forget, .accepted .forget, .blocked .forget,
      .whitelisted .whitelist, .blacklisted .blacklist`
-   )) {
+  )) {
     b.disabled = true;
   }
 
@@ -223,9 +223,9 @@ myPort.onMessage.addListener(m => {
   }
 });
 
-function print_local_storage(){
- myPort.postMessage({"printlocalstorage": true});
+function print_local_storage() {
+  myPort.postMessage({ "printlocalstorage": true });
 }
-function delete_local_storage(){
- myPort.postMessage({"deletelocalstorage":true});
+function delete_local_storage() {
+  myPort.postMessage({ "deletelocalstorage": true });
 }

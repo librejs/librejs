@@ -23,11 +23,11 @@
   A class to manage whitelist/blacklist operations
 */
 
-let {ListStore} = require("../common/Storage");
+let { ListStore } = require("../common/Storage");
 
 class ListManager {
   constructor(whitelist, blacklist, builtInHashes) {
-    this.lists = {whitelist, blacklist};
+    this.lists = { whitelist, blacklist };
     this.builtInHashes = new Set(builtInHashes);
   }
 
@@ -49,13 +49,13 @@ class ListManager {
     Returns "blacklisted", "whitelisted" or defValue
   */
   getStatus(key, defValue = "unknown") {
-    let {blacklist, whitelist} = this.lists;
+    let { blacklist, whitelist } = this.lists;
     let inline = ListStore.inlineItem(key);
     if (inline) {
       return blacklist.contains(inline)
         ? "blacklisted"
         : whitelist.contains(inline) ? "whitelisted"
-        : defValue;
+          : defValue;
     }
 
     let match = key.match(/\(([^)]+)\)(?=[^()]*$)/);
@@ -65,38 +65,38 @@ class ListManager {
       return (blacklist.contains(url) || ListManager.siteMatch(site, blacklist)
         ? "blacklisted"
         : whitelist.contains(url) || ListManager.siteMatch(site, whitelist)
-        ? "whitelisted" : defValue
+          ? "whitelisted" : defValue
       );
     }
 
-  	let [hashItem, srcHash] = match; // (hash), hash
-  	return blacklist.contains(hashItem) ? "blacklisted"
-  			: this.builtInHashes.has(srcHash) || whitelist.contains(hashItem)
+    let [hashItem, srcHash] = match; // (hash), hash
+    return blacklist.contains(hashItem) ? "blacklisted"
+      : this.builtInHashes.has(srcHash) || whitelist.contains(hashItem)
         ? "whitelisted"
-  			: defValue;
-  	}
+        : defValue;
+  }
 
-    /*
-      Matches by whole site ("http://some.domain.com/*") supporting also
-      wildcarded subdomains ("https://*.domain.com/*").
-    */
-    static siteMatch(url, list) {
-      let site = ListStore.siteItem(url);
+  /*
+    Matches by whole site ("http://some.domain.com/*") supporting also
+    wildcarded subdomains ("https://*.domain.com/*").
+  */
+  static siteMatch(url, list) {
+    let site = ListStore.siteItem(url);
+    if (list.contains(site)) {
+      return site;
+    }
+    site = site.replace(/^([\w-]+:\/\/)?(\w)/, "$1*.$2");
+    for (; ;) {
       if (list.contains(site)) {
         return site;
       }
-      site = site.replace(/^([\w-]+:\/\/)?(\w)/, "$1*.$2");
-      for (;;) {
-        if (list.contains(site)) {
-          return site;
-        }
-        let oldKey = site;
-        site = site.replace(/(?:\*\.)*\w+(?=\.)/, "*");
-        if (site === oldKey) {
-          return null;
-        }
+      let oldKey = site;
+      site = site.replace(/(?:\*\.)*\w+(?=\.)/, "*");
+      if (site === oldKey) {
+        return null;
       }
     }
+  }
 }
 
 module.exports = { ListManager };

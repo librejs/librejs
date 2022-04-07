@@ -34,7 +34,7 @@ var Storage = {
       return array ? new Set(array) : new Set();
     },
     async save(key, list) {
-      return await browser.storage.local.set({[key]: [...list]});
+      return await browser.storage.local.set({ [key]: [...list] });
     },
   },
 
@@ -45,7 +45,7 @@ var Storage = {
     },
 
     async save(key, list) {
-      return await browser.storage.local.set({[key]: [...list].join(",")});
+      return await browser.storage.local.set({ [key]: [...list].join(",") });
     }
   }
 };
@@ -70,8 +70,8 @@ class ListStore {
     // here we simplify and hash inline script references
     return url.startsWith("inline:") ? url
       : url.startsWith("view-source:")
-        && url.replace(/^view-source:[\w-+]+:\/+([^/]+).*#line\d+/,"inline://$1#")
-              .replace(/\n[^]*/, s => s.replace(/\s+/g, ' ').substring(0, 16) + "…" + hash(s.trim()));
+      && url.replace(/^view-source:[\w-+]+:\/+([^/]+).*#line\d+/, "inline://$1#")
+        .replace(/\n[^]*/, s => s.replace(/\s+/g, ' ').substring(0, 16) + "…" + hash(s.trim()));
   }
   static hashItem(hash) {
     return hash.startsWith("(") ? hash : `(${hash})`;
@@ -133,10 +133,10 @@ class ListStore {
   }
 }
 
-function hash(source){
-	var shaObj = new jssha("SHA-256","TEXT")
-	shaObj.update(source);
-	return shaObj.getHash("HEX");
+function hash(source) {
+  var shaObj = new jssha("SHA-256", "TEXT")
+  shaObj.update(source);
+  return shaObj.getHash("HEX");
 }
 
 if (typeof module === "object") {

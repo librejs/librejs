@@ -26,15 +26,15 @@
 */
 
 const BOM = [0xEF, 0xBB, 0xBF];
-const DECODER_PARAMS = {stream: true};
+const DECODER_PARAMS = { stream: true };
 
 class ResponseMetaData {
   constructor(request) {
-    let {responseHeaders} = request;
+    let { responseHeaders } = request;
     this.headers = {};
     for (let h of responseHeaders) {
       if (/^\s*Content-(Type|Disposition)\s*$/i.test(h.name)) {
-        let propertyName =  h.name.split("-")[1].trim();
+        let propertyName = h.name.split("-")[1].trim();
         propertyName = `content${propertyName.charAt(0).toUpperCase()}${propertyName.substring(1).toLowerCase()}`;
         this[propertyName] = h.value;
         this.headers[propertyName] = h;

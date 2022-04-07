@@ -24,15 +24,15 @@
 
   let fetchWebLabels = async args => {
     // see https://www.gnu.org/software/librejs/free-your-javascript.html#step3
-    let {map, cache} = args;
+    let { map, cache } = args;
     let link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
     let baseURL = link ? link.href : cache.webLabels && new URL(cache.webLabels.href, document.baseURI);
     if (baseURL) try {
       let response = await fetch(baseURL);
       if (!response.ok) throw `${response.status} ${response.statusText}`;
       let doc = new DOMParser().parseFromString(
-          await response.text(),
-          "text/html"
+        await response.text(),
+        "text/html"
       );
       let base = doc.querySelector("base");
       if (base) {
@@ -49,9 +49,9 @@
           let script = firstLink(cols[0]);
           let licenseLinks = allLinks(cols[1]);
           let sources = cols[2] ? allLinks(cols[2]) : [];
-          map.set(script.url, {script, licenseLinks, sources});
+          map.set(script.url, { script, licenseLinks, sources });
         } catch (e) {
-         console.error("LibreJS: error parsing Web Labels at %s, row %s", baseURL, row.innerHTML, e);
+          console.error("LibreJS: error parsing Web Labels at %s, row %s", baseURL, row.innerHTML, e);
         }
       }
     } catch (e) {
@@ -62,22 +62,22 @@
 
   let fetchLicenseInfo = async cache => {
     let map = new Map();
-    let args = {map, cache};
+    let args = { map, cache };
     // in the fetchXxx methods we add to a map whatever license(s)
     // URLs and source code references we can find in various formats
     // (WebLabels is currently the only implementation), keyed by script URLs.
     await Promise.all([
-    fetchWebLabels(args),
-    // fetchXmlSpdx(args),
-    // fetchTxtSpdx(args),
-    // ...
+      fetchWebLabels(args),
+      // fetchXmlSpdx(args),
+      // fetchTxtSpdx(args),
+      // ...
     ]);
     return map;
   }
 
   let handlers = {
     async checkLicensedScript(m) {
-      let {url, cache} = m;
+      let { url, cache } = m;
       if (!licensedScripts) licensedScripts = await fetchLicenseInfo(cache);
       return licensedScripts.get(url) || licensedScripts.get(url.replace(/\?.*/, ''));
     }
@@ -86,7 +86,7 @@
   browser.runtime.onMessage.addListener(async m => {
     if (m.action in handlers) try {
       debug("Received message", m);
-      let result =  await handlers[m.action](m);
+      let result = await handlers[m.action](m);
       return result;
     } catch (e) {
       console.error(e);
