@@ -9,7 +9,7 @@ This manual is for GNU LibreJS (version @value{VERSION}, @value{UPDATED}),
 a GNU IceCat extension to detect and block nonfree nontrivial
 JavaScript on webpages.
 
-Copyright @copyright{} 2011 2012 2014 2015 Loic J. Duros
+Copyright @copyright{} 2011 2012 2014 2015 Loic J. Duros, 2022 Yuchen Pei
 
 @quotation
 Permission is granted to copy, distribute and/or modify this document
@@ -30,6 +30,7 @@ Texts.  A copy of the license is included in the section entitled
 @title GNU LibreJS
 @subtitle for version @value{VERSION}, @value{UPDATED}
 @author Loic J. Duros  (@email{librejs@@lduros.net})
+@author Yuchen Pei (@email{ycp@@gnu.org})
 @page
 @vskip 0pt plus 1filll
 @insertcopying
@@ -109,10 +110,12 @@ it to @email{bug-librejs@@gnu.org}.
 @cindex Installation
 
 You can install LibreJS directly using a generated @file{librejs.xpi}
-file, or by building it from source.
+file, or by building it from source (@xref{LibreJS Development Notes}).
 
-You can also download it from @url{https://addons.mozilla.org/addon/librejs/},
-but due to Mozilla's review process the download isn't always up to date.
+You can also download it from
+@url{https://www.gnu.org/software/librejs/} or
+@url{https://addons.mozilla.org/addon/librejs/}, but due to Mozilla's
+review process the download isn't always up to date.
 
 @node How to Use
 @chapter How to Use
@@ -250,10 +253,11 @@ Allowed primitives exclude:
 @chapter Free Licenses Detection
 @cindex freelicenses
 
-The machine readable format for license declarations that LibreJS uses has changed
-in the most recent version. This was necessary in order to not break the asynchronous
-JS loading model that browsers use. Scripts are now evaluated independent of eachother
-and strictly as they arrive.
+The machine readable format for license declarations that LibreJS uses
+has changed in the most recent version. This was necessary in order to
+not break the asynchronous JS loading model that browsers use. Scripts
+are now evaluated independent of eachother and strictly as they
+arrive.
 
 @node Setting Your JavaScript Free
 @chapter Setting Your JavaScript Free
@@ -302,95 +306,291 @@ This format is the same for both remote in-line scripts.
 [Script here]
 "// @@license-end"
 
-"Identifier" is a name of a license from the following list and "magnet link" is that 
-license's exact corresponding magnet link. 
+"Identifier" is a name of a license from the following list and the
+magnet link in the @code{canonicalUrl} field is that license's exact
+corresponding magnet link.
 
 @verbatim
 {
-	'Apache-2.0':{
-		'URL': 'http://www.apache.org/licenses/LICENSE-2.0',
-		'Magnet link': 'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
-	},
-	'Artistic-2.0':{
-		'URL': 'http://www.perlfoundation.org/artistic_license_2_0',
-		'Magnet link': 'magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt'
-	},
-	'Boost':{
-		'URL': 'http://www.boost.org/LICENSE_1_0.txt',
-		'Magnet link': 'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
-	},
-	'BSD-3-Clause':{
-		'URL': 'http://opensource.org/licenses/BSD-3-Clause',
-		'Magnet link': 'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt',
-	},
-	'CPAL-1.0':{
-		'URL': 'http://opensource.org/licenses/cpal_1.0',
-		'Magnet link': 'magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt'
-	},
-	'CC0-1.0':{
-		'URL': 'http://creativecommons.org/publicdomain/zero/1.0/legalcode',
-		'Magnet link': 'magnet:?xt=urn:btih:90dc5c0be029de84e523b9b3922520e79e0e6f08&dn=cc0.txt'
-	},
-	'EPL-1.0':{
-		'URL': 'http://www.eclipse.org/legal/epl-v10.html',
-		'Magnet link': 'magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt'
-	},
-	'Expat':{
-		'URL': 'http://www.jclark.com/xml/copying.txt',
-		'Magnet link': 'magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt'
-	},
-	'FreeBSD':{
-		'URL': 'http://www.freebsd.org/copyright/freebsd-license.html',
-		'Magnet link': 'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
-	},
-	'GPL-2.0':{
-		'URL': 'http://www.gnu.org/licenses/gpl-2.0.html',
-		'Magnet link': 'magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt'
-	},
-	'GPL-3.0':{
-		'URL': 'http://www.gnu.org/licenses/gpl-3.0.html',
-		'Magnet link': 'magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt'
-	},
-	'LGPL-2.1':{
-		'URL': 'http://www.gnu.org/licenses/lgpl-2.1.html',
-		'Magnet link': 'magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a89eac2&dn=lgpl-2.1.txt'
-	},
-	'LGPL-3.0':{
-		'URL': 'http://www.gnu.org/licenses/lgpl-3.0.html',
-		'Magnet link': 'magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317705f85&dn=lgpl-3.0.txt'
-	},
-	'AGPL-3.0':{
-		'URL': 'http://www.gnu.org/licenses/agpl-3.0.html',
-		'Magnet link': 'magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt'
-	},
-	'ISC':{
-		'URL': 'https://www.isc.org/downloads/software-support-policy/isc-license/',
-		'Magnet link': 'magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt'
-	},
-	'MPL-2.0':{
-		'URL': 'http://www.mozilla.org/MPL/2.0',
-		'Magnet link': 'magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt'
-	},
-	'UPL-1.0': {
-		'URL': 'https://oss.oracle.com/licenses/upl/',
-		'Magnet link': 'magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt'
-	},
-	'WTFPL': {
-		'URL': 'http://www.wtfpl.net/txt/copying/',
-		'Magnet link': 'magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt'
-	},
-	'Unlicense':{
-		'URL': 'http://unlicense.org/UNLICENSE',
-		'Magnet link': 'magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt'
-	},
-	'X11':{
-		'URL': 'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
-		'Magnet link': 'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'	
-	},
-	'Modified-BSD':{
-		'URL': 'http://www.xfree86.org/current/LICENSE4.html',
-		'Magnet link': 'magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt'
-	}
+  'AGPL-3.0': {
+    licenseName: 'GNU AFFERO GENERAL PUBLIC LICENSE version 3',
+    identifier: 'AGPL-3.0',
+    canonicalUrl: [
+      'http://www.gnu.org/licenses/agpl-3.0.html',
+      'magnet:?xt=urn:btih:0b31508aeb0634b347b8270c7bee4d411b5d4109&dn=agpl-3.0.txt'
+    ],
+
+  },
+
+  'Apache-2.0': {
+    licenseName: 'Apache License, Version 2.0',
+    identifier: 'Apache-2.0',
+    canonicalUrl: [
+      'http://www.apache.org/licenses/LICENSE-2.0',
+      'magnet:?xt=urn:btih:8e4f440f4c65981c5bf93c76d35135ba5064d8b7&dn=apache-2.0.txt'
+    ],
+  },
+
+  'Artistic-2.0': {
+    licenseName: "Artistic License 2.0",
+    identifier: 'Artistic-2.0',
+    canonicalUrl: [
+      "http://www.perlfoundation.org/artistic_license_2_0",
+      "magnet:?xt=urn:btih:54fd2283f9dbdf29466d2df1a98bf8f65cafe314&dn=artistic-2.0.txt"
+    ],
+  },
+
+  'BSD-2-Clause': {
+    licenseName: "BSD 2-Clause License",
+    identifier: 'BSD-2-Clause',
+    canonicalUrl: [
+      'http://www.freebsd.org/copyright/freebsd-license.html',
+      'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
+    ],
+  },
+
+  'BSD-3-Clause': {
+    licenseName: "BSD 3-Clause License",
+    identifier: 'BSD-3-Clause',
+    canonicalUrl: [
+      'http://opensource.org/licenses/BSD-3-Clause',
+      'magnet:?xt=urn:btih:c80d50af7d3db9be66a4d0a86db0286e4fd33292&dn=bsd-3-clause.txt'
+    ],
+  },
+
+  'BSL-1.0': {
+    licenseName: 'Boost Software License 1.0',
+    identifier: 'BSL-1.0',
+    canonicalUrl: [
+      'http://www.boost.org/LICENSE_1_0.txt',
+      'magnet:?xt=urn:btih:89a97c535628232f2f3888c2b7b8ffd4c078cec0&dn=Boost-1.0.txt'
+    ],
+  },
+
+  'CC-BY-1.0': {
+    licenseName: 'Creative Commons Attribution 1.0 Generic',
+    identifier: 'CC-BY-1.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by/1.0/'],
+  },
+
+  'CC-BY-2.0': {
+    licenseName: 'Creative Commons Attribution 2.0 Generic',
+    identifier: 'CC-BY-2.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by/2.0/'],
+  },
+
+  'CC-BY-2.5': {
+    licenseName: 'Creative Commons Attribution 2.5 Generic',
+    identifier: 'CC-BY-2.5',
+    canonicalUrl: ['https://creativecommons.org/licenses/by/2.5/'],
+  },
+
+  'CC-BY-3.0': {
+    licenseName: 'Creative Commons Attribution 3.0 Unported',
+    identifier: 'CC-BY-3.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by/3.0/'],
+  },
+
+  'CC-BY-4.0': {
+    licenseName: 'Creative Commons Attribution 4.0 International',
+    identifier: 'CC-BY-4.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by/4.0/'],
+  },
+
+  'CC-BY-SA-1.0': {
+    licenseName: 'Creative Commons Attribution-ShareAlike 1.0 Generic',
+    identifier: 'CC-BY-SA-1.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by-sa/1.0/'],
+  },
+
+  'CC-BY-SA-2.0': {
+    licenseName: 'Creative Commons Attribution-ShareAlike 2.0 Generic',
+    identifier: 'CC-BY-SA-2.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by-sa/2.0/'],
+  },
+
+  'CC-BY-SA-2.5': {
+    licenseName: 'Creative Commons Attribution-ShareAlike 2.5 Generic',
+    identifier: 'CC-BY-SA-2.5',
+    canonicalUrl: ['https://creativecommons.org/licenses/by-sa/2.5/'],
+  },
+
+  'CC-BY-SA-3.0': {
+    licenseName: 'Creative Commons Attribution-ShareAlike 3.0 Unported',
+    identifier: 'CC-BY-SA-3.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by-sa/3.0/'],
+  },
+
+  'CC-BY-SA-4.0': {
+    licenseName: 'Creative Commons Attribution-ShareAlike 4.0 International',
+    identifier: 'CC-BY-SA-4.0',
+    canonicalUrl: ['https://creativecommons.org/licenses/by-sa/4.0/'],
+  },
+
+  'CC0-1.0': {
+    licenseName: 'Creative Commons CC0 1.0 Universal',
+    identifier: 'CC0-1.0',
+    canonicalUrl: [
+      'http://creativecommons.org/publicdomain/zero/1.0/legalcode',
+      'magnet:?xt=urn:btih:90dc5c0be029de84e523b9b3922520e79e0e6f08&dn=cc0.txt'
+    ],
+  },
+
+  'CPAL-1.0': {
+    licenseName: 'Common Public Attribution License Version 1.0 (CPAL)',
+    identifier: 'CPAL-1.0',
+    canonicalUrl: [
+      'http://opensource.org/licenses/cpal_1.0',
+      'magnet:?xt=urn:btih:84143bc45939fc8fa42921d619a95462c2031c5c&dn=cpal-1.0.txt'
+    ],
+  },
+
+  'EPL-1.0': {
+    licenseName: "Eclipse Public License Version 1.0",
+    identifier: "EPL-1.0",
+    canonicalUrl: [
+      "http://www.eclipse.org/legal/epl-v10.html",
+      "magnet:?xt=urn:btih:4c6a2ad0018cd461e9b0fc44e1b340d2c1828b22&dn=epl-1.0.txt"
+    ],
+  },
+
+  'Expat': {
+    licenseName: 'Expat License (sometimes called MIT Licensed)',
+    identifier: 'Expat',
+    canonicalUrl: [
+      'http://www.jclark.com/xml/copying.txt',
+      'magnet:?xt=urn:btih:d3d9a9a6595521f9666a5e94cc830dab83b65699&dn=expat.txt'
+    ],
+  },
+
+  'FreeBSD': {
+    licenseName: "FreeBSD License",
+    identifier: 'FreeBSD',
+    canonicalUrl: [
+      'http://www.freebsd.org/copyright/freebsd-license.html',
+      'magnet:?xt=urn:btih:87f119ba0b429ba17a44b4bffcab33165ebdacc0&dn=freebsd.txt'
+    ],
+  },
+
+  'GNU-All-Permissive': {
+    licenseName: 'GNU All-Permissive License',
+    identifier: 'GNU-All-Permissive',
+    canonicalUrl: [],
+  },
+
+  'GPL-2.0': {
+    licenseName: 'GNU General Public License (GPL) version 2',
+    identifier: 'GPL-2.0',
+    canonicalUrl: [
+      'http://www.gnu.org/licenses/gpl-2.0.html',
+      'magnet:?xt=urn:btih:cf05388f2679ee054f2beb29a391d25f4e673ac3&dn=gpl-2.0.txt'
+    ],
+  },
+
+  'GPL-3.0': {
+    licenseName: 'GNU General Public License (GPL) version 3',
+    identifier: 'GPL-3.0',
+    canonicalUrl: [
+      'http://www.gnu.org/licenses/gpl-3.0.html',
+      'magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt'
+    ],
+  },
+
+  'ISC': {
+    licenseName: "The ISC License",
+    identifier: 'ISC',
+    canonicalUrl: [
+      'https://www.isc.org/downloads/software-support-policy/isc-license/',
+      'magnet:?xt=urn:btih:b8999bbaf509c08d127678643c515b9ab0836bae&dn=ISC.txt'
+    ],
+  },
+
+  'jQueryTools': {
+    licenseName: "jQuery Tools",
+    identifier: 'jQueryTools',
+    canonicalUrl: [],
+  },
+
+  'LGPL-2.1': {
+    licenseName: 'GNU Lesser General Public License, version 2.1',
+    identifier: 'LGPL-2.1',
+    canonicalUrl: [
+      'http://www.gnu.org/licenses/lgpl-2.1.html',
+      'magnet:?xt=urn:btih:5de60da917303dbfad4f93fb1b985ced5a89eac2&dn=lgpl-2.1.txt'
+    ],
+  },
+
+  'LGPL-3.0': {
+    licenseName: 'GNU Lesser General Public License, version 3',
+    identifier: 'LGPL-3.0',
+    canonicalUrl: [
+      'http://www.gnu.org/licenses/lgpl-3.0.html',
+      'magnet:?xt=urn:btih:0ef1b8170b3b615170ff270def6427c317705f85&dn=lgpl-3.0.txt'
+    ],
+  },
+
+  'MPL-2.0': {
+    licenseName: 'Mozilla Public License Version 2.0',
+    identifier: 'MPL-2.0',
+    canonicalUrl: [
+      'http://www.mozilla.org/MPL/2.0',
+      'magnet:?xt=urn:btih:3877d6d54b3accd4bc32f8a48bf32ebc0901502a&dn=mpl-2.0.txt'
+    ],
+  },
+
+  'PublicDomain': {
+    licenseName: 'Public Domain',
+    identifier: 'PublicDomain',
+    canonicalUrl: [
+      'magnet:?xt=urn:btih:e95b018ef3580986a04669f1b5879592219e2a7a&dn=public-domain.txt'
+    ],
+  },
+
+
+  'Unlicense': {
+    licenseName: 'Unlicense',
+    identifier: 'Unlicense',
+    canonicalUrl: [
+      'http://unlicense.org/UNLICENSE',
+      'magnet:?xt=urn:btih:5ac446d35272cc2e4e85e4325b146d0b7ca8f50c&dn=unlicense.txt'
+    ],
+  },
+
+  'UPL': {
+    licenseName: 'Universal Permissive License',
+    identifier: 'UPL-1.0',
+    canonicalUrl: [
+      'https://oss.oracle.com/licenses/upl/',
+      'magnet:?xt=urn:btih:478974f4d41c3fa84c4befba25f283527fad107d&dn=upl-1.0.txt'
+    ],
+  },
+
+  'WTFPL': {
+    licenseName: 'Do What The F*ck You Want To Public License (WTFPL)',
+    identifier: 'WTFPL',
+    canonicalUrl: [
+      'http://www.wtfpl.net/txt/copying/',
+      'magnet:?xt=urn:btih:723febf9f6185544f57f0660a41489c7d6b4931b&dn=wtfpl.txt'
+    ],
+  },
+
+  'X11': {
+    licenseName: 'X11 License',
+    identifier: 'X11',
+    canonicalUrl: [
+      'magnet:?xt=urn:btih:5305d91886084f776adcf57509a648432709a7c7&dn=x11.txt'
+    ],
+  },
+
+  'XFree86-1.1': {
+    licenseName: "XFree86 1.1 License",
+    identifier: 'XFree86-1.1',
+    canonicalUrl: [
+      'http://www.xfree86.org/3.3.6/COPYRIGHT2.html#3',
+      'http://www.xfree86.org/current/LICENSE4.html',
+      'magnet:?xt=urn:btih:12f2ec9e8de2a3b0002a33d518d6010cc8ab2ae9&dn=xfree86.txt'
+    ],
+  },
 }
 @end verbatim
 
@@ -405,6 +605,13 @@ information.
 Many free licenses are listed in this page:
 @url{http://www.gnu.org/licenses/license-list.html}
 
+@section Known limitations
+
+Service workers may cause false positives and false negatives, and
+there are multiple ways to disable them.  The cleanest way is by
+setting @code{dom.serviceWorkers.enabled} to @code{false} in the
+@code{about:config} page of your browser.
+
 @node LibreJS Development Notes
 @chapter LibreJS Development Notes
 
@@ -414,9 +621,7 @@ LibreJS @value{VERSION} depends on a number of Node.js-based libraries that
 can be installed using the @code{npm} utility:
 
 @verbatim
-  $ npm install acorn-loose
-  $ npm install jssha
-  $ npm install browserify
+  $ npm install acorn-loose jassha browserify
   $ export PATH=$PATH:./node_modules/.bin
 @end verbatim
 
@@ -449,16 +654,62 @@ To debug LibreJS, visit the special URL @code{about:debugging}. Click
 on `Enable add-on debugging` then `Load Temporary Add-on`. Navigate
 to LibreJS's unpacked source directory and select @file{manifest.json}.
 
-Lines 39 and 40 in @file{main_background.js} assign two variables controlling
-the verbosity of @code{dbg_print()} statements. Make sure these are set to false
-before building a release.
+Lines 39 and 40 in @file{main_background.js} assign two variables
+controlling the verbosity of @code{dbg_print()} statements. Make sure
+these are set to false before building a release.
 
 @section Testing
 
-An automated test suite runs automatically in its own tab whenever the extension
-is loaded as a "Temporary add-on" from @code{about:debugging}.
-Otherwise (if included in the xpi) it can be launched from the
-UI by clicking the "Automated self test..." button.
+An automated test suite runs automatically in its own tab whenever the
+extension is loaded as a "Temporary add-on" from
+@code{about:debugging}.  Otherwise (if included in the xpi) it can be
+launched from the UI by clicking the "Automated self test..." button.
+
+@section Headless testing
+
+To launch the test suite from the command line, ensure the xpi package
+has been built with automated test suite. Then install
+selenium-webdriver and geckodriver, and ensure the latter is in $PATH:
+@verbatim
+  $ npm install selenium-webdriver geckodriver
+  $ export PATH=$PATH:./node_modules/.bin
+@end verbatim
+
+Now you can invoke the test with
+@verbatim
+  $ node ./test.js
+@end verbatim
+
+which will print out a summary of test results.
+
+Optionally you can also test with a chosen seed
+@verbatim
+  $ node ./test.js 12345
+@end verbatim
+
+@section Headless compliance check
+To check whether a webpage is LibreJS-compliant from the command line,
+ensure that the xpi package has been built WITHOUT the automated test
+suite. Then install selenium-webdriver and geckodriver, and ensure the
+latter is in $PATH:
+@verbatim
+  $ npm install selenium-webdriver
+  $ npm install geckodriver
+  $ export PATH=$PATH:./node_modules/.bin
+@end verbatim
+
+Now you can check a webpage for compliance with
+@verbatim
+  $ node ./compliance.js <url>
+@end verbatim
+
+It will open the url in a headless browser, save a screenshot, and
+output the compliance check result.
+
+For example, to check the compliance of the FSF homepage, do
+@verbatim
+  $ node ./compliance.js https://fsf.org
+@end verbatim
 
 @section Adding new whitelisted libraries
 
