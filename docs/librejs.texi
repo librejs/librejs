@@ -283,7 +283,7 @@ code, try to find a free alternative.
 
 @item
 If you're using a third-party service such as an analytics service,
-replace it with a free alternative like Piwik.
+replace it with a free alternative like Matomo.
 
 @item
 If you can't find free JavaScript that has already been developed,
