@@ -651,7 +651,8 @@ function license_read(scriptSrc, name, external = false) {
     // let's check the actual license
     uneditedSrc = uneditedSrc.substring(openingIndex);
 
-    const closureMatch = /\/([*/])\s*@license-end\b[^*/\n]*/i.exec(uneditedSrc);
+    const closureMatch =
+      /\/([*/])\s*@license-end\s*(\*\/)?/mi.exec(uneditedSrc);
     if (!closureMatch) {
       const msg = 'ERROR: @license with no @license-end';
       return [false, `\n/*\n ${msg} \n*/\n`, msg];
