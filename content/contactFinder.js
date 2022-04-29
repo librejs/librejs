@@ -308,7 +308,7 @@ function main() {
       }
       content.appendChild(list);
     }
-    Array.forEach(contentDoc.querySelectorAll(".close, a"), makeCloser);
+    contentDoc.querySelectorAll(".close, a").forEach(makeCloser);
     debug("frame initialized");
   }
 
