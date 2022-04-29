@@ -31,10 +31,18 @@ exports.patternUtils = {
   removeNonalpha: function(str) {
     return str.replace(/[^a-z0-9<>@]+/gi, '');
   },
+
   removeWhitespace: function(str) {
     return str.replace(/\/\//gmi, '').replace(/\*/gmi, '').replace(/\s+/gmi, '');
   },
+
   replaceTokens: function(str) {
     return str.replace(/<.*?>/gi, '.*?');
+  },
+
+  removeJsComments: function(str) {
+    const ml_comments = /\/\*.*?(\*\/)/g;
+    const il_comments = /\/\/.*/gm;
+    return str.replace(ml_comments, '').replace(il_comments, '');
   }
 };

@@ -27,6 +27,7 @@ const { Storage, ListStore, hash } = require('./common/Storage');
 const { ListManager } = require('./bg/ListManager');
 const { ExternalLicenses } = require('./bg/ExternalLicenses');
 const { licenses } = require('./license_definitions');
+const { patternUtils } = require('./pattern_utils');
 
 console.log('main_background.js');
 /**
@@ -540,8 +541,8 @@ function evaluate(script, name) {
     return new RegExp('(?:[^\\w\\d]|^|(?:' + arith_operators + '))' + object + '(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)', 'g');
   }
   reserved_object_regex('window');
-  var ml_comment = /\/\*([\s\S]+?)\*\//g;
-  var il_comment = /\/\/.+/gm;
+  const ml_comment = /\/\*([\s\S]+?)\*\//g;
+  const il_comment = /\/\/.+/gm;
   var temp = script.replace(/'.+?'+/gm, '\'string\'');
   temp = temp.replace(/".+?"+/gm, '"string"');
   temp = temp.replace(ml_comment, '');
@@ -616,7 +617,7 @@ function license_read(scriptSrc, name, external = false) {
   let partsAccepted = false;
 
   function checkTriviality(s) {
-    if (!s.trim()) {
+    if (!patternUtils.removeJsComments(s).trim()) {
       return true; // empty, ignore it
     }
     const [trivial, message] = external ?
