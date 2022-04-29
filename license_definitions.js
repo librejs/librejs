@@ -177,6 +177,16 @@ exports.licenses = {
     licenseFragments: []
   },
 
+  'CECILL-2.0': {
+    licenseName: 'CeCILL Free Software License Agreement v2.0',
+    identifier: 'CECILL-2.0',
+    canonicalUrl: [
+      'https://www.cecill.info/licences/Licence_CeCILL_V2-en.txt',
+      'magnet:?xt=urn:btih:dda0473d240d7febeac8fa265da27286ead0b1ce&dn=cecill-2.0.txt'
+    ],
+    licenseFragments: []
+  },
+
   'CPAL-1.0': {
     licenseName: 'Common Public Attribution License Version 1.0 (CPAL)',
     identifier: 'CPAL-1.0',
@@ -388,5 +398,16 @@ exports.licenses = {
     ],
     licenseFragments: [{ text: "All rights reserved.\nPermission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:\n1. Redistributions of source code must retain the above copyright notice, this list of conditions, and the following disclaimer.\n2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution, and in the same place and form as other copyright, license and disclaimer information.\n3. The end-user documentation included with the redistribution, if any, must include the following acknowledgment: \"This product includes software developed by The XFree86 Project, Inc (http://www.xfree86.org/) and its contributors\", in the same place and form as other third-party acknowledgments. Alternately, this acknowledgment may appear in the software itself, in the same form and location as other such third-party acknowledgments.4. Except as contained in this notice, the name of The XFree86 Project, Inc shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from The XFree86 Project, Inc.", type: type.SHORT }
     ]
+  },
+
+  'Zlib': {
+    licenseName: 'zlib License',
+    canonicalUrl: [
+      'https://www.zlib.net/zlib_license.html',
+      'https://spdx.org/licenses/Zlib.txt',
+      'magnet:?xt=urn:btih:922bd98043fa3daf4f9417e3e8fec8406b1961a3&dn=zlib.txt'
+    ],
+    identifier: 'Zlib',
+    licenseFragments: []
   },
 };
