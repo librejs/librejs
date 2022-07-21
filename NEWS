@@ -1,4 +1,19 @@
+New in 7.21.0
+
+	* Fix bug #59021
+	* Add headless test, which can be used by website developers to
+	test LibreJS-compliance of their website
+	* Fix license validation to check magnet link only for @license /
+	@license-end method
+	* Update documentation
+	* Fix complaint dialog close bug
+	(https://lists.gnu.org/archive/html/bug-librejs/2021-09/msg00002.html)
+	* Fix @license-end detection to detect accept /* */ comments (bug
+	#59533)
+	* Add CECILL-2.0 and zlib license (bug #50682 and #53221)
+	* Fix subresource integraty hash-busting bug (bug #62464 and #58131)
+
 New in 7.20.3
 
-    * Fix build by updating json files
-    * Fix hanging on certain websites
+	* Fix build by updating json files
+	* Fix hanging on certain websites

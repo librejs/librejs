@@ -728,6 +728,8 @@ Update the version number in manifest.json.
 Make sure debug statements are set to false on lines 39/40 in
 @file{main_background.js}.
 
+Update the version number in docs/version.texi
+
 Then run the build script @file{build.sh}.
 
 @node Installation Requirements
