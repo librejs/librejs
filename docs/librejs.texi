@@ -775,8 +775,8 @@ Update the download links on the LibreJS webpage
 (@url{https://gnu.org/s/librejs}) to point to the new release.
 
 @item
-Announce to info-gnu, help-librejs, bug-librejs mailing list, and
-the Savannah project News section.
+Announce to info-gnu, help-librejs, bug-librejs mailing lists, and the
+Savannah project News section.
 
 @item
 (Optional) Update projects that uses LibreJS like gnuzilla and
