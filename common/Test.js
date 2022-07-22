@@ -21,7 +21,7 @@
 
 'use strict';
 var Test = (() => {
-  const RUNNER_URL = browser.extension.getURL('/test/SpecRunner.html');
+  const RUNNER_URL = browser.runtime.getURL('/test/SpecRunner.html');
   return {
     /*
       returns RUNNER_URL if it's a test-enabled build or an about:debugging

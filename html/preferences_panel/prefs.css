@@ -73,7 +73,7 @@ input[type="text"] {
 
 #new-site {
   display: flex;
-  flex 2;
+  flex: 2;
 }
 .error-msg {
   color: red;
