@@ -767,7 +767,8 @@ new version.  Download the signed xpi from Mozilla website
 
 @item
 Follow the steps in Information for GNU Maintainer to upload the
-source tar ball (downloadable from cgit) and the signed xpi.
+source tar ball (downloadable from cgit) and the signed xpi to the GNU
+FTP server.
 
 @item
 Update the download links on the LibreJS webpage
