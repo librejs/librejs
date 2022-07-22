@@ -723,14 +723,64 @@ place in main_background.js.
 
 @section Releasing a new version
 
-Update the version number in manifest.json.
+@enumerate
 
+@item
+Run some tests and make sure they all pass.
+
+@item
 Make sure debug statements are set to false on lines 39/40 in
 @file{main_background.js}.
 
-Update the version number in docs/version.texi
+@item
+Update the version number in manifest.json.
 
-Then run the build script @file{build.sh}.
+@item
+Add user-visible changes to @file{NEWS}.
+
+@item
+Update the version number in @file{docs/version.texi}.
+
+@item
+Commit and tag the release, and push to Savannah.
+
+@item
+Run build.sh in a clean repo and upload the generated
+@file{librejs.xpi} to Mozilla.
+
+@item
+Fix any validation warnings or errors during the upload in the
+previous step, test, re-tag the release, re-push to Savannah, and
+re-upload to Mozilla.
+
+@item
+Generate docs from @file{docs/} using gnulib gendocs.sh script
+(@url{https://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=build-aux/gendocs.sh}),
+and commit the docs to the website cvs repo under the @file{manual/}
+directory.  This will update the docs at
+@url{https://www.gnu.org/software/librejs/manual/}.
+
+@item
+From this step onwards it is required that Mozilla has approved the
+new version.  Download the signed xpi from Mozilla website
+(@url{https://addons.mozilla.org/en-US/firefox/addon/librejs/}).
+
+@item
+Follow the steps in Information for GNU Maintainer to upload the
+source tar ball (downloadable from cgit) and the signed xpi.
+
+@item
+Update the download links on the LibreJS webpage
+(@url{https://gnu.org/s/librejs}) to point to the new release.
+
+@item
+Announce to info-gnu, help-librejs, bug-librejs mailing list, and
+the Savannah project News section.
+
+@item
+(Optional) Update projects that uses LibreJS like gnuzilla and
+abrowser.
+@end enumerate
 
 @node Installation Requirements
 @appendix Installation Requirements
