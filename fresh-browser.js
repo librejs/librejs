@@ -24,6 +24,7 @@
  * for manual testing.
  * Usage:
  * node ./fresh-browser.js [url]
+ * Without the optional [url], a tab with "inspect librejs" will open
  */
 
 (function freshBrowser() {
@@ -36,5 +37,7 @@
     ).build()
     .then(driver =>
       driver.installAddon("./librejs.xpi", /*isTemporary=*/true)
-        .then(process.argv[2] ? driver.get(process.argv[2]) : {}));
+        .then(process.argv[2] ? driver.get(process.argv[2]) :
+          driver.sleep(2000)
+            .then(_ => driver.get("about:devtools-toolbox?id=jid1-KtlZuoiikVfFew%40jetpack&type=extension"))));
 })();
