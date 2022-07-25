@@ -46,7 +46,10 @@
         .then(_ => driver.wait(_ =>
           driver.findElement(webdriver.By.css('.jasmine-alert'))
             .then(e => e.getText()), 10000))
-        .then(_ => driver.findElement(webdriver.By.css('.jasmine-alert')))
+        .then(_ => driver.findElement(webdriver.By.css('.jasmine-overall-result')))
+        .then(e => e.getText())
+        .then(console.log)
+        .then(_ => driver.findElement(webdriver.By.css('.jasmine-results')))
         .then(e => e.getText())
         .then(console.log)
         .then(_ => driver.quit())
