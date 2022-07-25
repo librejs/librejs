@@ -282,6 +282,22 @@ describe('LibreJS\' components', () => {
       expect(scriptInfo).toBeNull();
     });
   });
+
+  describe('Contact finder', () => {
+    it('should display the contact finder iframe', async (done) => {
+      await browser.runtime.connect({ name: "port-from-cs" }).postMessage({ invoke_contact_finder: 1 });
+      // Direct await / async does not work as executeScript does not wait
+      // for the listener
+      setTimeout(async () => {
+        const frame = await browser.tabs.executeScript(tab.id, {
+          code: 'document.getElementById("_LibreJS_frame").outerHTML'
+        })
+        expect(frame).toBeTruthy();
+        done();
+      }, 100);
+    });
+  });
+
   afterAll(async () => {
     await browser.tabs.remove(tab.id);
     browser.tabs.update((await browser.tabs.getCurrent()).id, { active: true });
