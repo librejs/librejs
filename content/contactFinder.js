@@ -43,27 +43,14 @@ function debug(format, ...args) {
   console.debug(`LibreJS - ${format}`, ...args);
 }
 
-var myPort;
-
 debug("Injecting contact finder in %s", document.URL);
-
-// email address regexp
-var reEmail = /^mailto\:(admin|feedback|webmaster|info|contact|support|comments|team|help)\@[a-z0-9.\-]+\.[a-z]{2,4}$/i;
-
-var reAnyEmail = /^mailto\:.*?\@[a-z0-9\.\-]+\.[a-z]{2,4}$/i;
-
-// twitter address regexp
-var reTwitter = /twitter\.com\/(\!?#\/)?[a-z0-9]*/i;
-
-// identi.ca address regexp
-var reIdentiCa = /identi\.ca\/(?!notice\/)[a-z0-9]*/i;
 
 /**
  * contactSearchStrings
  * Contains arrays of strings classified by language
  * and by degree of certainty.
  */
-var contactStr = {
+const contactFrags = {
   'da': {
     'certain': [
       '^[\\s]*Kontakt os[\\s]*$',
@@ -124,25 +111,10 @@ var contactStr = {
   }
 };
 
-var usaPhoneNumber = new RegExp(/(?:\+ ?1 ?)?\(?[2-9]{1}[0-9]{2}\)?(?:\-|\.| )?[0-9]{3}(?:\-|\.| )[0-9]{4}(?:[^0-9])/mg);
 // Taken from http://emailregex.com/
-var email_regex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
+const email_regex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
 //*********************************************************************************************
 
-var prefs;
-
-/**
-*	returns input with all elements not of type string removed
-*/
-function remove_not_str(a) {
-  var new_a = [];
-  for (var i in a) {
-    if (typeof (a[i]) == "string") {
-      new_a.push(a[i])
-    }
-  }
-  return new_a;
-}
 /**
 *	Tests all links on the page for regexes under a certain certainty level.
 *
@@ -151,41 +123,34 @@ function remove_not_str(a) {
 *
 *	certainty_lvl can be "certain" > "probable" > "uncertain"
 */
-function attempt(certainty_lvl, first = true) {
+function attempt(certaintyLvl, first = true) {
   // There needs to be some kind of max so that people can't troll by for example leaving a comment with a bunch of emails
   // to cause LibreJS users to slow down.
-  var fail_flag = true;
-  var flag;
-  var matches = [];
-  var result = [];
-  var str_under_test = "";
-  for (var i in document.links) {
-    if (typeof (document.links[i].innerText) != "string" || typeof (document.links[i].href) != "string") {
+  const matches = [];
+  for (const link of document.links) {
+    if (typeof (link.innerText) !== "string" || typeof (link.href) !== "string") {
       continue;
     }
-    str_under_test = document.links[i].innerText + " " + document.links[i].href;
-    flag = true;
-    for (var j in contactStr) {
-      for (var k in contactStr[j][certainty_lvl]) {
-        if (flag) {
-          result = [];
-          result = str_under_test.match(new RegExp(contactStr[j][certainty_lvl][k], "g"));
-          result = remove_not_str(result);
-          if (result !== undefined && typeof (result[0]) == "string") {
+    const strUnderTest = link.innerText + " " + link.href;
+    const matched = false;
+    for (const byLevel of Object.values(contactFrags)) {
+      for (const frag of byLevel[certaintyLvl]) {
+        if (!matched) {
+          const result = strUnderTest.match(new RegExp(frag, "g")).filter(x => typeof x == "string");
+          if (result && typeof (result[0]) === "string") {
             if (first) {
-              return { "fail": false, "result": document.links[i] };
+              return { "fail": false, "result": link };
             } else {
-              //console.log(document.links[i].href + " matched " + contactStr[j][certainty_lvl][k]);
-              matches.push(document.links[i]);
-              fail_flag = false;
-              flag = false;
+              //console.log(link.href + " matched " + contactFrags[j][certainty_lvl][k]);
+              matches.push(link);
+              matched = true;
             }
           }
         }
       }
     }
   }
-  return { "fail": fail_flag, "result": matches };
+  return { "fail": notMatched, "result": matches };
 }
 
 /**
@@ -193,46 +158,20 @@ function attempt(certainty_lvl, first = true) {
 *	maintainer of the site, Twitter and identi.ca links, and phone numbers."
 */
 function find_contacts() {
-  var all = document.documentElement.innerText;
-  var phone_num = [];
-  var twitlinks = [];
-  var identi = [];
-  var contact_pages = [];
-  var res = attempt("certain");
-  var flag = true;
-  var type = "";
-  if (res["fail"] == false) {
-    type = "certain";
-    res = res["result"];
-    flag = false;
-  }
-  if (flag) {
-    res = attempt("probable");
-    if (res["fail"] == false) {
-      type = "probable";
-      res = res["result"];
-      flag = false;
+  for (const type of ["certain", "probable", "uncertain"]) {
+    const attempted = attempt(type);
+    if (!attempted["fail"]) {
+      return [type, attempted["result"]];
     }
   }
-  if (flag) {
-    res = attempt("uncertain");
-    if (res["fail"] == false) {
-      type = "uncertain";
-      res = res["result"];
-      flag = false;
-    }
-  }
-  if (flag) {
-    return res;
-  }
-  return [type, res];
+  return null;
 }
 
 
 function createWidget(id, tag, parent = document.body) {
-  let widget = document.getElementById(id);
-  if (widget) widget.remove();
-  widget = parent.appendChild(document.createElement(tag));
+  const oldWidget = document.getElementById(id);
+  if (oldWidget) oldWidget.remove();
+  const widget = parent.appendChild(document.createElement(tag));
   widget.id = id;
   return widget;
 }
@@ -244,48 +183,47 @@ function createWidget(id, tag, parent = document.body) {
 */
 
 function main() {
-  let overlay = createWidget("_LibreJS_overlay", "div");
-  let frame = createWidget("_LibreJS_frame", "iframe");
+  const overlay = createWidget("_LibreJS_overlay", "div");
+  const frame = createWidget("_LibreJS_frame", "iframe");
 
-  let close = () => {
+  const close = () => {
     frame.remove();
     overlay.remove();
   };
 
-  let closeListener = e => {
-    let t = e.currentTarget;
-    if (t.href) { // link navigation
-      if (t.href !== document.URL) {
-        if (t.href.includes("#")) {
-          window.addEventListener("hashchange", close);
-        }
-        return;
+  const closeListener = e => {
+    const t = e.currentTarget;
+    if (t.href && t.href !== document.URL) { // link navigation
+      if (t.href.includes("#")) {
+        window.addEventListener("hashchange", close);
       }
+      return;
     }
     close();
   };
-  let makeCloser = clickable => clickable.addEventListener("click", closeListener);
+  const makeCloser = clickable => clickable.addEventListener("click", closeListener);
 
   makeCloser(overlay);
 
-  let initFrame = () => {
+  const initFrame = prefs => {
     debug("initFrame");
-    let res = find_contacts();
-    let contentDoc = frame.contentWindow.document;
-    let { body } = contentDoc;
+    const res = find_contacts();
+    const contentDoc = frame.contentWindow.document;
+    const { body } = contentDoc;
     body.id = "_LibreJS_dialog";
     body.innerHTML = `<h1>LibreJS Complaint</h1><button class='close'>x</button>`;
     contentDoc.documentElement.appendChild(contentDoc.createElement("base")).target = "_top";
-    let content = body.appendChild(contentDoc.createElement("div"));
+    const content = body.appendChild(contentDoc.createElement("div"));
     content.id = "content";
-    let addHTML = s => content.insertAdjacentHTML("beforeend", s);
-    if ("fail" in res) {
+    // TODO: fix warning
+    const addHTML = s => content.insertAdjacentHTML("beforeend", s);
+    if (!res) {
       content.classList.toggle("_LibreJS_fail", true)
       addHTML("<div>Could not guess any contact page for this site.</div>");
     } else {
       addHTML("<h3>Contact info guessed for this site</h3>");
       if (typeof (res[1]) === "string") {
-        let a = contentDoc.createElement("a");
+        const a = contentDoc.createElement("a");
         a.href = a.textContent = res[1];
         content.appendChild(a);
       } else if (typeof (res[1]) === "object") {
@@ -293,13 +231,13 @@ function main() {
       }
     }
 
-    let emails = document.documentElement.textContent.match(email_regex);
-    if (emails && (emails = Array.filter(emails, e => !!e)).length) {
+    // TODO: check this change is ok, i.e. if the result of match is null filter still works
+    const emails = document.documentElement.textContent.match(email_regex).filter(e => !!e);
+    if (emails && emails.length) {
       addHTML("<h5>Possible email addresses:</h5>");
-      let list = contentDoc.createElement("ul");
-      for (let i = 0, max = Math.min(emails.length, 10); i < max; i++) {
-        let recipient = emails[i];
-        let a = contentDoc.createElement("a");
+      const list = contentDoc.createElement("ul");
+      for (const recipient of emails.slice(0, 10)) {
+        const a = contentDoc.createElement("a");
         a.href = `mailto:${recipient}?subject${encodeURIComponent(prefs["pref_subject"])
           }&body=${encodeURIComponent(prefs["pref_body"])
           }`;
@@ -312,14 +250,9 @@ function main() {
     debug("frame initialized");
   }
 
-
-
-  frame.addEventListener("load", e => {
+  frame.addEventListener("load", _ => {
     debug("frame loaded");
-    myPort = browser.runtime.connect({ name: "contact_finder" }).onMessage.addListener(m => {
-      prefs = m;
-      initFrame();
-    });
+    browser.runtime.connect({ name: "contact_finder" }).onMessage.addListener(initFrame);
   });
 }
 
