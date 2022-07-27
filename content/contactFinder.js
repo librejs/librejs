@@ -112,6 +112,8 @@ const contactFrags = [
   }
 ];
 
+const CONTACT_LINK_LIMIT = 5;
+
 // Taken from http://emailregex.com/
 const emailRegex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
 //*********************************************************************************************
@@ -130,7 +132,7 @@ function findMatch(link, frag) {
 *
 *	certainty can be "certain" > "probable" > "uncertain"
 */
-function attempt(certainty, limit = 1) {
+function attempt(certainty, limit) {
   // There needs to be some kind of max so that people can't troll by for example leaving a comment with a bunch of emails
   // to cause LibreJS users to slow down.
   const matches = [];
@@ -152,7 +154,7 @@ function attempt(certainty, limit = 1) {
 */
 function findContacts() {
   for (const type of ["certain", "probable", "uncertain"]) {
-    const attempted = attempt(type);
+    const attempted = attempt(type, CONTACT_LINK_LIMIT);
     if (!attempted["fail"]) {
       return [type, attempted["result"]];
     }
@@ -196,37 +198,51 @@ function main() {
   };
   const makeCloser = clickable => clickable.addEventListener("click", closeListener);
 
+  // Clicking the "outer area" closes the dialog.
   makeCloser(overlay);
 
   const initFrame = prefs => {
     debug("initFrame");
-    const res = findContacts();
     const contentDoc = frame.contentWindow.document;
+
+    const addText = (text, tag, wherein) => {
+      el = wherein.appendChild(contentDoc.createElement(tag));
+      el.textContent = text;
+    }
+
+    // Header of the dialog
     const { body } = contentDoc;
     body.id = "_LibreJS_dialog";
-    body.innerHTML = `<h1>LibreJS Complaint</h1><button class='close'>x</button>`;
-    contentDoc.documentElement.appendChild(contentDoc.createElement("base")).target = "_top";
+    addText('LibreJS Complaint', 'h1', body);
+    const closeButton = body.appendChild(contentDoc.createElement('button'));
+    closeButton.classList.toggle('close', true);
+    closeButton.textContent = 'x';
+
     const content = body.appendChild(contentDoc.createElement("div"));
     content.id = "content";
-    // TODO: fix warning
-    const addHTML = s => content.insertAdjacentHTML("beforeend", s);
+
+    // Add list of contact links
+    const res = findContacts();
     if (!res) {
-      content.classList.toggle("_LibreJS_fail", true)
-      addHTML("<div>Could not guess any contact page for this site.</div>");
+      content.classList.toggle("_LibreJS_fail", true);
+      addText('Could not guess any contact page for this site.', 'div', content);
     } else {
-      addHTML("<h3>Contact info guessed for this site</h3>");
+      addText('Contact info guessed for this site', 'h3', content);
+      addText(res[0] + ':', 'span', content);
+      const list = content.appendChild(contentDoc.createElement("ul"));
       for (const link of res[1]) {
         const a = contentDoc.createElement("a");
         a.href = link.href;
         a.textContent = link.textContent;
-        content.appendChild(a);
+        list.appendChild(contentDoc.createElement("li")).appendChild(a);
       }
     }
 
+    // Add list of emails
     const emails = (document.documentElement.textContent.match(emailRegex) || []).filter(e => !!e);
     if (emails.length) {
-      addHTML("<h5>Possible email addresses:</h5>");
-      const list = contentDoc.createElement("ul");
+      addText("Possible email addresses:", 'h5', content);
+      const list = content.appendChild(contentDoc.createElement("ul"));
       for (const recipient of emails.slice(0, 10)) {
         const a = contentDoc.createElement("a");
         a.href = `mailto:${recipient}?subject=${encodeURIComponent(prefs["pref_subject"])
@@ -235,8 +251,8 @@ function main() {
         a.textContent = recipient;
         list.appendChild(contentDoc.createElement("li")).appendChild(a);
       }
-      content.appendChild(list);
     }
+
     contentDoc.querySelectorAll(".close, a").forEach(makeCloser);
     debug("frame initialized");
   }
