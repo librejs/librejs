@@ -239,7 +239,7 @@ function main() {
       for (const recipient of emails.slice(0, 10)) {
         const a = contentDoc.createElement("a");
         // TODO: fix prefs
-        a.href = `mailto:${recipient}?subject${encodeURIComponent(prefs["pref_subject"])
+        a.href = `mailto:${recipient}?subject=${encodeURIComponent(prefs["pref_subject"])
           }&body=${encodeURIComponent(prefs["pref_body"])
           }`;
         a.textContent = recipient;

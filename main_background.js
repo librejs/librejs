@@ -301,7 +301,7 @@ async function connected(p) {
     });
 
     // Send a message back with the relevant settings
-    p.postMessage(await browser.storage.local.get(['prefs_subject', 'prefs_body']));
+    p.postMessage(await browser.storage.local.get(['pref_subject', 'pref_body']));
     return;
   }
   p.onMessage.addListener(async function(m) {
