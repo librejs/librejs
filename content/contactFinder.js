@@ -51,7 +51,8 @@ debug("Injecting contact finder in %s", document.URL);
  * and by degree of certainty.
  */
 const contactFrags = {
-  'da': {
+  // TODO: remove lang, change things to regexp
+  'de': {
     'certain': [
       '^[\\s]*Kontakt os[\\s]*$',
       '^[\\s]*Email Os[\\s]*$',
@@ -136,8 +137,8 @@ function attempt(certaintyLvl, first = true) {
     for (const byLevel of Object.values(contactFrags)) {
       for (const frag of byLevel[certaintyLvl]) {
         if (!matched) {
-          const result = strUnderTest.match(new RegExp(frag, "g")).filter(x => typeof x == "string");
-          if (result && typeof (result[0]) === "string") {
+          const result = (strUnderTest.match(new RegExp(frag, "g")) || []).filter(x => typeof x == "string");
+          if (result.length) {
             if (first) {
               return { "fail": false, "result": link };
             } else {
@@ -150,7 +151,7 @@ function attempt(certaintyLvl, first = true) {
       }
     }
   }
-  return { "fail": notMatched, "result": matches };
+  return { "fail": matches.length === 0, "result": matches };
 }
 
 /**
@@ -232,8 +233,8 @@ function main() {
     }
 
     // TODO: check this change is ok, i.e. if the result of match is null filter still works
-    const emails = document.documentElement.textContent.match(email_regex).filter(e => !!e);
-    if (emails && emails.length) {
+    const emails = (document.documentElement.textContent.match(email_regex) || []).filter(e => !!e);
+    if (emails.length) {
       addHTML("<h5>Possible email addresses:</h5>");
       const list = contentDoc.createElement("ul");
       for (const recipient of emails.slice(0, 10)) {
