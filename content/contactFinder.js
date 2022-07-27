@@ -116,38 +116,30 @@ const contactFrags = [
 const emailRegex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
 //*********************************************************************************************
 
-function findMatch(link, frag, first) {
+function findMatch(link, frag) {
   const result = (link.innerText.match(new RegExp(frag, "g")) || []).filter(x => typeof x == "string");
-  if (result.length) {
-    if (first) {
-      return { 'final': true, 'matched': true };
-    } else {
-      //console.log(link.href + " matched " + frag);
-      return { 'final': false, 'matched': true };
-    }
-  }
-  return { 'final': false, 'matched': false };
+  if (result.length) return true;
+  return false;
 }
 
 /**
 *	Tests all links on the page for regexes under a certain certainty level.
 *
-*	Will return either the first regex match from the selected certainty level or all regexes that
-*	match on that certainty level.
+*	Will return either all regex matches from the selected certainty level,
+* up to a limit.
 *
-*	certaintyLvl can be "certain" > "probable" > "uncertain"
+*	certainty can be "certain" > "probable" > "uncertain"
 */
-function attempt(certaintyLvl, first = true) {
+function attempt(certainty, limit = 1) {
   // There needs to be some kind of max so that people can't troll by for example leaving a comment with a bunch of emails
   // to cause LibreJS users to slow down.
   const matches = [];
   const links = Array.from(document.links).filter(link => (typeof (link.innerText) === "string" || typeof (link.href) === "string"));
   for (const link of links) {
     for (const byLevel of contactFrags) {
-      for (const frag of byLevel[certaintyLvl]) {
-        const match = findMatch(link, frag, first);
-        if (match.final) return { 'fail': false, 'result': [link] };
-        match.matched && matches.push(link);
+      for (const frag of byLevel[certainty]) {
+        findMatch(link, frag) && matches.push(link);
+        if (matches.length >= limit) return { 'fail': false, 'result': [link] };
       }
     }
   }
