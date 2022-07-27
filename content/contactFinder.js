@@ -71,7 +71,7 @@ const contactFrags = [
       '^[\\s]*Feedback[\\s]*$',
       '^[\\s]*Web.?site Feedback[\\s]*$'
     ],
-    'probable': ['^[\\s]Contact', '^[\\s]*Email'],
+    'probable': ['^[\\s]*Contact', '^[\\s]*Email'],
     'uncertain': [
       '^[\\s]*About Us',
       '^[\\s]*About',
@@ -117,8 +117,7 @@ const emailRegex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'
 //*********************************************************************************************
 
 function findMatch(link, frag, first) {
-  const strUnderTest = link.innerText + " " + link.href
-  const result = (strUnderTest.match(new RegExp(frag, "g")) || []).filter(x => typeof x == "string");
+  const result = (link.innerText.match(new RegExp(frag, "g")) || []).filter(x => typeof x == "string");
   if (result.length) {
     if (first) {
       return { 'final': true, 'matched': true };
@@ -156,8 +155,8 @@ function attempt(certaintyLvl, first = true) {
 }
 
 /**
-*	"LibreJS detects contact pages, email addresses that are likely to be owned by the
-*	maintainer of the site, Twitter and identi.ca links, and phone numbers."
+*	"LibreJS detects contact pages and email addresses that are likely to be owned by the
+*	maintainer of the site."
 */
 function findContacts() {
   for (const type of ["certain", "probable", "uncertain"]) {
@@ -238,7 +237,6 @@ function main() {
       const list = contentDoc.createElement("ul");
       for (const recipient of emails.slice(0, 10)) {
         const a = contentDoc.createElement("a");
-        // TODO: fix prefs
         a.href = `mailto:${recipient}?subject=${encodeURIComponent(prefs["pref_subject"])
           }&body=${encodeURIComponent(prefs["pref_body"])
           }`;
