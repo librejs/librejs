@@ -3,6 +3,7 @@
 * *
 * Copyright (C) 2017 Nathan Nichols, Loic J. Duros, Nik Nyby
 * Copyright (C) 2018 Giorgio Maone
+* Copyright (C) 2022 Yuchen Pei
 *
 * This file is part of GNU LibreJS.
 *
@@ -35,10 +36,6 @@
 
 
 //*********************************************************************************************
-//Regexes taken from "contact_regex.js" in the current LibreJS
-//Copyright (C) 2011, 2012, 2014 Loic J. Duros
-//Copyright (C) 2014, 2015 Nik Nyby
-
 function debug(format, ...args) {
   console.debug(`LibreJS - ${format}`, ...args);
 }
@@ -50,9 +47,9 @@ debug("Injecting contact finder in %s", document.URL);
  * Contains arrays of strings classified by language
  * and by degree of certainty.
  */
-const contactFrags = {
-  // TODO: remove lang, change things to regexp
-  'de': {
+const contactFrags = [
+  // de
+  {
     'certain': [
       '^[\\s]*Kontakt os[\\s]*$',
       '^[\\s]*Email Os[\\s]*$',
@@ -65,7 +62,8 @@ const contactFrags = {
       'Hvem vi er'
     ]
   },
-  'en': {
+  // en
+  {
     'certain': [
       '^[\\s]*Contact Us[\\s]*$',
       '^[\\s]*Email Us[\\s]*$',
@@ -83,7 +81,8 @@ const contactFrags = {
       'Customer Service'
     ]
   },
-  'es': {
+  // es
+  {
     'certain': [
       '^[\\s]*contáctenos[\\s]*$',
       '^[\\s]*Email[\\s]*$'
@@ -93,7 +92,8 @@ const contactFrags = {
       'Acerca de nosotros'
     ]
   },
-  'fr': {
+  // fr
+  {
     'certain': [
       '^[\\s]*Contactez nous[\\s]*$',
       '^[\\s]*(Nous )?contacter[\\s]*$',
@@ -110,11 +110,25 @@ const contactFrags = {
       'Service Client(e|è)le'
     ]
   }
-};
+];
 
 // Taken from http://emailregex.com/
-const email_regex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
+const emailRegex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
 //*********************************************************************************************
+
+function findMatch(link, frag, first) {
+  const strUnderTest = link.innerText + " " + link.href
+  const result = (strUnderTest.match(new RegExp(frag, "g")) || []).filter(x => typeof x == "string");
+  if (result.length) {
+    if (first) {
+      return { 'final': true, 'matched': true };
+    } else {
+      //console.log(link.href + " matched " + frag);
+      return { 'final': false, 'matched': true };
+    }
+  }
+  return { 'final': false, 'matched': false };
+}
 
 /**
 *	Tests all links on the page for regexes under a certain certainty level.
@@ -122,32 +136,19 @@ const email_regex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&
 *	Will return either the first regex match from the selected certainty level or all regexes that
 *	match on that certainty level.
 *
-*	certainty_lvl can be "certain" > "probable" > "uncertain"
+*	certaintyLvl can be "certain" > "probable" > "uncertain"
 */
 function attempt(certaintyLvl, first = true) {
   // There needs to be some kind of max so that people can't troll by for example leaving a comment with a bunch of emails
   // to cause LibreJS users to slow down.
   const matches = [];
-  for (const link of document.links) {
-    if (typeof (link.innerText) !== "string" || typeof (link.href) !== "string") {
-      continue;
-    }
-    const strUnderTest = link.innerText + " " + link.href;
-    const matched = false;
-    for (const byLevel of Object.values(contactFrags)) {
+  const links = Array.from(document.links).filter(link => (typeof (link.innerText) === "string" || typeof (link.href) === "string"));
+  for (const link of links) {
+    for (const byLevel of contactFrags) {
       for (const frag of byLevel[certaintyLvl]) {
-        if (!matched) {
-          const result = (strUnderTest.match(new RegExp(frag, "g")) || []).filter(x => typeof x == "string");
-          if (result.length) {
-            if (first) {
-              return { "fail": false, "result": link };
-            } else {
-              //console.log(link.href + " matched " + contactFrags[j][certainty_lvl][k]);
-              matches.push(link);
-              matched = true;
-            }
-          }
-        }
+        const match = findMatch(link, frag, first);
+        if (match.final) return { 'fail': false, 'result': [link] };
+        match.matched && matches.push(link);
       }
     }
   }
@@ -158,7 +159,7 @@ function attempt(certaintyLvl, first = true) {
 *	"LibreJS detects contact pages, email addresses that are likely to be owned by the
 *	maintainer of the site, Twitter and identi.ca links, and phone numbers."
 */
-function find_contacts() {
+function findContacts() {
   for (const type of ["certain", "probable", "uncertain"]) {
     const attempted = attempt(type);
     if (!attempted["fail"]) {
@@ -208,7 +209,7 @@ function main() {
 
   const initFrame = prefs => {
     debug("initFrame");
-    const res = find_contacts();
+    const res = findContacts();
     const contentDoc = frame.contentWindow.document;
     const { body } = contentDoc;
     body.id = "_LibreJS_dialog";
@@ -223,22 +224,21 @@ function main() {
       addHTML("<div>Could not guess any contact page for this site.</div>");
     } else {
       addHTML("<h3>Contact info guessed for this site</h3>");
-      if (typeof (res[1]) === "string") {
+      for (const link of res[1]) {
         const a = contentDoc.createElement("a");
-        a.href = a.textContent = res[1];
+        a.href = link.href;
+        a.textContent = link.textContent;
         content.appendChild(a);
-      } else if (typeof (res[1]) === "object") {
-        addHTML(`${res[0]}: ${res[1].outerHTML}`);
       }
     }
 
-    // TODO: check this change is ok, i.e. if the result of match is null filter still works
-    const emails = (document.documentElement.textContent.match(email_regex) || []).filter(e => !!e);
+    const emails = (document.documentElement.textContent.match(emailRegex) || []).filter(e => !!e);
     if (emails.length) {
       addHTML("<h5>Possible email addresses:</h5>");
       const list = contentDoc.createElement("ul");
       for (const recipient of emails.slice(0, 10)) {
         const a = contentDoc.createElement("a");
+        // TODO: fix prefs
         a.href = `mailto:${recipient}?subject${encodeURIComponent(prefs["pref_subject"])
           }&body=${encodeURIComponent(prefs["pref_body"])
           }`;
