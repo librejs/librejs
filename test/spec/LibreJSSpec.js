@@ -283,7 +283,7 @@ describe('LibreJS\' components', () => {
     });
   });
 
-  describe('Contact finder', () => {
+  describe('The contact finder', () => {
     it('should display the contact finder iframe', async (done) => {
       await browser.runtime.connect({ name: "port-from-cs" }).postMessage({ invoke_contact_finder: 1 });
       // Direct await / async does not work as executeScript does not wait
