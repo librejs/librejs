@@ -304,7 +304,6 @@ describe('LibreJS\' components', () => {
         const [frameBody] = await browser.tabs.executeScript(tab.id, {
           code: 'document.getElementById("_LibreJS_frame").contentWindow.document.body.innerHTML'
         })
-        console.log(frameBody);
         expect(frameBody).not.toContain('About Us');
         expect(frameBody).toContain('Contact Us');
         expect(frameBody).toContain('Website Feedback');
