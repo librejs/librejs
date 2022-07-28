@@ -20,7 +20,7 @@
 */
 
 'use strict';
-var Test = (() => {
+const Test = (() => {
   const RUNNER_URL = browser.runtime.getURL('/test/SpecRunner.html');
   return {
     /*
@@ -28,19 +28,17 @@ var Test = (() => {
       temporary extension session, null otherwise
     */
     async getURL() {
-      let url = RUNNER_URL;
       try {
-        await fetch(url);
+        await fetch(RUNNER_URL);
+        return RUNNER_URL;
       } catch (e) {
-        url = null;
+        return null;
       }
-      this.getURL = () => url;
-      return url;
     },
 
     async getTab(activate = false) {
-      let url = await this.getURL();
-      let tab = url ? (await browser.tabs.query({ url }))[0] ||
+      const url = await this.getURL();
+      const tab = url ? (await browser.tabs.query({ url }))[0] ||
         (await browser.tabs.create({ url }))
         : null;
       if (tab && activate) {
