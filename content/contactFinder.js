@@ -186,20 +186,8 @@ function main() {
     overlay.remove();
   };
 
-  const closeListener = e => {
-    const t = e.currentTarget;
-    if (t.href && t.href !== document.URL) { // link navigation
-      if (t.href.includes("#")) {
-        window.addEventListener("hashchange", close);
-      }
-      return;
-    }
-    close();
-  };
-  const makeCloser = clickable => clickable.addEventListener("click", closeListener);
-
   // Clicking the "outer area" closes the dialog.
-  makeCloser(overlay);
+  overlay.addEventListener("click", close);
 
   const initFrame = prefs => {
     debug("initFrame");
@@ -217,6 +205,7 @@ function main() {
     const closeButton = body.appendChild(contentDoc.createElement('button'));
     closeButton.classList.toggle('close', true);
     closeButton.textContent = 'x';
+    closeButton.addEventListener("click", close);
 
     const content = body.appendChild(contentDoc.createElement("div"));
     content.id = "content";
@@ -253,7 +242,7 @@ function main() {
       }
     }
 
-    contentDoc.querySelectorAll(".close, a").forEach(makeCloser);
+    // contentDoc.querySelectorAll(".close, a").forEach(makeCloser);
     debug("frame initialized");
   }
 
