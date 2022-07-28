@@ -47,75 +47,81 @@ debug("Injecting contact finder in %s", document.URL);
  * Contains arrays of strings classified by language
  * and by degree of certainty.
  */
-const contactFrags = [
-  // de
-  {
-    'certain': [
-      '^[\\s]*Kontakt os[\\s]*$',
-      '^[\\s]*Email Os[\\s]*$',
-      '^[\\s]*Kontakt[\\s]*$'
-    ],
-    'probable': ['^[\\s]Kontakt', '^[\\s]*Email'],
-    'uncertain': [
-      '^[\\s]*Om Us',
-      '^[\\s]*Om',
-      'Hvem vi er'
-    ]
-  },
-  // en
-  {
-    'certain': [
-      '^[\\s]*Contact Us[\\s]*$',
-      '^[\\s]*Email Us[\\s]*$',
-      '^[\\s]*Contact[\\s]*$',
-      '^[\\s]*Feedback[\\s]*$',
-      '^[\\s]*Web.?site Feedback[\\s]*$'
-    ],
-    'probable': ['^[\\s]*Contact', '^[\\s]*Email'],
-    'uncertain': [
-      '^[\\s]*About Us',
-      '^[\\s]*About',
-      'Who we are',
-      'Who I am',
-      'Company Info',
-      'Customer Service'
-    ]
-  },
-  // es
-  {
-    'certain': [
-      '^[\\s]*contáctenos[\\s]*$',
-      '^[\\s]*Email[\\s]*$'
-    ],
-    'probable': ['^[\\s]contáctenos', '^[\\s]*Email'],
-    'uncertain': [
-      'Acerca de nosotros'
-    ]
-  },
-  // fr
-  {
-    'certain': [
-      '^[\\s]*Contactez nous[\\s]*$',
-      '^[\\s]*(Nous )?contacter[\\s]*$',
-      '^[\\s]*Email[\\s]*$',
-      '^[\\s]*Contact[\\s]*$',
-      '^[\\s]*Commentaires[\\s]*$'
-    ],
-    'probable': ['^[\\s]Contact', '^[\\s]*Email'],
-    'uncertain': [
-      '^[\\s]*(A|À) propos',
-      'Qui nous sommes',
-      'Qui suis(-| )?je',
-      'Info',
-      'Service Client(e|è)le'
-    ]
-  }
-];
+function contactFrags() {
+  return [
+    // de
+    {
+      'certain': [
+        '^[\\s]*Kontakt os[\\s]*$',
+        '^[\\s]*Email Os[\\s]*$',
+        '^[\\s]*Kontakt[\\s]*$'
+      ],
+      'probable': ['^[\\s]Kontakt', '^[\\s]*Email'],
+      'uncertain': [
+        '^[\\s]*Om Us',
+        '^[\\s]*Om',
+        'Hvem vi er'
+      ]
+    },
+    // en
+    {
+      'certain': [
+        '^[\\s]*Contact Us[\\s]*$',
+        '^[\\s]*Email Us[\\s]*$',
+        '^[\\s]*Contact[\\s]*$',
+        '^[\\s]*Feedback[\\s]*$',
+        '^[\\s]*Web.?site Feedback[\\s]*$'
+      ],
+      'probable': ['^[\\s]*Contact', '^[\\s]*Email'],
+      'uncertain': [
+        '^[\\s]*About Us',
+        '^[\\s]*About',
+        'Who we are',
+        'Who I am',
+        'Company Info',
+        'Customer Service'
+      ]
+    },
+    // es
+    {
+      'certain': [
+        '^[\\s]*contáctenos[\\s]*$',
+        '^[\\s]*Email[\\s]*$'
+      ],
+      'probable': ['^[\\s]contáctenos', '^[\\s]*Email'],
+      'uncertain': [
+        'Acerca de nosotros'
+      ]
+    },
+    // fr
+    {
+      'certain': [
+        '^[\\s]*Contactez nous[\\s]*$',
+        '^[\\s]*(Nous )?contacter[\\s]*$',
+        '^[\\s]*Email[\\s]*$',
+        '^[\\s]*Contact[\\s]*$',
+        '^[\\s]*Commentaires[\\s]*$'
+      ],
+      'probable': ['^[\\s]Contact', '^[\\s]*Email'],
+      'uncertain': [
+        '^[\\s]*(A|À) propos',
+        'Qui nous sommes',
+        'Qui suis(-| )?je',
+        'Info',
+        'Service Client(e|è)le'
+      ]
+    }
+  ];
+}
 
-const CONTACT_LINK_LIMIT = 5;
+function contactLinkLimit() {
+  return 5;
+}
 
 // Taken from http://emailregex.com/
-const emailRegex = new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
+function emailRegex() {
+  return new RegExp(/(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/g);
+}
 //*********************************************************************************************
 
 function findMatch(link, frag) {
@@ -138,7 +144,7 @@ function attempt(certainty, limit) {
   const matches = [];
   const links = Array.from(document.links).filter(link => (typeof (link.innerText) === "string" || typeof (link.href) === "string"));
   for (const link of links) {
-    for (const byLevel of contactFrags) {
+    for (const byLevel of contactFrags()) {
       for (const frag of byLevel[certainty]) {
         findMatch(link, frag) && matches.push(link);
         if (matches.length >= limit) return { 'fail': false, 'result': [link] };
@@ -154,7 +160,7 @@ function attempt(certainty, limit) {
 */
 function findContacts() {
   for (const type of ["certain", "probable", "uncertain"]) {
-    const attempted = attempt(type, CONTACT_LINK_LIMIT);
+    const attempted = attempt(type, contactLinkLimit());
     if (!attempted["fail"]) {
       return [type, attempted["result"]];
     }
@@ -228,7 +234,7 @@ function main() {
     }
 
     // Add list of emails
-    const emails = (document.documentElement.textContent.match(emailRegex) || []).filter(e => !!e);
+    const emails = (document.documentElement.textContent.match(emailRegex()) || []).filter(e => !!e);
     if (emails.length) {
       addText("Possible email addresses:", 'h5', content);
       const list = content.appendChild(contentDoc.createElement("ul"));
