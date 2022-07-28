@@ -25,13 +25,14 @@
 */
 'use strict';
 
-var Storage = {
+const jssha = require('jssha');
+
+const Storage = {
   ARRAY: {
     async load(key, array = undefined) {
-      if (array === undefined) {
-        array = (await browser.storage.local.get(key))[key];
-      }
-      return array ? new Set(array) : new Set();
+      const result = array === undefined ?
+        (await browser.storage.local.get(key))[key] : array;
+      return result ? new Set(result) : new Set();
     },
     async save(key, list) {
       return await browser.storage.local.set({ [key]: [...list] });
@@ -40,7 +41,7 @@ var Storage = {
 
   CSV: {
     async load(key) {
-      let csv = (await browser.storage.local.get(key))[key];
+      const csv = (await browser.storage.local.get(key))[key];
       return csv ? new Set(csv.split(/\s*,\s*/)) : new Set();
     },
 
@@ -77,7 +78,7 @@ class ListStore {
     return hash.startsWith('(') ? hash : `(${hash})`;
   }
   static urlItem(url) {
-    let queryPos = url.indexOf('?');
+    const queryPos = url.indexOf('?');
     return queryPos === -1 ? url : url.substring(0, queryPos);
   }
   static siteItem(url) {
@@ -108,24 +109,14 @@ class ListStore {
   }
 
   async store(...items) {
-    let size = this.items.size;
-    let changed = false;
-    for (let item of items) {
-      if (size !== this.items.add(item).size) {
-        changed = true;
-      }
-    }
-    return changed && await this.save();
+    const size = this.items.size;
+    const changed = items.reduce((current, item) => size !== this.items.add(item).size || current, false);
+    changed && await this.save();
   }
 
   async remove(...items) {
-    let changed = false;
-    for (let item of items) {
-      if (this.items.delete(item)) {
-        changed = true;
-      }
-    }
-    return changed && await this.save();
+    const changed = items.reduce((current, item) => this.items.delete(item) || current, false);
+    changed && await this.save();
   }
 
   contains(item) {
@@ -134,12 +125,11 @@ class ListStore {
 }
 
 function hash(source) {
-  var shaObj = new jssha('SHA-256', 'TEXT')
+  const shaObj = new jssha('SHA-256', 'TEXT')
   shaObj.update(source);
   return shaObj.getHash('HEX');
 }
 
 if (typeof module === 'object') {
   module.exports = { ListStore, Storage, hash };
-  var jssha = require('jssha');
 }
