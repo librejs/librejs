@@ -1141,7 +1141,7 @@ var whitelist = new ListStore('pref_whitelist', Storage.CSV);
 var blacklist = new ListStore('pref_blacklist', Storage.CSV);
 var listManager = new ListManager(whitelist, blacklist,
   // built-in whitelist of script hashes, e.g. jQuery
-  Object.values(require('./hash_script/whitelist').whitelist)
+  Object.values(require('./utilities/hash_script/whitelist').whitelist)
     .reduce((a, b) => a.concat(b)) // as a flat array
     .map(script => script.hash)
 );

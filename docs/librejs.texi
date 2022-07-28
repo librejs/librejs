@@ -677,14 +677,14 @@ selenium-webdriver and geckodriver, and ensure the latter is in $PATH:
 
 Now you can invoke the test with
 @verbatim
-  $ node ./test.js
+  $ node ./utilities/test.js
 @end verbatim
 
 which will print out a summary of test results.
 
 Optionally you can also test with a chosen seed
 @verbatim
-  $ node ./test.js 12345
+  $ node ./utilities/test.js 12345
 @end verbatim
 
 @section Headless compliance check
@@ -700,7 +700,7 @@ latter is in $PATH:
 
 Now you can check a webpage for compliance with
 @verbatim
-  $ node ./compliance.js <url>
+  $ node ./utilities/compliance.js <url>
 @end verbatim
 
 It will open the url in a headless browser, save a screenshot, and
@@ -708,12 +708,12 @@ output the compliance check result.
 
 For example, to check the compliance of the FSF homepage, do
 @verbatim
-  $ node ./compliance.js https://fsf.org
+  $ node ./utilities/compliance.js https://fsf.org
 @end verbatim
 
 @section Adding new whitelisted libraries
 
-The script index.js in @file{./hash_script} generates the default
+The script index.js in @file{./utilities/hash_script} generates the default
 whitelist. Run it with the following command:
 
 @command{node index.js > output}

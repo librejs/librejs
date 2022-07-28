@@ -45,12 +45,12 @@ selenium-webdriver and geckodriver, and ensure the latter is in $PATH:
   $ export PATH=$PATH:./node_modules/.bin
 
 Now you can invoke the test with
-  $ node ./test.js
+  $ node ./utilities/test.js
 
 which will print out a summary of test results.
 
 Optionally you can also test with a chosen seed
-  $ node ./test.js 12345
+  $ node ./utilities/test.js 12345
 
 
 HEADLESS COMPLIANCE CHECK:
@@ -64,13 +64,13 @@ latter is in $PATH:
   $ export PATH=$PATH:./node_modules/.bin
 
 Now you can check a webpage for compliance with
-  $ node ./compliance.js <url>
+  $ node ./utilities/compliance.js <url>
 
 It will open the url in a headless browser, save a screenshot, and
 output the compliance check result.
 
 For example, to check the compliance of the FSF homepage, do
-  $ node ./compliance.js https://fsf.org
+  $ node ./utilities/compliance.js https://fsf.org
 
 
 CONTACT:

@@ -3,6 +3,7 @@
 *
 * Copyright (C) 2017 Nathan Nichols
 * Copyright (C) 2018 Giorgio maone
+* Copyright (C) 2022 Yuchen Pei
 *
 * This file is part of GNU LibreJS.
 *
