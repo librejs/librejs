@@ -25,7 +25,6 @@
 */
 'use strict';
 
-const jssha = require('jssha');
 
 const Storage = {
   ARRAY: {
@@ -132,4 +131,6 @@ function hash(source) {
 
 if (typeof module === 'object') {
   module.exports = { ListStore, Storage, hash };
+  // TODO: eliminate the var
+  var jssha = require('jssha');
 }
