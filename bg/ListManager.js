@@ -23,7 +23,7 @@
   A class to manage whitelist/blacklist operations
 */
 
-let { ListStore } = require('../common/Storage');
+const { ListStore } = require('../common/Storage');
 
 class ListManager {
   constructor(whitelist, blacklist, builtInHashes) {
@@ -49,8 +49,8 @@ class ListManager {
     Returns "blacklisted", "whitelisted" or defValue
   */
   getStatus(key, defValue = 'unknown') {
-    let { blacklist, whitelist } = this.lists;
-    let inline = ListStore.inlineItem(key);
+    const { blacklist, whitelist } = this.lists;
+    const inline = ListStore.inlineItem(key);
     if (inline) {
       return blacklist.contains(inline)
         ? 'blacklisted'
@@ -58,10 +58,10 @@ class ListManager {
           : defValue;
     }
 
-    let match = key.match(/\(([^)]+)\)(?=[^()]*$)/);
+    const match = key.match(/\(([^)]+)\)(?=[^()]*$)/);
     if (!match) {
-      let url = ListStore.urlItem(key);
-      let site = ListStore.siteItem(key);
+      const url = ListStore.urlItem(key);
+      const site = ListStore.siteItem(key);
       return (blacklist.contains(url) || ListManager.siteMatch(site, blacklist)
         ? 'blacklisted'
         : whitelist.contains(url) || ListManager.siteMatch(site, whitelist)
@@ -69,7 +69,7 @@ class ListManager {
       );
     }
 
-    let [hashItem, srcHash] = match; // (hash), hash
+    const [hashItem, srcHash] = match; // (hash), hash
     return blacklist.contains(hashItem) ? 'blacklisted'
       : this.builtInHashes.has(srcHash) || whitelist.contains(hashItem)
         ? 'whitelisted'
@@ -81,20 +81,14 @@ class ListManager {
     wildcarded subdomains ("https://*.domain.com/*").
   */
   static siteMatch(url, list) {
-    let site = ListStore.siteItem(url);
-    if (list.contains(site)) {
-      return site;
-    }
-    site = site.replace(/^([\w-]+:\/\/)?(\w)/, '$1*.$2');
-    for (; ;) {
-      if (list.contains(site)) {
-        return site;
-      }
-      let oldKey = site;
-      site = site.replace(/(?:\*\.)*\w+(?=\.)/, '*');
-      if (site === oldKey) {
-        return null;
-      }
+    const site = ListStore.siteItem(url);
+    if (list.contains(site)) return site;
+    // TODO: get rid of let
+    for (let replaced = site.replace(/^([\w-]+:\/\/)?(\w)/, '$1*.$2'); ;) {
+      if (list.contains(replaced)) return replaced;
+      const oldKey = replaced;
+      replaced = replaced.replace(/(?:\*\.)*\w+(?=\.)/, '*');
+      if (oldKey === replaced) return null;
     }
   }
 }
