@@ -86,34 +86,33 @@ const ExternalLicenses = {
   * Returns true if the document has been actually modified, false otherwise.
   */
   optimizeDocument(doc, cachePointer) {
-    let cache = {};
-    let { tabId, frameId, documentUrl } = cachePointer;
-    let frameCache = cachedHrefs.get(tabId);
-    if (!frameCache) {
-      cachedHrefs.set(tabId, frameCache = new Map());
-    }
+    const cache = {};
+    const { tabId, frameId, documentUrl } = cachePointer;
+    const frameCache = cachedHrefs.get(tabId) || new Map();
+    cachedHrefs.set(tabId, frameCache);
     frameCache.set(frameId, new Map([[documentUrl, cache]]));
 
-    let link = doc.querySelector('link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]');
+    const link = doc.querySelector('link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]');
     if (link) {
-      let href = link.getAttribute('href');
+      const href = link.getAttribute('href');
       cache.webLabels = { href };
-      let move = () => !!doc.head.insertBefore(link, doc.head.firstChild);
+      const move = (link) => !!doc.head.insertBefore(link, doc.head.firstChild);
       if (link.parentNode === doc.head) {
+        // TODO: eliminate let
         let node = link.previousElementSibling;
         for (; node; node = node.previousElementSibling) {
           if (node.tagName.toUpperCase() === 'SCRIPT') {
-            return move();
+            return move(link);
           }
         }
       } else { // the reference is only in the body
         if (link.tagName.toUpperCase() === 'A') {
-          let newLink = doc.createElement('link');
+          const newLink = doc.createElement('link');
           newLink.rel = 'jslicense';
           newLink.setAttribute('href', href);
-          link = newLink;
+          return move(newLink);
         }
-        return move();
+        return move(link);
       }
     }
 
