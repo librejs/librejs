@@ -26,23 +26,14 @@
 'use strict';
 
 const { licenses } = require('../license_definitions')
-const licensesByLabel = Object.entries(licenses).reduce((acc, [id, license]) => {
-  return {
-    ...acc,
-    [license.identifier.toUpperCase()]: license,
-    [id.toUpperCase()]: license,
-    [license.licenseName.toUpperCase()]: license
-  };
-}, {});
-const licensesByUrl = Object.entries(licenses).reduce((acc, [_, license]) => {
-  return {
-    ...acc,
-    ...(license.canonicalUrl.reduce((result, url) => {
-      return { ...result, [url]: license }
-    }, {}))
-  };
-}, {});
-
+const licensesByLabel = new Map(Object.entries(licenses).map(([id, license]) =>
+  [
+    [license.identifier.toUpperCase(), license],
+    [id.toUpperCase(), license],
+    [license.licenseName.toUpperCase(), license]
+  ]).flat());
+const licensesByUrl = new Map(Object.values(licenses).map(license =>
+  license.canonicalUrl.map(url => [url, license])).flat());
 for (const [id, license] of Object.entries(licenses)) {
   if (!license.identifier) {
     license.identifier = id;
@@ -70,27 +61,18 @@ const ExternalLicenses = {
     if (!(scriptInfo && scriptInfo.licenseLinks.length)) {
       return null;
     }
-    scriptInfo.licenses = new Set();
+    scriptInfo.licenses = new Set(scriptInfo.licenseLinks.map(
+      ({ label, url }) => {
+        const uLabel = label.trim().toUpperCase();
+        const license = licensesByLabel.get(uLabel) || licensesByUrl.get(url) ||
+          licensesByLabel.get(uLabel.replace(/^GNU-|-(?:OR-LATER|ONLY)$/, ''));
+        return license ? [license] : [];
+      }).flat());
     scriptInfo.toString = () => {
       const licenseIds = [...this.licenses].map(l => l.identifier).sort().join(', ');
       return licenseIds
         ? `Free license${this.licenses.size > 1 ? 's' : ''} (${licenseIds})`
         : 'Unknown license(s)';
-    }
-    const match = (map, key) => {
-      console.debug(map);
-      if (map.has(key)) {
-        scriptInfo.licenses.add(map.get(key));
-        return true;
-      }
-      return false;
-    };
-
-    for (const { label, url } of scriptInfo.licenseLinks) {
-      const uLabel = label.trim().toUpperCase();
-      match(licensesByLabel, uLabel) ||
-        match(licensesByUrl, url) ||
-        match(licensesByLabel, uLabel.replace(/^GNU-|-(?:OR-LATER|ONLY)$/, ''));
     }
     scriptInfo.free = scriptInfo.licenses.size > 0;
     return scriptInfo;
