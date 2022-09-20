@@ -76,6 +76,8 @@ const RESERVED_OBJECTS = [
   'browser', // only on firefox
   'eval'
 ];
+const LOOPKEYS = { 'for': true, 'if': true, 'while': true, 'switch': true };
+const OPERATORS = { '||': true, '&&': true, '=': true, '==': true, '++': true, '--': true, '+=': true, '-=': true, '*': true };
 
 /*
 *
@@ -412,7 +414,7 @@ async function onTabActivated({ tabId }) {
 
 /* *********************************************************************************************** */
 
-var fname_data = require('./fname_data.json').fname_data;
+const fnameData = require('./fname_data.json').fname_data;
 
 //************************this part can be tested in the HTML file index.html's script test.js****************************
 
@@ -422,17 +424,15 @@ var fname_data = require('./fname_data.json').fname_data;
  * Returns an array of
  * [flag (boolean, true if trivial), reason (string, human readable report)].
  */
-function full_evaluate(script) {
+function fullEvaluate(script) {
   if (script === undefined || script == '') {
     return [true, 'Harmless null script'];
   }
 
-  var amtloops = 0;
+  let tokens;
 
-  var loopkeys = { 'for': true, 'if': true, 'while': true, 'switch': true };
-  var operators = { '||': true, '&&': true, '=': true, '==': true, '++': true, '--': true, '+=': true, '-=': true, '*': true };
   try {
-    var tokens = acorn.tokenizer(script);
+    tokens = acorn.tokenizer(script);
   } catch (e) {
     console.warn('Tokenizer could not be initiated (probably invalid code)');
     return [false, 'Tokenizer could not be initiated (probably invalid code)'];
@@ -446,11 +446,14 @@ function full_evaluate(script) {
     console.warn('Continuing evaluation');
   }
 
+  let amtloops = 0;
+  let definesFunctions = false;
+
   /**
   * Given the end of an identifer token, it tests for parentheses
   */
   function is_bsn(end) {
-    var i = 0;
+    let i = 0;
     while (script.charAt(end + i).match(/\s/g) !== null) {
       i++;
       if (i >= script.length - 1) {
@@ -459,56 +462,66 @@ function full_evaluate(script) {
     }
     return script.charAt(end + i) == '[';
   }
-  var defines_functions = false;
+
+  function evaluateByTokenValue(toke) {
+    const value = toke.value;
+    if (OPERATORS[value] !== undefined) {
+      // It's just an operator. Javascript doesn't have operator overloading so it must be some
+      // kind of primitive (I.e. a number)
+    } else {
+      const status = fnameData[value];
+      if (status === true) { // is the identifier banned?
+        dbg_print('%c NONTRIVIAL: nontrivial token: \'' + value + '\'', 'color:red');
+        if (DEBUG == false) {
+          return [false, 'NONTRIVIAL: nontrivial token: \'' + value + '\''];
+        }
+      } else if (status === false || status === undefined) {// is the identifier not banned or user defined?
+        // Is there bracket suffix notation?
+        if (is_bsn(toke.end)) {
+          dbg_print('%c NONTRIVIAL: Bracket suffix notation on variable \'' + value + '\'', 'color:red');
+          if (DEBUG == false) {
+            return [false, '%c NONTRIVIAL: Bracket suffix notation on variable \'' + value + '\''];
+          }
+        }
+      } else {
+        dbg_print('trivial token:' + value);
+      }
+    }
+    return [true, ''];
+  }
+
+  function evaluateByTokenTypeKeyword(keyword) {
+    if (toke.type.keyword == 'function') {
+      dbg_print('%c NOTICE: Function declaration.', 'color:green');
+      definesFunctions = true;
+    }
+
+    if (LOOPKEYS[keyword] !== undefined) {
+      amtloops++;
+      if (amtloops > 3) {
+        dbg_print('%c NONTRIVIAL: Too many loops/conditionals.', 'color:red');
+        if (DEBUG == false) {
+          return [false, 'NONTRIVIAL: Too many loops/conditionals.'];
+        }
+      }
+    }
+    return [true, ''];
+  }
+
   while (toke !== undefined && toke.type != acorn.tokTypes.eof) {
     if (toke.type.keyword !== undefined) {
       //dbg_print("Keyword:");
       //dbg_print(toke);
 
       // This type of loop detection ignores functional loop alternatives and ternary operators
-
-      if (toke.type.keyword == 'function') {
-        dbg_print('%c NOTICE: Function declaration.', 'color:green');
-        defines_functions = true;
+      const tokeTypeRes = evaluateByTokenTypeKeyword(toke.type.keyword);
+      if (tokeTypeRes[0] === false) {
+        return tokeTypeRes;
       }
-
-      if (loopkeys[toke.type.keyword] !== undefined) {
-        amtloops++;
-        if (amtloops > 3) {
-          dbg_print('%c NONTRIVIAL: Too many loops/conditionals.', 'color:red');
-          if (DEBUG == false) {
-            return [false, 'NONTRIVIAL: Too many loops/conditionals.'];
-          }
-        }
-      }
-    } else if (toke.value !== undefined && operators[toke.value] !== undefined) {
-      // It's just an operator. Javascript doesn't have operator overloading so it must be some
-      // kind of primitive (I.e. a number)
     } else if (toke.value !== undefined) {
-      var status = fname_data[toke.value];
-      if (status === true) { // is the identifier banned?
-        dbg_print('%c NONTRIVIAL: nontrivial token: \'' + toke.value + '\'', 'color:red');
-        if (DEBUG == false) {
-          return [false, 'NONTRIVIAL: nontrivial token: \'' + toke.value + '\''];
-        }
-      } else if (status === false) {// is the identifier not banned?
-        // Is there bracket suffix notation?
-        if (is_bsn(toke.end)) {
-          dbg_print('%c NONTRIVIAL: Bracket suffix notation on variable \'' + toke.value + '\'', 'color:red');
-          if (DEBUG == false) {
-            return [false, '%c NONTRIVIAL: Bracket suffix notation on variable \'' + toke.value + '\''];
-          }
-        }
-      } else if (status === undefined) {// is the identifier user defined?
-        // Is there bracket suffix notation?
-        if (is_bsn(toke.end)) {
-          dbg_print('%c NONTRIVIAL: Bracket suffix notation on variable \'' + toke.value + '\'', 'color:red');
-          if (DEBUG == false) {
-            return [false, 'NONTRIVIAL: Bracket suffix notation on variable \'' + toke.value + '\''];
-          }
-        }
-      } else {
-        dbg_print('trivial token:' + toke.value);
+      const tokeValRes = evaluateByTokenValue(toke);
+      if (tokeValRes[0] === false) {
+        return tokeValRes;
       }
     }
     // If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets
@@ -521,7 +534,7 @@ function full_evaluate(script) {
   }
 
   dbg_print('%cAppears to be trivial.', 'color:green;');
-  if (defines_functions === true)
+  if (definesFunctions === true)
     return [true, 'Script appears to be trivial but defines functions.'];
   else
     return [true, 'Script appears to be trivial.'];
@@ -530,7 +543,7 @@ function full_evaluate(script) {
 
 //****************************************************************************************************
 /**
-*	This is the entry point for full code evaluation.
+*	This is the entry point for full code evaluation for triviality.
 *
 *	Performs the initial pass on code to see if it needs to be completely parsed
 *
@@ -549,7 +562,7 @@ function evaluate(script, name) {
     return reservedResult;
   }
 
-  return full_evaluate(script);
+  return fullEvaluate(script);
 }
 
 function evaluateForReservedObj(script, name) {
