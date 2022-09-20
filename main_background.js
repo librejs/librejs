@@ -618,6 +618,7 @@ function validateLicense(matches) {
 */
 function license_read(scriptSrc, name, external = false) {
 
+  // Check for @licstart .. @licend method
   const license = legacy_license_lib.check(scriptSrc);
   if (license) {
     return [true, scriptSrc, `Licensed under: ${license}`];
@@ -653,6 +654,7 @@ function license_read(scriptSrc, name, external = false) {
     return trivial;
   }
 
+  // Check for @license .. @license-end method
   while (uneditedSrc) {
     const openingMatch = /\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi.exec(uneditedSrc);
     if (!openingMatch) { // no license found, check for triviality
@@ -856,6 +858,7 @@ var ResponseHandler = {
           });
           return ResponseProcessor.ACCEPT;
         } else {
+          // Check for the weblabel method
           let scriptInfo = await ExternalLicenses.check({ url: fullUrl, tabId, frameId, documentUrl });
           if (scriptInfo) {
             let verdict, ret;
