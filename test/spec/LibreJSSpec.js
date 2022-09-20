@@ -36,6 +36,10 @@ describe('LibreJS\' components', () => {
 
   let trivial = '1+1';
   let nontrivial = 'function nt() { document.documentElement.innerHTML=""; nt(); }';
+  // code calling reserved object is nontrivial
+  const nontrivialCall = 'eval();';
+  // code calling anything else is trivial
+  const trivialCall = 'foo();';
   let licensed = `// @license ${license.magnet} ${license.id}\n${nontrivial}\n// @license-end`;
   let unknownLicensed = `// @license ${unknownLicense.magnet} ${unknownLicense.id}\n${nontrivial}\n// @license-end`;
   let malformedLicensed = `// @license\n${nontrivial}`;
@@ -160,14 +164,17 @@ describe('LibreJS\' components', () => {
     });
 
     it('should accept trivial scripts', async () => {
-      let trivialInHtml = addScript(html, trivial);
-      let processed = await processHtml(trivialInHtml);
-      expect(extractScripts(processed, trivial)).toContain(trivial);
+      expect(extractScripts(await processHtml(
+        addScript(html, trivial)), trivial)).toContain(trivial);
+      expect(extractScripts(await processHtml(
+        addScript(html, trivialCall)), trivialCall)).toContain(trivialCall);
     });
 
     it('should block non-trivial scripts', async () => {
-      let processed = await processHtml(nontrivialInHtml);
-      expect(extractScripts(processed, nontrivial)).not.toContain(nontrivial);
+      expect(extractScripts(await processHtml(
+        nontrivialInHtml), nontrivial)).not.toContain(nontrivial);
+      expect(extractScripts(await processHtml(
+        addScript(html, nontrivialCall)), nontrivialCall)).not.toContain(nontrivialCall);
     });
 
     it('should accept scripts with known free license tags', async () => {
