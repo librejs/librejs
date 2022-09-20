@@ -67,7 +67,7 @@ function dbg_print(a, b) {
 */
 
 // These are objects that it will search for in an initial regex pass over non-free scripts.
-var reserved_objects = [
+const RESERVED_OBJECTS = [
   //"document",
   //"window",
   'fetch',
@@ -416,6 +416,12 @@ var fname_data = require('./fname_data.json').fname_data;
 
 //************************this part can be tested in the HTML file index.html's script test.js****************************
 
+/**
+ * Checks whether script is trivial by analysing its tokens.
+ *
+ * Returns an array of
+ * [flag (boolean, true if trivial), reason (string, human readable report)].
+ */
 function full_evaluate(script) {
   if (script === undefined || script == '') {
     return [true, 'Harmless null script'];
@@ -536,39 +542,36 @@ function full_evaluate(script) {
 *
 */
 function evaluate(script, name) {
-  function reserved_object_regex(object) {
-    var arith_operators = '\\+\\-\\*\\/\\%\\=';
-    return new RegExp('(?:[^\\w\\d]|^|(?:' + arith_operators + '))' + object + '(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)', 'g');
-  }
-  reserved_object_regex('window');
-  const ml_comment = /\/\*([\s\S]+?)\*\//g;
-  const il_comment = /\/\/.+/gm;
-  var temp = script.replace(/'.+?'+/gm, '\'string\'');
-  temp = temp.replace(/".+?"+/gm, '"string"');
-  temp = temp.replace(ml_comment, '');
-  temp = temp.replace(il_comment, '');
-  dbg_print('%c ------evaluation results for ' + name + '------', 'color:white');
-  dbg_print('Script accesses reserved objects?');
-  var flag = true;
-  var reason = ''
-  // 	This is where individual "passes" are made over the code
-  for (var i = 0; i < reserved_objects.length; i++) {
-    var res = reserved_object_regex(reserved_objects[i]).exec(temp);
-    if (res != null) {
-      dbg_print('%c fail', 'color:red;');
-      flag = false;
-      reason = 'Script uses a reserved object (' + reserved_objects[i] + ')';
-    }
-  }
-  if (flag) {
+  const reservedResult = evaluateForReservedObj(script, name);
+  if (reservedResult[0] === true) {
     dbg_print('%c pass', 'color:green;');
   } else {
-    return [flag, reason];
+    return reservedResult;
   }
 
   return full_evaluate(script);
 }
 
+function evaluateForReservedObj(script, name) {
+  function reservedObjectRegex(object) {
+    const arith_operators = '\\+\\-\\*\\/\\%\\=';
+    return new RegExp('(?:[^\\w\\d]|^|(?:' + arith_operators + '))' + object + '(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)', 'g');
+  }
+  const ml_comment = /\/\*([\s\S]+?)\*\//g;
+  const il_comment = /\/\/.+/gm;
+  const temp = script.replace(/'.+?'+/gm, '\'string\'').replace(/".+?"+/gm, '"string"').replace(ml_comment, '').replace(il_comment, '');
+  dbg_print('%c ------evaluation results for ' + name + '------', 'color:white');
+  dbg_print('Script accesses reserved objects?');
+
+  // 	This is where individual "passes" are made over the code
+  for (const reserved of RESERVED_OBJECTS) {
+    if (reservedObjectRegex(reserved).exec(temp) != null) {
+      dbg_print('%c fail', 'color:red;');
+      return [false, 'Script uses a reserved object (' + reserved + ')'];
+    }
+  }
+  return [true, 'Reserved object not found.'];
+}
 
 function validateLicense(matches) {
   if (!(Array.isArray(matches) && matches.length >= 4)) {
