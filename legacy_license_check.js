@@ -2,6 +2,7 @@
 * GNU LibreJS - A browser add-on to block nonfree nontrivial JavaScript.
 * *
 * Copyright (C) 2018 Nathan Nichols
+* Copyright (C) 2022 Yuchen Pei
 *
 * This file is part of GNU LibreJS.
 *
@@ -22,7 +23,7 @@
 const { licenses } = require('./license_definitions.js');
 const { patternUtils } = require('./pattern_utils.js');
 
-const licStartLicEndRe = /@licstartThefollowingistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)(.*)?@licendTheaboveistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)/mi;
+const LIC_RE = /@licstartThefollowingistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)(.*)?@licendTheaboveistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)/mi;
 
 
 /**
@@ -67,28 +68,23 @@ const searchTable = function(strippedComment) {
     }
   }
   console.log('No global license found.');
-  return false;
-
+  return null;
 }
 
 /**
-*	Takes the "first comment available on the page"
-*	returns true for "free" and false for anything else	
-*/
+ * Checks whether licenseText, modulo whitespace, starts with
+ * a @licstart / @licend with a free license, returns the license name
+ * if so, and null otherwise.
+ */
 const check = function(licenseText) {
-  if (licenseText === undefined || licenseText === null || licenseText == '') {
-    // not an inline script
-    return false;
+  if (licenseText === undefined || licenseText === null) {
+    return null;
   }
   // remove whitespace
   const stripped = patternUtils.removeWhitespace(licenseText);
   // Search for @licstart/@licend
-  // This assumes that there isn't anything before the comment
-  const matches = stripped.match(licStartLicEndRe);
-  if (matches == null) {
-    return false;
-  }
-  return searchTable(matches[0]);
+  const matches = stripped.match(LIC_RE);
+  return matches && searchTable(matches[0]);
 };
 
 module.exports.check = check;

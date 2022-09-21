@@ -1052,7 +1052,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
     }
   }
 
-  let license = false;
+  let license = null;
   if (first_script_src != '') {
     license = legacy_license_lib.check(first_script_src);
   }
