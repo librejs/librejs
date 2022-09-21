@@ -735,16 +735,16 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
       return result(`/* LibreJS: script whitelisted by user preference. */\n${scriptSrc}`);
   }
 
-  let [verdict, editedSource, reason] = licenseRead(scriptSrc, scriptName, isExternal);
+  let [accepted, editedSource, reason] = licenseRead(scriptSrc, scriptName, isExternal);
 
   if (tabId < 0) {
-    return result(verdict ? scriptSrc : editedSource);
+    return result(editedSource);
   }
 
   let domain = get_domain(url);
   let report = activityReports[tabId] || (activityReports[tabId] = await createReport({ tabId }));
-  updateBadge(tabId, report, !verdict);
-  let category = await addReportEntry(tabId, { 'url': domain, [verdict ? 'accepted' : 'blocked']: [url, reason] });
+  updateBadge(tabId, report, !accepted);
+  let category = await addReportEntry(tabId, { 'url': domain, [accepted ? 'accepted' : 'blocked']: [url, reason] });
   switch (category) {
     case 'blacklisted': {
       editedSource = `/* LibreJS: script ${category} by user. */`;
@@ -756,9 +756,9 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
         ? scriptSrc : `/* LibreJS: script ${category} by user. */\n${scriptSrc}`);
     }
     default: {
-      let scriptSource = verdict ? scriptSrc : editedSource;
+      let scriptSource = accepted ? scriptSrc : editedSource;
       return result(scriptSrc.startsWith('javascript:')
-        ? (verdict ? scriptSource : `javascript:void(/* ${scriptSource} */)`)
+        ? (accepted ? scriptSource : `javascript:void(/* ${scriptSource} */)`)
         : `/* LibreJS: script ${category}. */\n${scriptSource}`
       );
     }
