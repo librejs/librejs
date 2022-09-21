@@ -3,6 +3,7 @@
  * *
  * Copyright (C) 2011, 2012, 2013, 2014 Loic J. Duros
  * Copyright (C) 2014, 2015 Nik Nyby
+ * Copyright (C) 2022 Yuchen Pei
  *
  * This file is part of GNU LibreJS.
  *
