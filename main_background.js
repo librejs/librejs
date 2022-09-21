@@ -78,6 +78,10 @@ const RESERVED_OBJECTS = [
 ];
 const LOOPKEYS = { 'for': true, 'if': true, 'while': true, 'switch': true };
 const OPERATORS = { '||': true, '&&': true, '=': true, '==': true, '++': true, '--': true, '+=': true, '-=': true, '*': true };
+// @license match, second and third capture groups are canonicalUrl
+// and license name
+const OPENING_LICENSE_RE = /\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi;
+const CLOSING_LICENSE_RE = /\/([*/])\s*@license-end\s*(\*\/)?/mi;
 
 /*
 *
@@ -567,12 +571,12 @@ function evaluate(script, name) {
 
 function evaluateForReservedObj(script, name) {
   function reservedObjectRegex(object) {
-    const arith_operators = '\\+\\-\\*\\/\\%\\=';
-    return new RegExp('(?:[^\\w\\d]|^|(?:' + arith_operators + '))' + object + '(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)', 'g');
+    const arithOperators = '\\+\\-\\*\\/\\%\\=';
+    return new RegExp('(?:[^\\w\\d]|^|(?:' + arithOperators + '))' + object + '(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)', 'g');
   }
-  const ml_comment = /\/\*([\s\S]+?)\*\//g;
-  const il_comment = /\/\/.+/gm;
-  const temp = script.replace(/'.+?'+/gm, '\'string\'').replace(/".+?"+/gm, '"string"').replace(ml_comment, '').replace(il_comment, '');
+  const mlComment = /\/\*([\s\S]+?)\*\//g;
+  const ilComment = /\/\/.+/gm;
+  const temp = script.replace(/'.+?'+/gm, '\'string\'').replace(/".+?"+/gm, '"string"').replace(mlComment, '').replace(ilComment, '');
   dbg_print('%c ------evaluation results for ' + name + '------', 'color:white');
   dbg_print('Script accesses reserved objects?');
 
@@ -586,15 +590,16 @@ function evaluateForReservedObj(script, name) {
   return [true, 'Reserved object not found.'];
 }
 
-function validateLicense(matches) {
-  if (!(Array.isArray(matches) && matches.length >= 4)) {
+// checks license in an OPENING_LICENSE_RE match
+function checkLicenseInMatch(match) {
+  if (!(Array.isArray(match) && match.length >= 4)) {
     return [false, 'Malformed or unrecognized license tag.'];
   }
 
-  const [all, first] = [matches[0], matches[2].replace('&amp;', '&')];
+  const [all, first] = [match[0], match[2].replace('&amp;', '&')];
 
   for (const key in licenses) {
-    // Match by link on first parameter (legacy)
+    // Match by canonicalUrl
     for (const url of licenses[key].canonicalUrl) {
       if (first === url || first === url.replace('^http://', 'https://')) {
         return [true, `Recognized license: "${licenses[key].licenseName}".`];
@@ -606,17 +611,21 @@ function validateLicense(matches) {
 
 
 /**
-*
-*	Evaluates the content of a script (license, if it is non-trivial)
-*
-*	Returns
-*	[
-*		true (accepted) or false (denied),
-*		edited content,
-*		reason text
-*	]
-*/
-function license_read(scriptSrc, name, external = false) {
+ *
+ *	Evaluates the content of a script for licenses and triviality
+ * scriptSrc: content of the script; name: script name; external:
+ * whether the script is external
+ *
+ *	Returns
+ *	[
+ *		true (accepted) or false (denied),
+ *		edited content,
+ *		reason text
+ *	]
+ */
+function licenseRead(scriptSrc, name, external = false) {
+  let inSrc = scriptSrc.trim();
+  if (!inSrc) return [true, scriptSrc, 'Empty source.'];
 
   // Check for @licstart .. @licend method
   const license = legacy_license_lib.check(scriptSrc);
@@ -627,9 +636,8 @@ function license_read(scriptSrc, name, external = false) {
     return [true, scriptSrc, 'Common script known to be free software.'];
   }
 
-  let editedSrc = '';
-  let uneditedSrc = scriptSrc.trim();
-  let reason = uneditedSrc ? '' : 'Empty source.';
+  let outSrc = '';
+  let reason = '';
   let partsDenied = false;
   let partsAccepted = false;
 
@@ -642,66 +650,58 @@ function license_read(scriptSrc, name, external = false) {
       : evaluate(s, name);
     if (trivial) {
       partsAccepted = true;
-      editedSrc += s;
+      outSrc += s;
     } else {
       partsDenied = true;
       if (s.startsWith('javascript:'))
-        editedSrc += `# LIBREJS BLOCKED: ${message}`;
+        outSrc += `# LIBREJS BLOCKED: ${message}`;
       else
-        editedSrc += `/*\nLIBREJS BLOCKED: ${message}\n*/`;
+        outSrc += `/*\nLIBREJS BLOCKED: ${message}\n*/`;
     }
     reason += `\n${message}`;
-    return trivial;
   }
 
-  // Check for @license .. @license-end method
-  while (uneditedSrc) {
-    const openingMatch = /\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi.exec(uneditedSrc);
-    if (!openingMatch) { // no license found, check for triviality
-      checkTriviality(uneditedSrc);
-      break;
-    }
+  // Consume inSrc by checking licenses in all @license / @license-end
+  // blocks and triviality outside these blocks
+  while (inSrc) {
+    const openingMatch = OPENING_LICENSE_RE.exec(inSrc);
+    const openingIndex = openingMatch ? openingMatch.index : inSrc.length;
+    // checks the triviality of the code before the license tag, if any
+    checkTriviality(inSrc.substring(0, openingIndex));
+    inSrc = inSrc.substring(openingIndex);
+    if (!inSrc) break;
 
-    const openingIndex = openingMatch.index;
-    if (openingIndex) {
-      // let's check the triviality of the code before the license tag, if any
-      checkTriviality(uneditedSrc.substring(0, openingIndex));
-    }
-    // let's check the actual license
-    uneditedSrc = uneditedSrc.substring(openingIndex);
-
-    const closureMatch =
-      /\/([*/])\s*@license-end\s*(\*\/)?/mi.exec(uneditedSrc);
+    // checks the remaining part, that starts with an @license
+    const closureMatch = CLOSING_LICENSE_RE.exec(inSrc);
     if (!closureMatch) {
       const msg = 'ERROR: @license with no @license-end';
       return [false, `\n/*\n ${msg} \n*/\n`, msg];
     }
-
     let closureEndIndex = closureMatch.index + closureMatch[0].length;
-    const commentEndOffset = uneditedSrc.substring(closureEndIndex).indexOf(closureMatch[1] === '*' ? '*/' : '\n');
+    const commentEndOffset = inSrc.substring(closureEndIndex).indexOf(closureMatch[1] === '*' ? '*/' : '\n');
     if (commentEndOffset !== -1) {
       closureEndIndex += commentEndOffset;
     }
 
-    const [licenseOK, message] = validateLicense(openingMatch);
+    const [licenseOK, message] = checkLicenseInMatch(openingMatch);
     if (licenseOK) {
-      editedSrc += uneditedSrc.substr(0, closureEndIndex);
+      outSrc += inSrc.substr(0, closureEndIndex);
       partsAccepted = true;
     } else {
-      editedSrc += `\n/*\n${message}\n*/\n`;
+      outSrc += `\n/*\n${message}\n*/\n`;
       partsDenied = true;
     }
     reason += `\n${message}`;
 
     // trim off everything we just evaluated
-    uneditedSrc = uneditedSrc.substring(closureEndIndex).trim();
+    inSrc = inSrc.substring(closureEndIndex).trim();
   }
 
   if (partsDenied) {
     if (partsAccepted) {
       reason = `Some parts of the script have been disabled (check the source for details).\n^--- ${reason}`;
     }
-    return [false, editedSrc, reason];
+    return [false, outSrc, reason];
   }
 
   return [true, scriptSrc, reason];
@@ -736,7 +736,7 @@ async function get_script(response, url, tabId = -1, whitelisted = false, index 
       return result(`/* LibreJS: script whitelisted by user preference. */\n${response}`);
   }
 
-  let [verdict, editedSource, reason] = license_read(response, scriptName, index === -2);
+  let [verdict, editedSource, reason] = licenseRead(response, scriptName, index === -2);
 
   if (tabId < 0) {
     return result(verdict ? response : editedSource);
