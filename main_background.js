@@ -3,6 +3,7 @@
 * *
 * Copyright (C) 2017, 2018 Nathan Nichols
 * Copyright (C) 2018 Ruben Rodriguez <ruben@gnu.org>
+* Copyright (C) 2022 Yuchen Pei <id@ypei.org>
 *
 * This file is part of GNU LibreJS.
 *
@@ -20,68 +21,15 @@
 * along with GNU LibreJS.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-const acorn = require('acorn');
-const licenseLib = require('./common/checks.js');
+const checkLib = require('./common/checks.js');
 const { ResponseProcessor } = require('./bg/ResponseProcessor');
 const { Storage, ListStore, hash } = require('./common/Storage');
 const { ListManager } = require('./bg/ListManager');
 const { ExternalLicenses } = require('./bg/ExternalLicenses');
-const { licenses } = require('./common/license_definitions');
-const { patternUtils } = require('./common/pattern_utils');
+const { makeDebugLogger } = require('./common/debug.js');
 
-console.log('main_background.js');
-/**
-*	If this is true, it evaluates entire scripts instead of returning as soon as it encounters a violation.
-*
-*	Also, it controls whether or not this part of the code logs to the console.
-*
-*/
-var DEBUG = false; // debug the JS evaluation
-var PRINT_DEBUG = false; // Everything else
-var time = Date.now();
-
-function dbg_print(a, b) {
-  if (PRINT_DEBUG == true) {
-    console.log('Time spent so far: ' + (Date.now() - time) / 1000 + ' seconds');
-    if (b === undefined) {
-      console.log(a);
-    } else {
-      console.log(a, b);
-    }
-  }
-}
-
-/*
-  NONTRIVIAL THINGS:
-  - Fetch
-  - XMLhttpRequest
-  - eval()
-  - ?
-  JAVASCRIPT CAN BE FOUND IN:
-  - Event handlers (onclick, onload, onsubmit, etc.)
-  - <script>JS</script>
-  - <script src="/JS.js"></script>
-  WAYS TO DETERMINE PASS/FAIL:
-  - "// @license [magnet link] [identifier]" then "// @license-end" (may also use /* comments)
-  - Automatic whitelist: (http://bzr.savannah.gnu.org/lh/librejs/dev/annotate/head:/data/script_libraries/script-libraries.json_
-*/
-
-// These are objects that it will search for in an initial regex pass over non-free scripts.
-const RESERVED_OBJECTS = [
-  //"document",
-  //"window",
-  'fetch',
-  'XMLHttpRequest',
-  'chrome', // only on chrome
-  'browser', // only on firefox
-  'eval'
-];
-const LOOPKEYS = new Set(['for', 'if', 'while', 'switch']);
-const OPERATORS = new Set(['||', '&&', '=', '==', '++', '--', '+=', '-=', '*']);
-// @license match, second and third capture groups are canonicalUrl
-// and license name
-const OPENING_LICENSE_RE = /\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi;
-const CLOSING_LICENSE_RE = /\/([*/])\s*@license-end\s*(\*\/)?/mi;
+const PRINT_DEBUG = false;
+const dbg_print = makeDebugLogger('main_background.js', PRINT_DEBUG, Date.now());
 
 /*
 *
@@ -415,294 +363,6 @@ async function onTabActivated({ tabId }) {
 }
 
 /* *********************************************************************************************** */
-
-const fnameData = require('./fname_data.json').fname_data;
-
-//************************this part can be tested in the HTML file index.html's script test.js****************************
-
-/**
- * Checks whether script is trivial by analysing its tokens.
- *
- * Returns an array of
- * [flag (boolean, true if trivial), reason (string, human readable report)].
- */
-function fullEvaluate(script) {
-  if (script === undefined || script == '') {
-    return [true, 'Harmless null script'];
-  }
-
-  let tokens;
-
-  try {
-    tokens = acorn.tokenizer(script);
-  } catch (e) {
-    console.warn('Tokenizer could not be initiated (probably invalid code)');
-    return [false, 'Tokenizer could not be initiated (probably invalid code)'];
-  }
-  try {
-    var toke = tokens.getToken();
-  } catch (e) {
-    console.log(script);
-    console.log(e);
-    console.warn('couldn\'t get first token (probably invalid code)');
-    console.warn('Continuing evaluation');
-  }
-
-  let amtloops = 0;
-  let definesFunctions = false;
-
-  /**
-  * Given the end of an identifer token, it tests for parentheses
-  */
-  function is_bsn(end) {
-    let i = 0;
-    while (script.charAt(end + i).match(/\s/g) !== null) {
-      i++;
-      if (i >= script.length - 1) {
-        return false;
-      }
-    }
-    return script.charAt(end + i) == '[';
-  }
-
-  function evaluateByTokenValue(toke) {
-    const value = toke.value;
-    if (OPERATORS.has(value)) {
-      // It's just an operator. Javascript doesn't have operator overloading so it must be some
-      // kind of primitive (I.e. a number)
-    } else {
-      const status = fnameData[value];
-      if (status === true) { // is the identifier banned?
-        dbg_print('%c NONTRIVIAL: nontrivial token: \'' + value + '\'', 'color:red');
-        if (DEBUG == false) {
-          return [false, 'NONTRIVIAL: nontrivial token: \'' + value + '\''];
-        }
-      } else if (status === false || status === undefined) {// is the identifier not banned or user defined?
-        // Is there bracket suffix notation?
-        if (is_bsn(toke.end)) {
-          dbg_print('%c NONTRIVIAL: Bracket suffix notation on variable \'' + value + '\'', 'color:red');
-          if (DEBUG == false) {
-            return [false, '%c NONTRIVIAL: Bracket suffix notation on variable \'' + value + '\''];
-          }
-        }
-      } else {
-        dbg_print('trivial token:' + value);
-      }
-    }
-    return [true, ''];
-  }
-
-  function evaluateByTokenTypeKeyword(keyword) {
-    if (toke.type.keyword == 'function') {
-      dbg_print('%c NOTICE: Function declaration.', 'color:green');
-      definesFunctions = true;
-    }
-
-    if (LOOPKEYS.has(keyword)) {
-      amtloops++;
-      if (amtloops > 3) {
-        dbg_print('%c NONTRIVIAL: Too many loops/conditionals.', 'color:red');
-        if (DEBUG == false) {
-          return [false, 'NONTRIVIAL: Too many loops/conditionals.'];
-        }
-      }
-    }
-    return [true, ''];
-  }
-
-  while (toke !== undefined && toke.type != acorn.tokTypes.eof) {
-    if (toke.type.keyword !== undefined) {
-      //dbg_print("Keyword:");
-      //dbg_print(toke);
-
-      // This type of loop detection ignores functional loop alternatives and ternary operators
-      const tokeTypeRes = evaluateByTokenTypeKeyword(toke.type.keyword);
-      if (tokeTypeRes[0] === false) {
-        return tokeTypeRes;
-      }
-    } else if (toke.value !== undefined) {
-      const tokeValRes = evaluateByTokenValue(toke);
-      if (tokeValRes[0] === false) {
-        return tokeValRes;
-      }
-    }
-    // If not a keyword or an identifier it's some kind of operator, field parenthesis, brackets
-    try {
-      toke = tokens.getToken();
-    } catch (e) {
-      dbg_print('Denied script because it cannot be parsed.');
-      return [false, 'NONTRIVIAL: Cannot be parsed. This could mean it is a 404 error.'];
-    }
-  }
-
-  dbg_print('%cAppears to be trivial.', 'color:green;');
-  if (definesFunctions === true)
-    return [true, 'Script appears to be trivial but defines functions.'];
-  else
-    return [true, 'Script appears to be trivial.'];
-}
-
-
-//****************************************************************************************************
-/**
-*	This is the entry point for full code evaluation for triviality.
-*
-*	Performs the initial pass on code to see if it needs to be completely parsed
-*
-*	This can only determine if a script is bad, not if it's good
-*
-*	If it passes the intitial pass, it runs the full pass and returns the result
-
-*	It returns an array of [flag (boolean, false if "bad"), reason (string, human readable report)]
-*
-*/
-function evaluate(script, name) {
-  const reservedResult = evaluateForReservedObj(script, name);
-  if (reservedResult[0] === true) {
-    dbg_print('%c pass', 'color:green;');
-  } else {
-    return reservedResult;
-  }
-
-  return fullEvaluate(script);
-}
-
-function evaluateForReservedObj(script, name) {
-  function reservedObjectRegex(object) {
-    const arithOperators = '\\+\\-\\*\\/\\%\\=';
-    return new RegExp('(?:[^\\w\\d]|^|(?:' + arithOperators + '))' + object + '(?:\\s*?(?:[\\;\\,\\.\\(\\[])\\s*?)', 'g');
-  }
-  const mlComment = /\/\*([\s\S]+?)\*\//g;
-  const ilComment = /\/\/.+/gm;
-  const temp = script.replace(/'.+?'+/gm, '\'string\'').replace(/".+?"+/gm, '"string"').replace(mlComment, '').replace(ilComment, '');
-  dbg_print('%c ------evaluation results for ' + name + '------', 'color:white');
-  dbg_print('Script accesses reserved objects?');
-
-  // 	This is where individual "passes" are made over the code
-  for (const reserved of RESERVED_OBJECTS) {
-    if (reservedObjectRegex(reserved).exec(temp) != null) {
-      dbg_print('%c fail', 'color:red;');
-      return [false, 'Script uses a reserved object (' + reserved + ')'];
-    }
-  }
-  return [true, 'Reserved object not found.'];
-}
-
-// checks license in an OPENING_LICENSE_RE match
-function checkLicenseInMatch(match) {
-  if (!(Array.isArray(match) && match.length >= 4)) {
-    return [false, 'Malformed or unrecognized license tag.'];
-  }
-
-  const [all, first] = [match[0], match[2].replace('&amp;', '&')];
-
-  for (const key in licenses) {
-    // Match by canonicalUrl
-    for (const url of licenses[key].canonicalUrl) {
-      if (first === url || first === url.replace('^http://', 'https://')) {
-        return [true, `Recognized license: "${licenses[key].licenseName}".`];
-      }
-    }
-  }
-  return [false, `Unrecognized license tag: "${all}"`];
-}
-
-
-/**
- *
- *	Evaluates the content of a script for licenses and triviality
- * scriptSrc: content of the script; name: script name; external:
- * whether the script is external
- *
- *	Returns
- *	[
- *		true (accepted) or false (denied),
- *		edited content,
- *		reason text
- *	]
- */
-function licenseRead(scriptSrc, name, external = false) {
-  let inSrc = scriptSrc.trim();
-  if (!inSrc) return [true, scriptSrc, 'Empty source.'];
-
-  // Check for @licstart .. @licend method
-  const license = licenseLib.check(scriptSrc);
-  if (license) {
-    return [true, scriptSrc, `Licensed under: ${license}`];
-  }
-
-  let outSrc = '';
-  let reason = '';
-  let partsDenied = false;
-  let partsAccepted = false;
-
-  function checkTriviality(s) {
-    if (!patternUtils.removeJsComments(s).trim()) {
-      return true; // empty, ignore it
-    }
-    const [trivial, message] = external ?
-      [false, 'External script with no known license']
-      : evaluate(s, name);
-    if (trivial) {
-      partsAccepted = true;
-      outSrc += s;
-    } else {
-      partsDenied = true;
-      if (s.startsWith('javascript:'))
-        outSrc += `# LIBREJS BLOCKED: ${message}`;
-      else
-        outSrc += `/*\nLIBREJS BLOCKED: ${message}\n*/`;
-    }
-    reason += `\n${message}`;
-  }
-
-  // Consume inSrc by checking licenses in all @license / @license-end
-  // blocks and triviality outside these blocks
-  while (inSrc) {
-    const openingMatch = OPENING_LICENSE_RE.exec(inSrc);
-    const openingIndex = openingMatch ? openingMatch.index : inSrc.length;
-    // checks the triviality of the code before the license tag, if any
-    checkTriviality(inSrc.substring(0, openingIndex));
-    inSrc = inSrc.substring(openingIndex);
-    if (!inSrc) break;
-
-    // checks the remaining part, that starts with an @license
-    const closureMatch = CLOSING_LICENSE_RE.exec(inSrc);
-    if (!closureMatch) {
-      const msg = 'ERROR: @license with no @license-end';
-      return [false, `\n/*\n ${msg} \n*/\n`, msg];
-    }
-    let closureEndIndex = closureMatch.index + closureMatch[0].length;
-    const commentEndOffset = inSrc.substring(closureEndIndex).indexOf(closureMatch[1] === '*' ? '*/' : '\n');
-    if (commentEndOffset !== -1) {
-      closureEndIndex += commentEndOffset;
-    }
-
-    const [licenseOK, message] = checkLicenseInMatch(openingMatch);
-    if (licenseOK) {
-      outSrc += inSrc.substr(0, closureEndIndex);
-      partsAccepted = true;
-    } else {
-      outSrc += `\n/*\n${message}\n*/\n`;
-      partsDenied = true;
-    }
-    reason += `\n${message}`;
-
-    // trim off everything we just evaluated
-    inSrc = inSrc.substring(closureEndIndex).trim();
-  }
-
-  if (partsDenied) {
-    if (partsAccepted) {
-      reason = `Some parts of the script have been disabled (check the source for details).\n^--- ${reason}`;
-    }
-    return [false, outSrc, reason];
-  }
-
-  return [true, scriptSrc, reason];
-}
-
-/* *********************************************************************************************** */
 // TODO: Test if this script is being loaded from another domain compared to activityReports[tabid]["url"]
 
 /**
@@ -732,7 +392,7 @@ async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, re
       return result(`/* LibreJS: script whitelisted by user preference. */\n${scriptSrc}`);
   }
 
-  const [accepted, editedSource, reason] = listManager.builtInHashes.has(hash(scriptSrc)) ? [true, scriptSrc, 'Common script known to be free software.'] : licenseRead(scriptSrc, scriptName, isExternal);
+  const [accepted, editedSource, reason] = listManager.builtInHashes.has(hash(scriptSrc)) ? [true, scriptSrc, 'Common script known to be free software.'] : checkLib.checkScriptSource(scriptSrc, scriptName, isExternal);
 
   if (tabId < 0) {
     return result(editedSource);
@@ -995,19 +655,10 @@ function read_metadata(meta_element) {
     return false;
   }
 
-  // this should be adequete to escape the HTML escaping
-  parts[0] = parts[0].replace(/&amp;/g, '&');
-
-  try {
-    for (const url of licenses[parts[1]].canonicalUrl) {
-      if (url.startsWith('magnet:') && url == parts[0]) {
-        return true;
-      }
-    }
-    console.log('invalid (doesn\'t match licenses)');
-    return false;
-  } catch (error) {
-    console.log('invalid (threw error, key didn\'t exist)');
+  if (checkLib.checkMagnet(parts[0])) {
+    return true;
+  } else {
+    console.log('invalid (doesn\'t match licenses or key didn\'t exist)');
     return false;
   }
 }
@@ -1044,24 +695,21 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
     }
   }
 
-  let license = null;
-  if (first_script_src != '') {
-    license = licenseLib.check(first_script_src);
-  }
+  const licenseName = checkLib.checkLicenseText(first_script_src);
 
   let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
-  if (read_metadata(meta_element) || license) {
+  if (read_metadata(meta_element) || licenseName) {
     console.log('Valid license for intrinsic events found');
     let line, extras;
     if (meta_element) {
       line = findLine(/id\s*=\s*['"]?LibreJS-info\b/gi);
       extras = '(0)';
-    } else if (license) {
+    } else if (licenseName) {
       line = html.substring(0, html.indexOf(first_script_src)).split(/\n/).length;
       extras = '\n' + first_script_src;
     }
     let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${meta_element ? meta_element.tagName : 'SCRIPT'}>)${extras}` : url;
-    addReportEntry(tabId, { url, 'accepted': [viewUrl, `Global license for the page: ${license}`] });
+    addReportEntry(tabId, { url, 'accepted': [viewUrl, `Global license for the page: ${licenseName}`] });
     // Do not process inline scripts
     scripts = [];
   } else {
@@ -1219,7 +867,7 @@ async function init_addon() {
   // Analyzes all the html documents and external scripts as they're loaded
   ResponseProcessor.install(ResponseHandler);
 
-  licenseLib.init();
+  checkLib.init();
 
   const Test = require('./common/Test');
   if (Test.getURL()) {
