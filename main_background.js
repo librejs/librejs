@@ -719,7 +719,7 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
     return returnsPair ? scriptSource : [scriptSource, -1];
   }
 
-  let scriptName = url.split('/').pop();
+  const scriptName = url.split('/').pop();
   if (whitelisted) {
     if (tabId !== -1) {
       const site = ListManager.siteMatch(url, whitelist);
@@ -741,22 +741,22 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
     return result(editedSource);
   }
 
-  let domain = get_domain(url);
-  let report = activityReports[tabId] || (activityReports[tabId] = await createReport({ tabId }));
+  const domain = get_domain(url);
+  const report = activityReports[tabId] || (activityReports[tabId] = await createReport({ tabId }));
   updateBadge(tabId, report, !accepted);
-  let category = await addReportEntry(tabId, { 'url': domain, [accepted ? 'accepted' : 'blocked']: [url, reason] });
+  const category = await addReportEntry(tabId, { 'url': domain, [accepted ? 'accepted' : 'blocked']: [url, reason] });
   switch (category) {
     case 'blacklisted': {
-      editedSource = `/* LibreJS: script ${category} by user. */`;
+      const edited = `/* LibreJS: script ${category} by user. */`;
       return result(scriptSrc.startsWith('javascript:')
-        ? `javascript:void(${encodeURIComponent(editedSource)})` : editedSource);
+        ? `javascript:void(${encodeURIComponent(edited)})` : edited);
     }
     case 'whitelisted': {
       return result(scriptSrc.startsWith('javascript:')
         ? scriptSrc : `/* LibreJS: script ${category} by user. */\n${scriptSrc}`);
     }
     default: {
-      let scriptSource = accepted ? scriptSrc : editedSource;
+      const scriptSource = accepted ? scriptSrc : editedSource;
       return result(scriptSrc.startsWith('javascript:')
         ? (accepted ? scriptSource : `javascript:void(/* ${scriptSource} */)`)
         : `/* LibreJS: script ${category}. */\n${scriptSource}`
@@ -858,17 +858,10 @@ var ResponseHandler = {
           return ResponseProcessor.ACCEPT;
         } else {
           // Check for the weblabel method
-          let scriptInfo = await ExternalLicenses.check({ url: fullUrl, tabId, frameId, documentUrl });
+          const scriptInfo = await ExternalLicenses.check({ url: fullUrl, tabId, frameId, documentUrl });
           if (scriptInfo) {
-            let verdict, ret;
-            let msg = scriptInfo.toString();
-            if (scriptInfo.free) {
-              verdict = 'accepted';
-              ret = ResponseProcessor.ACCEPT;
-            } else {
-              verdict = 'blocked';
-              ret = ResponseProcessor.REJECT;
-            }
+            const [verdict, ret] = scriptInfo.free ? ['accepted', ResponseProcessor.ACCEPT] : ['blocked', ResponseProcessor.REJECT];
+            const msg = scriptInfo.toString();
             addReportEntry(tabId, { url, [verdict]: [url, msg] });
             return ret;
           }
@@ -884,8 +877,8 @@ var ResponseHandler = {
   *	Here we do the heavylifting, analyzing unknown scripts
   */
   async post(response) {
-    let { type } = response.request;
-    let handle_it = type === 'script' ? handle_script : handle_html;
+    const { type } = response.request;
+    const handle_it = type === 'script' ? handle_script : handle_html;
     return await handle_it(response, response.whitelisted);
   }
 }
