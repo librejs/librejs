@@ -625,31 +625,31 @@ function showConditionalElements(doc) {
 *	Tests to see if the intrinsic events on the page are free or not.
 *	returns true if they are, false if they're not
 */
-function read_metadata(meta_element) {
+function readMetadata(metaElement) {
 
-  if (meta_element === undefined || meta_element === null) {
-    return;
+  if (metaElement === undefined || metaElement === null) {
+    return false;
   }
 
   console.log('metadata found');
 
-  var metadata = {};
+  let metadata = {};
 
   try {
-    metadata = JSON.parse(meta_element.innerHTML);
+    metadata = JSON.parse(metaElement.innerHTML);
   } catch (error) {
     console.log('Could not parse metadata on page.')
     return false;
   }
 
-  var license_str = metadata['intrinsic-events'];
-  if (license_str === undefined) {
+  const licenseStr = metadata['intrinsic-events'];
+  if (licenseStr === undefined) {
     console.log('No intrinsic events license');
     return false;
   }
-  console.log(license_str);
+  console.log(licenseStr);
 
-  var parts = license_str.split(' ');
+  const parts = licenseStr.split(' ');
   if (parts.length != 2) {
     console.log('invalid (>2 tokens)');
     return false;
@@ -663,52 +663,47 @@ function read_metadata(meta_element) {
   }
 }
 /**
-
-* 	Reads/changes the HTML of a page and the scripts within it.
-*/
+ * 	Reads/changes the HTML of a page and the scripts within it.
+ * Returns string or null.
+ */
 async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
 
-  var parser = new DOMParser();
-  var html_doc = parser.parseFromString(html, 'text/html');
+  const htmlDoc = new DOMParser().parseFromString(html, 'text/html');
 
   // moves external licenses reference, if any, before any <SCRIPT> element
-  ExternalLicenses.optimizeDocument(html_doc, { tabId, frameId, documentUrl });
+  ExternalLicenses.optimizeDocument(htmlDoc, { tabId, frameId, documentUrl });
 
-  let url = ListStore.urlItem(documentUrl);
+  const url = ListStore.urlItem(documentUrl);
 
   if (whitelisted) { // don't bother rewriting
     await checkScriptAndUpdateReport(html, url, tabId, whitelisted); // generates whitelisted report
     return null;
   }
 
-  var scripts = html_doc.scripts;
+  const scripts = htmlDoc.scripts;
 
-  var meta_element = html_doc.getElementById('LibreJS-info');
-  var first_script_src = '';
+  const metaElement = htmlDoc.getElementById('LibreJS-info');
+  let firstScriptSrc = '';
 
   // get the potential inline source that can contain a license
-  for (let script of scripts) {
+  for (const script of scripts) {
     // The script must be in-line and exist
     if (script && !script.src) {
-      first_script_src = script.textContent;
+      firstScriptSrc = script.textContent;
       break;
     }
   }
 
-  const licenseName = checkLib.checkLicenseText(first_script_src);
+  const licenseName = checkLib.checkLicenseText(firstScriptSrc);
 
-  let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
-  if (read_metadata(meta_element) || licenseName) {
+  const findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
+  if (readMetadata(metaElement) || licenseName) {
     console.log('Valid license for intrinsic events found');
-    let line, extras;
-    if (meta_element) {
-      line = findLine(/id\s*=\s*['"]?LibreJS-info\b/gi);
-      extras = '(0)';
-    } else if (licenseName) {
-      line = html.substring(0, html.indexOf(first_script_src)).split(/\n/).length;
-      extras = '\n' + first_script_src;
-    }
-    let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${meta_element ? meta_element.tagName : 'SCRIPT'}>)${extras}` : url;
+    const [line, extras] = metaElement ?
+      [findLine(/id\s*=\s*['"]?LibreJS-info\b/gi), '(0)'] :
+      [html.substring(0, html.indexOf(firstScriptSrc)).split(/\n/).length,
+      '\n' + firstScriptSrc];
+    let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${metaElement ? metaElement.tagName : 'SCRIPT'}>)${extras}` : url;
     addReportEntry(tabId, { url, 'accepted': [viewUrl, `Global license for the page: ${licenseName}`] });
     // Do not process inline scripts
     scripts = [];
@@ -717,7 +712,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
     let modified = false;
     // Deal with intrinsic events
     let intrinsicFinder = /<[a-z][^>]*\b(on\w+|href\s*=\s*['"]?javascript:)/gi;
-    for (let element of html_doc.querySelectorAll('*')) {
+    for (let element of htmlDoc.querySelectorAll('*')) {
       let line = -1;
       for (let attr of element.attributes) {
         let { name, value } = attr;
@@ -773,12 +768,12 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
       }
     }
 
-    modified = showConditionalElements(html_doc) > 0 || modified;
+    modified = showConditionalElements(htmlDoc) > 0 || modified;
     if (modified) {
       if (modifiedInline) {
-        forceNoscriptElements(html_doc);
+        forceNoscriptElements(htmlDoc);
       }
-      return doc2HTML(html_doc);
+      return doc2HTML(htmlDoc);
     }
   }
   return null;

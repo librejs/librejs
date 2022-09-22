@@ -37,7 +37,7 @@
       if (!response.ok) throw `${response.status} ${response.statusText}`;
       const doc = new DOMParser().parseFromString(
         await response.text(),
-        "text/html"
+        'text/html'
       );
       const link = a => ({ url: a.href, label: a.textContent });
       const firstLink = parent => link(parent.querySelector("a"));
