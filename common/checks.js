@@ -24,7 +24,7 @@ const acorn = require('acorn');
 const { licenses } = require('./license_definitions.js');
 const { patternUtils } = require('./pattern_utils.js');
 const { makeDebugLogger } = require('./common/debug.js');
-const fnameData = require('../fname_data.json').fname_data;
+const fnameData = require('./fname_data.json').fname_data;
 
 const LIC_RE = /@licstartThefollowingistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)(.*)?@licendTheaboveistheentirelicensenoticefortheJavaScriptcodeinthis(?:page|file)/mi;
 
