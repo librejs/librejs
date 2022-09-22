@@ -76,8 +76,8 @@ const RESERVED_OBJECTS = [
   'browser', // only on firefox
   'eval'
 ];
-const LOOPKEYS = { 'for': true, 'if': true, 'while': true, 'switch': true };
-const OPERATORS = { '||': true, '&&': true, '=': true, '==': true, '++': true, '--': true, '+=': true, '-=': true, '*': true };
+const LOOPKEYS = new Set(['for', 'if', 'while', 'switch']);
+const OPERATORS = new Set(['||', '&&', '=', '==', '++', '--', '+=', '-=', '*']);
 // @license match, second and third capture groups are canonicalUrl
 // and license name
 const OPENING_LICENSE_RE = /\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi;
@@ -469,7 +469,7 @@ function fullEvaluate(script) {
 
   function evaluateByTokenValue(toke) {
     const value = toke.value;
-    if (OPERATORS[value] !== undefined) {
+    if (OPERATORS.has(value)) {
       // It's just an operator. Javascript doesn't have operator overloading so it must be some
       // kind of primitive (I.e. a number)
     } else {
@@ -500,7 +500,7 @@ function fullEvaluate(script) {
       definesFunctions = true;
     }
 
-    if (LOOPKEYS[keyword] !== undefined) {
+    if (LOOPKEYS.has(keyword)) {
       amtloops++;
       if (amtloops > 3) {
         dbg_print('%c NONTRIVIAL: Too many loops/conditionals.', 'color:red');
