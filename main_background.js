@@ -208,66 +208,64 @@ async function updateReport(tabId, oldReport, updateUI = false) {
   }
 }
 
-/**
-*
-*	This is what you call when a page gets changed to update the info box.
-*
-*	Sends a message to the content script that adds a popup entry for a tab.
-*
-*	The action argument is an object with two properties: one named either
-* "accepted","blocked", "whitelisted", "blacklisted" or "unknown", whose value
-* is the array [scriptName, reason], and another named "url". Example:
-* action = {
-*		"accepted": ["jquery.js (someHash)","Whitelisted by user"],
-*		"url": "https://example.com/js/jquery.js"
-*	}
-*
-*	Returns either "whitelisted, "blacklisted", "blocked", "accepted" or "unknown"
-*
-*	NOTE: This WILL break if you provide inconsistent URLs to it.
-*	Make sure it will use the right URL when refering to a certain script.
-*
-*/
+/** Updates the report for tab with tabId with action.
+ *
+ *	This is what you call when a page gets changed to update the info
+ *	box.
+ * 
+ *	Sends a message to the content script that adds a popup entry for
+ *	a tab.
+ *
+ *	The action argument is an object with two properties: one named of
+ * "accepted","blocked", "whitelisted", "blacklisted", whose value is
+ * the array [scriptName, reason], and another named "url". Example:
+ * action =
+ *   {
+ *     "accepted": ["jquery.js (someHash)", "Whitelisted by user"],
+ *     "url": "https://example.com/js/jquery.js"
+ *   }
+ *
+ *  Overrides the action type with the white/blacklist status for
+ *  scriptName, if any.  Then add the entry if scriptName is not
+ *  already in the entries associated with the action type.
+ *
+ *	Returns one of "whitelisted", "blacklisted", "blocked", "accepted"
+ *	or "unknown"
+ *
+ *	NOTE: This WILL break if you provide inconsistent URLs to it.
+ *	Make sure it will use the right URL when refering to a certain
+ *	script.
+ *
+ */
 async function addReportEntry(tabId, action) {
-  let report = activityReports[tabId];
-  if (!report) report = activityReports[tabId] =
-    await createReport({ tabId });
-  let type, actionValue;
-  for (type of ['accepted', 'blocked', 'whitelisted', 'blacklisted']) {
-    if (type in action) {
-      actionValue = action[type];
-      break;
-    }
-  }
-  if (!actionValue) {
-    console.debug('Something wrong with action', action);
-    return '';
-  }
 
-  // Search unused data for the given entry
-  function isNew(entries, item) {
-    for (let e of entries) {
-      if (e[0] === item) return false;
-    }
-    return true;
+  const actionPair = Object.entries(action).find(
+    ([k, _]) => ['accepted', 'blocked', 'whitelisted', 'blacklisted'].indexOf(k) != -1);
+  if (!actionPair) {
+    console.debug('Wrong action', action);
+    return 'unknown';
   }
+  const [actionType, actionValue] = actionPair;
+  const scriptName = actionValue[0];
 
+  const report = activityReports[tabId] || (activityReports[tabId] = await createReport({ tabId }));
   let entryType;
-  let scriptName = actionValue[0];
+  // Update the report if the scriptName is new for the entryType.
   try {
-    entryType = listManager.getStatus(scriptName, type);
-    let entries = report[entryType];
-    if (isNew(entries, scriptName)) {
+    entryType = listManager.getStatus(scriptName, actionType);
+    const entries = report[entryType];
+    if (!entries.find(e => e[0] === scriptName)) {
       dbg_print(activityReports);
       dbg_print(activityReports[tabId]);
       dbg_print(entryType);
       entries.push(actionValue);
     }
   } catch (e) {
-    console.error('action %o, type %s, entryType %s', action, type, entryType, e);
+    console.error('action %o, type %s, entryType %s', action, actionType, entryType, e);
     entryType = 'unknown';
   }
 
+  // Refresh the main panel script list.
   if (activeMessagePorts[tabId]) {
     activeMessagePorts[tabId].postMessage({ show_info: report });
   }
@@ -278,8 +276,8 @@ async function addReportEntry(tabId, action) {
 }
 
 
-function get_domain(url) {
-  var domain = url.replace('http://', '').replace('https://', '').split(/[/?#]/)[0];
+function getDomain(url) {
+  let domain = url.replace('http://', '').replace('https://', '').split(/[/?#]/)[0];
   if (url.indexOf('http://') == 0) {
     domain = 'http://' + domain;
   }
@@ -741,7 +739,7 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
     return result(editedSource);
   }
 
-  const domain = get_domain(url);
+  const domain = getDomain(url);
   const report = activityReports[tabId] || (activityReports[tabId] = await createReport({ tabId }));
   updateBadge(tabId, report, !accepted);
   const category = await addReportEntry(tabId, { 'url': domain, [accepted ? 'accepted' : 'blocked']: [url, reason] });
@@ -765,12 +763,12 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
   }
 }
 
-
+// Updates the extension icon in the toolbar.
 function updateBadge(tabId, report = null, forceRed = false) {
-  let blockedCount = report ? report.blocked.length + report.blacklisted.length : 0;
-  let [text, color] = blockedCount > 0 || forceRed
+  const blockedCount = report ? report.blocked.length + report.blacklisted.length : 0;
+  const [text, color] = blockedCount > 0 || forceRed
     ? [blockedCount && blockedCount.toString() || '!', 'red'] : ['✓', 'green']
-  let { browserAction } = browser;
+  const { browserAction } = browser;
   if ('setBadgeText' in browserAction) {
     browserAction.setBadgeText({ text, tabId });
     browserAction.setBadgeBackgroundColor({ color, tabId });
