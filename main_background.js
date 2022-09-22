@@ -21,13 +21,13 @@
 */
 
 const acorn = require('acorn');
-const legacy_license_lib = require('./legacy_license_check.js');
+const licenseLib = require('./common/checks.js');
 const { ResponseProcessor } = require('./bg/ResponseProcessor');
 const { Storage, ListStore, hash } = require('./common/Storage');
 const { ListManager } = require('./bg/ListManager');
 const { ExternalLicenses } = require('./bg/ExternalLicenses');
-const { licenses } = require('./license_definitions');
-const { patternUtils } = require('./pattern_utils');
+const { licenses } = require('./common/license_definitions');
+const { patternUtils } = require('./common/pattern_utils');
 
 console.log('main_background.js');
 /**
@@ -626,7 +626,7 @@ function licenseRead(scriptSrc, name, external = false) {
   if (!inSrc) return [true, scriptSrc, 'Empty source.'];
 
   // Check for @licstart .. @licend method
-  const license = legacy_license_lib.check(scriptSrc);
+  const license = licenseLib.check(scriptSrc);
   if (license) {
     return [true, scriptSrc, `Licensed under: ${license}`];
   }
@@ -1046,7 +1046,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
 
   let license = null;
   if (first_script_src != '') {
-    license = legacy_license_lib.check(first_script_src);
+    license = licenseLib.check(first_script_src);
   }
 
   let findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
@@ -1219,7 +1219,7 @@ async function init_addon() {
   // Analyzes all the html documents and external scripts as they're loaded
   ResponseProcessor.install(ResponseHandler);
 
-  legacy_license_lib.init();
+  licenseLib.init();
 
   const Test = require('./common/Test');
   if (Test.getURL()) {

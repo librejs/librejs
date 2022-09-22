@@ -26,7 +26,7 @@
 
 'use strict';
 
-const { licenses } = require('../license_definitions')
+const { licenses } = require('../common/license_definitions')
 const licensesByLabel = new Map(Object.entries(licenses).map(([id, license]) =>
   [
     [license.identifier.toUpperCase(), license],
