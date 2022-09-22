@@ -630,9 +630,6 @@ function licenseRead(scriptSrc, name, external = false) {
   if (license) {
     return [true, scriptSrc, `Licensed under: ${license}`];
   }
-  if (listManager.builtInHashes.has(hash(scriptSrc))) {
-    return [true, scriptSrc, 'Common script known to be free software.'];
-  }
 
   let outSrc = '';
   let reason = '';
@@ -709,10 +706,12 @@ function licenseRead(scriptSrc, name, external = false) {
 // TODO: Test if this script is being loaded from another domain compared to activityReports[tabid]["url"]
 
 /**
-*	Asynchronous function, returns the final edited script as a string,
-* or an array containing it -1, if returnsPair is true
-*/
-async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, returnsPair = true, isExternal = false) {
+ * Checks script and updates the report entry accordingly.
+ *
+ * Asynchronous function, returns the final edited script as a
+ * string, or an array containing it and -1, if returnsPair is true
+ */
+async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, returnsPair = true, isExternal = false) {
   function result(scriptSource) {
     return returnsPair ? scriptSource : [scriptSource, -1];
   }
@@ -733,7 +732,7 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
       return result(`/* LibreJS: script whitelisted by user preference. */\n${scriptSrc}`);
   }
 
-  let [accepted, editedSource, reason] = licenseRead(scriptSrc, scriptName, isExternal);
+  const [accepted, editedSource, reason] = listManager.builtInHashes.has(hash(scriptSrc)) ? [true, scriptSrc, 'Common script known to be free software.'] : licenseRead(scriptSrc, scriptName, isExternal);
 
   if (tabId < 0) {
     return result(editedSource);
@@ -742,22 +741,22 @@ async function getScript(scriptSrc, url, tabId = -1, whitelisted = false, return
   const domain = getDomain(url);
   const report = activityReports[tabId] || (activityReports[tabId] = await createReport({ tabId }));
   updateBadge(tabId, report, !accepted);
-  const category = await addReportEntry(tabId, { 'url': domain, [accepted ? 'accepted' : 'blocked']: [url, reason] });
-  switch (category) {
+  const actionType = await addReportEntry(tabId, { 'url': domain, [accepted ? 'accepted' : 'blocked']: [url, reason] });
+  switch (actionType) {
     case 'blacklisted': {
-      const edited = `/* LibreJS: script ${category} by user. */`;
+      const edited = `/* LibreJS: script ${actionType} by user. */`;
       return result(scriptSrc.startsWith('javascript:')
         ? `javascript:void(${encodeURIComponent(edited)})` : edited);
     }
     case 'whitelisted': {
       return result(scriptSrc.startsWith('javascript:')
-        ? scriptSrc : `/* LibreJS: script ${category} by user. */\n${scriptSrc}`);
+        ? scriptSrc : `/* LibreJS: script ${actionType} by user. */\n${scriptSrc}`);
     }
     default: {
       const scriptSource = accepted ? scriptSrc : editedSource;
       return result(scriptSrc.startsWith('javascript:')
         ? (accepted ? scriptSource : `javascript:void(/* ${scriptSource} */)`)
-        : `/* LibreJS: script ${category}. */\n${scriptSource}`
+        : `/* LibreJS: script ${actionType}. */\n${scriptSource}`
       );
     }
   }
@@ -888,7 +887,7 @@ async function handle_script(response, whitelisted) {
   let { text, request } = response;
   let { url, tabId } = request;
   url = ListStore.urlItem(url);
-  let edited = await getScript(text, url, tabId, whitelisted, returnsPair = false, isExternal = true);
+  let edited = await checkScriptAndUpdateReport(text, url, tabId, whitelisted, returnsPair = false, isExternal = true);
   return Array.isArray(edited) ? edited[0] : edited;
 }
 
@@ -1024,7 +1023,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
   let url = ListStore.urlItem(documentUrl);
 
   if (whitelisted) { // don't bother rewriting
-    await getScript(html, url, tabId, whitelisted); // generates whitelisted report
+    await checkScriptAndUpdateReport(html, url, tabId, whitelisted); // generates whitelisted report
     return null;
   }
 
@@ -1084,7 +1083,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
             } else {
               let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${value.trim()}`;
               if (name === 'href') value = decodeURIComponent(value);
-              edited = await getScript(value, url, tabId, whitelist.contains(url));
+              edited = await checkScriptAndUpdateReport(value, url, tabId, whitelist.contains(url));
               dejaVu.set(key, edited);
             }
             if (edited && edited !== value) {
@@ -1110,7 +1109,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
           editedSource = dejaVu.get(source);
         } else {
           let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${source}`;
-          let edited = await getScript(source, url, tabId, whitelisted, returnsPair = false);
+          let edited = await checkScriptAndUpdateReport(source, url, tabId, whitelisted, returnsPair = false);
           editedSource = edited && edited[0].trim();
           dejaVu.set(url, editedSource);
         }
