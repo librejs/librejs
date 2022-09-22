@@ -21,8 +21,14 @@
 */
 "use strict";
 {
+  // Find and fetch the url to the web labels table, and returns the
+  // license info in the table as a map from the script url to
+  // { script: {url, label},
+  //   licenseLinks: [{url, label}],
+  //   sources: [{url, label}] }
+  //   
+  // see https://www.gnu.org/software/librejs/free-your-javascript.html#step3
   const fetchWebLabels = async args => {
-    // see https://www.gnu.org/software/librejs/free-your-javascript.html#step3
     const { map, cache } = args;
     const link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
     const baseURL = link ? link.href : cache.webLabels && new URL(cache.webLabels.href, document.baseURI);
@@ -69,6 +75,11 @@
   }
 
   const handlers = {
+    // Look up the script url in the web labels and return it if found,
+    //  otherwise return undefined.  The found value is of the format
+    // { script: {url, label},
+    //   licenseLinks: [{url, label}],
+    //   sources: [{url, label}] }
     async checkLicensedScript(m) {
       const { url, cache } = m;
       const licensedScripts = await fetchLicenseInfo(cache);

@@ -858,7 +858,10 @@ var ResponseHandler = {
           const scriptInfo = await ExternalLicenses.check({ url: fullUrl, tabId, frameId, documentUrl });
           if (scriptInfo) {
             const [verdict, ret] = scriptInfo.free ? ['accepted', ResponseProcessor.ACCEPT] : ['blocked', ResponseProcessor.REJECT];
-            const msg = scriptInfo.toString();
+            const licenseIds = [...scriptInfo.licenses].map(l => l.identifier).sort().join(', ');
+            const msg = licenseIds
+              ? `Free license${scriptInfo.licenses.size > 1 ? 's' : ''} (${licenseIds})`
+              : 'Unknown license(s)';
             addReportEntry(tabId, { url, [verdict]: [url, msg] });
             return ret;
           }

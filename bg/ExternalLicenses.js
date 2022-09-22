@@ -48,6 +48,7 @@ const ExternalLicenses = {
     cachedHrefs.delete(tabId);
   },
 
+  // Checks external script using web labels
   async check(script) {
     const { url, tabId, frameId, documentUrl } = script;
     const tabCache = cachedHrefs.get(tabId);
@@ -69,12 +70,6 @@ const ExternalLicenses = {
           licensesByLabel.get(uLabel.replace(/^GNU-|-(?:OR-LATER|ONLY)$/, ''));
         return license ? [license] : [];
       }).flat());
-    scriptInfo.toString = () => {
-      const licenseIds = [...this.licenses].map(l => l.identifier).sort().join(', ');
-      return licenseIds
-        ? `Free license${this.licenses.size > 1 ? 's' : ''} (${licenseIds})`
-        : 'Unknown license(s)';
-    }
     scriptInfo.free = scriptInfo.licenses.size > 0;
     return scriptInfo;
   },
