@@ -31,14 +31,20 @@
   const fetchWebLabels = async args => {
     const { map, cache } = args;
     const link = document.querySelector(`link[rel="jslicense"], link[data-jslicense="1"], a[rel="jslicense"], a[data-jslicense="1"]`);
-    const baseURL = link ? link.href : cache.webLabels && new URL(cache.webLabels.href, document.baseURI);
-    if (baseURL) try {
-      const response = await fetch(baseURL);
+    const webLabelsUrl = link ? link.href : cache.webLabels && new URL(cache.webLabels.href, document.baseURI);
+    if (webLabelsUrl) try {
+      const response = await fetch(webLabelsUrl);
       if (!response.ok) throw `${response.status} ${response.statusText}`;
       const doc = new DOMParser().parseFromString(
         await response.text(),
         'text/html'
       );
+      // Sets the base url to be the url of the weblabel page if it
+      // does not exist.  Otherwise relative links on the weblabels
+      // page will use the base of the current page.
+      if (!doc.querySelector("base")) {
+        doc.head.appendChild(doc.createElement("base")).href = webLabelsUrl;
+      }
       const link = a => ({ url: a.href, label: a.textContent });
       const firstLink = parent => link(parent.querySelector("a"));
       const allLinks = parent => Array.prototype.map.call(parent.querySelectorAll("a"), link);
@@ -50,7 +56,7 @@
           const sources = cols[2] ? allLinks(cols[2]) : [];
           map.set(script.url, { script, licenseLinks, sources });
         } catch (e) {
-          console.error("LibreJS: error parsing Web Labels at %s, row %s", baseURL, row.innerHTML, e);
+          console.error("LibreJS: error parsing Web Labels at %s, row %s", webLabelsUrl, row.innerHTML, e);
         }
       }
     } catch (e) {
