@@ -1,3 +1,4 @@
+#!/bin/bash
 PATH=$PATH:./node_modules/.bin
 which browserify > /dev/null || (echo "can not find browserify" && false) || exit
 
@@ -19,7 +20,7 @@ browserify main_background.js -o bundle.js
 mkdir ./build_temp
 
 # Move source files to temp directory
-if [ "$1" == "-t" -o "$1" == "--test" ]; then
+if [ "$1" == "-t" ] || [ "$1" == "--test" ]; then
   cp -r ./test ./build_temp
 fi
 cp -r ./icons ./build_temp
@@ -30,8 +31,8 @@ cp manifest.json ./build_temp
 cp bundle.js ./build_temp
 
 # build zip file from temp directory
-cd ./build_temp
-zip -r librejs.zip *
+cd ./build_temp || exit
+zip -r librejs.zip ./*
 # remove old file
 rm ../librejs.xpi || true
 # move new zip file
