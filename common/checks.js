@@ -310,7 +310,7 @@ function checkMagnet(url, key = null) {
   const checkLicenseMagnet = license => {
     for (const cUrl of license.canonicalUrl) {
       if (cUrl.startsWith('magnet:') && fixedUrl === cUrl) {
-        return licenses[key].licenseName;
+        return license.licenseName;
       }
     }
     return null;
