@@ -680,7 +680,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
     return null;
   }
 
-  const scripts = htmlDoc.scripts;
+  let scripts = htmlDoc.scripts;
 
   const metaElement = htmlDoc.getElementById('LibreJS-info');
   let firstScriptSrc = '';
