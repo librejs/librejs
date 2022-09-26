@@ -369,11 +369,11 @@ async function onTabActivated({ tabId }) {
  * Checks script and updates the report entry accordingly.
  *
  * Asynchronous function, returns the final edited script as a
- * string, or an array containing it and -1, if returnsPair is true
+ * string, or an array containing it and -1, if returnsString is false
  */
-async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, returnsPair = true, isExternal = false) {
+async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, returnsString = true, isExternal = false) {
   function result(scriptSource) {
-    return returnsPair ? scriptSource : [scriptSource, -1];
+    return returnsString ? scriptSource : [scriptSource, -1];
   }
 
   const scriptName = url.split('/').pop();
@@ -547,11 +547,9 @@ var ResponseHandler = {
 * Here we handle external script requests
 */
 async function handle_script(response, whitelisted) {
-  let { text, request } = response;
-  let { url, tabId } = request;
-  url = ListStore.urlItem(url);
-  let edited = await checkScriptAndUpdateReport(text, url, tabId, whitelisted, returnsPair = false, isExternal = true);
-  return Array.isArray(edited) ? edited[0] : edited;
+  const { text, request } = response;
+  const { url, tabId } = request;
+  return await checkScriptAndUpdateReport(text, ListStore.urlItem(url), tabId, whitelisted, returnsString = true, isExternal = true);
 }
 
 /**
@@ -755,7 +753,7 @@ async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
           editedSource = dejaVu.get(source);
         } else {
           let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${source}`;
-          let edited = await checkScriptAndUpdateReport(source, url, tabId, whitelisted, returnsPair = false);
+          let edited = await checkScriptAndUpdateReport(source, url, tabId, whitelisted, returnsString = false);
           editedSource = edited && edited[0].trim();
           dejaVu.set(url, editedSource);
         }
