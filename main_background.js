@@ -533,7 +533,7 @@ var ResponseHandler = {
   */
   async post(response) {
     const { type } = response.request;
-    const handle_it = type === 'script' ? handle_script : handle_html;
+    const handle_it = type === 'script' ? handleScript : handle_html;
     return await handle_it(response, response.whitelisted);
   }
 }
@@ -541,7 +541,7 @@ var ResponseHandler = {
 /**
 * Here we handle external script requests
 */
-async function handle_script(response, whitelisted) {
+async function handleScript(response, whitelisted) {
   const { text, request } = response;
   const { url, tabId } = request;
   return await checkScriptAndUpdateReport(text, ListStore.urlItem(url), tabId, whitelisted, isExternal = true);
@@ -660,117 +660,134 @@ function readMetadata(metaElement) {
  * Returns string or null.
  */
 async function editHtml(html, documentUrl, tabId, frameId, whitelisted) {
-
   const htmlDoc = new DOMParser().parseFromString(html, 'text/html');
-
   // moves external licenses reference, if any, before any <SCRIPT> element
   ExternalLicenses.optimizeDocument(htmlDoc, { tabId, frameId, documentUrl });
-
   const url = ListStore.urlItem(documentUrl);
 
   if (whitelisted) { // don't bother rewriting
     await checkScriptAndUpdateReport(html, url, tabId, whitelisted); // generates whitelisted report
     return null;
   }
+  if (checkFullHtml(html, documentUrl, url, tabId, htmlDoc)) return null;
+  const dejaVu = new Map(); // deduplication map & edited script cache
+  let modified = await checkIntrinsicEvents(html, documentUrl, tabId, htmlDoc, dejaVu);
+  let modifiedInline = await checkInlineScripts(html, documentUrl, tabId, htmlDoc, dejaVu);
 
-  let scripts = htmlDoc.scripts;
-
-  const metaElement = htmlDoc.getElementById('LibreJS-info');
-  let firstScriptSrc = '';
-
-  // get the potential inline source that can contain a license
-  for (const script of scripts) {
-    // The script must be in-line and exist
-    if (script && !script.src) {
-      firstScriptSrc = script.textContent;
-      break;
+  modified = showConditionalElements(htmlDoc) > 0 || modified || modifiedInline;
+  if (modified) {
+    if (modifiedInline) {
+      forceNoscriptElements(htmlDoc);
     }
+    return doc2HTML(htmlDoc);
   }
+  return null;
+}
 
+/**
+ * Checks LibreJS-info element (undocumented) or licensing js in
+ * entire html using @licstart/@licend ("JavaScript embedded on your
+ * page..." in
+ * https://www.gnu.org/software/librejs/free-your-javascript.html)
+ * Returns true if handled, false otherwise.
+ */
+function checkFullHtml(html, documentUrl, url, tabId, htmlDoc) {
+  const firstInlineScript = Array.from(htmlDoc.scripts).find(script => script && !script.src);
+  const firstScriptSrc = firstInlineScript ? firstInlineScript.textContent : '';
   const licenseName = checkLib.checkLicenseText(firstScriptSrc);
-
-  const findLine = finder => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
+  const metaElement = htmlDoc.getElementById('LibreJS-info');
   if (readMetadata(metaElement) || licenseName) {
-    console.log('Valid license for intrinsic events found');
+    console.log('Valid license for the whole page found (LibreJS-info or @licstart/@licend)');
     const [line, extras] = metaElement ?
-      [findLine(/id\s*=\s*['"]?LibreJS-info\b/gi), '(0)'] :
+      [findLine(/id\s*=\s*['"]?LibreJS-info\b/gi, html), '(0)'] :
       [html.substring(0, html.indexOf(firstScriptSrc)).split(/\n/).length,
       '\n' + firstScriptSrc];
     let viewUrl = line ? `view-source:${documentUrl}#line${line}(<${metaElement ? metaElement.tagName : 'SCRIPT'}>)${extras}` : url;
     addReportEntry(tabId, { url, 'accepted': [viewUrl, `Global license for the page: ${licenseName}`] });
-    // Do not process inline scripts
-    scripts = [];
-  } else {
-    let dejaVu = new Map(); // deduplication map & edited script cache
-    let modified = false;
-    // Deal with intrinsic events
-    let intrinsicFinder = /<[a-z][^>]*\b(on\w+|href\s*=\s*['"]?javascript:)/gi;
-    for (let element of htmlDoc.querySelectorAll('*')) {
-      let line = -1;
-      for (let attr of element.attributes) {
-        let { name, value } = attr;
-        value = value.trim();
-        if (name.startsWith('on') || (name === 'href' && value.toLowerCase().startsWith('javascript:'))) {
-          if (line === -1) {
-            line = findLine(intrinsicFinder);
-          }
-          try {
-            let key = `<${element.tagName} ${name}="${value}">`;
-            let edited;
-            if (dejaVu.has(key)) {
-              edited = dejaVu.get(key);
-            } else {
-              let url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${value.trim()}`;
-              if (name === 'href') value = decodeURIComponent(value);
-              edited = await checkScriptAndUpdateReport(value, url, tabId, whitelist.contains(url));
-              dejaVu.set(key, edited);
-            }
-            if (edited && edited !== value) {
-              modified = true;
-              attr.value = edited;
-            }
-          } catch (e) {
-            console.error(e);
-          }
-        }
-      }
-    }
+    return true;
+  }
+  return false;
+}
 
-    let modifiedInline = false;
-    let scriptFinder = /<script\b/ig;
-    for (let i = 0, len = scripts.length; i < len; i++) {
-      let script = scripts[i];
-      let line = findLine(scriptFinder);
-      if (!script.src && !(script.type && script.type !== 'text/javascript')) {
-        let source = script.textContent.trim();
-        let editedSource;
-        if (dejaVu.has(source)) {
-          editedSource = dejaVu.get(source);
-        } else {
-          let url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${source}`;
-          let edited = await checkScriptAndUpdateReport(source, url, tabId, whitelisted);
-          editedSource = edited.trim();
-          dejaVu.set(url, editedSource);
+/**
+ * Checks intrinsic events, i.e. in event handlers or the href
+ * attribute.
+ * Returns true if htmlDoc is modified, false otherwise.
+ * Mutates htmlDoc and dejaVu.
+ */
+async function checkIntrinsicEvents(html, documentUrl, tabId, htmlDoc, dejaVu) {
+  let modified = false;
+  const intrinsicFinder = /<[a-z][^>]*\b(on\w+|href\s*=\s*['"]?javascript:)/gi;
+  for (const element of htmlDoc.querySelectorAll('*')) {
+    let line = -1;
+    for (const attr of element.attributes) {
+      let { name, value } = attr;
+      value = value.trim();
+      if (name.startsWith('on') || (name === 'href' && value.toLowerCase().startsWith('javascript:'))) {
+        if (line === -1) {
+          line = findLine(intrinsicFinder, html);
         }
-        if (editedSource) {
-          if (source !== editedSource) {
-            script.textContent = editedSource;
-            modified = modifiedInline = true;
+        try {
+          const key = `<${element.tagName} ${name}="${value}">`;
+          let edited;
+          if (dejaVu.has(key)) {
+            edited = dejaVu.get(key);
+          } else {
+            const url = `view-source:${documentUrl}#line${line}(<${element.tagName} ${name}>)\n${value.trim()}`;
+            if (name === 'href') value = decodeURIComponent(value);
+            edited = await checkScriptAndUpdateReport(value, url, tabId, whitelist.contains(url));
+            dejaVu.set(key, edited);
           }
+          if (edited && edited !== value) {
+            modified = true;
+            attr.value = edited;
+          }
+        } catch (e) {
+          console.error(e);
         }
       }
-    }
-
-    modified = showConditionalElements(htmlDoc) > 0 || modified;
-    if (modified) {
-      if (modifiedInline) {
-        forceNoscriptElements(htmlDoc);
-      }
-      return doc2HTML(htmlDoc);
     }
   }
-  return null;
+  return modified;
 }
+
+/**
+ * Checks inline scripts.
+ * Mutates dejaVu and htmlDoc.
+ */
+async function checkInlineScripts(html, documentUrl, tabId, htmlDoc, dejaVu) {
+  let modifiedInline = false;
+  const scriptFinder = /<script\b/ig;
+  for (const script of htmlDoc.scripts) {
+    const line = findLine(scriptFinder, html);
+    if (!script.src && !(script.type && script.type !== 'text/javascript')) {
+      const source = script.textContent.trim();
+      let editedSource;
+      if (dejaVu.has(source)) {
+        editedSource = dejaVu.get(source);
+      } else {
+        const url = `view-source:${documentUrl}#line${line}(<SCRIPT>)\n${source}`;
+        const edited = await checkScriptAndUpdateReport(source, url, tabId, false);
+        editedSource = edited.trim();
+        dejaVu.set(url, editedSource);
+      }
+      if (editedSource) {
+        if (source !== editedSource) {
+          script.textContent = editedSource;
+          modifiedInline = true;
+        }
+      }
+    }
+  }
+  return modifiedInline;
+}
+
+/**
+ * Returns the line of next match for finder.
+ * May mutate finder if it is stateful.
+ */
+const findLine = (finder, html) => finder.test(html) && html.substring(0, finder.lastIndex).split(/\n/).length || 0;
+
 
 /**
 * Here we handle html document responses
@@ -862,7 +879,7 @@ async function init_addon() {
     // export testable functions to the global scope
     this.LibreJS = {
       editHtml,
-      handle_script,
+      handle_script: handleScript,
       ExternalLicenses,
       ListManager, ListStore, Storage,
     };
