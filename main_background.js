@@ -322,6 +322,16 @@ async function connected(p) {
 }
 
 /**
+*	Loads the contact finder on the given tab ID.
+*/
+async function injectContactFinder(tabId) {
+  await Promise.all([
+    browser.tabs.insertCSS(tabId, { file: '/content/overlay.css', cssOrigin: 'user' }),
+    browser.tabs.executeScript(tabId, { file: '/content/contactFinder.js' }),
+  ]);
+}
+
+/**
 *	The callback for tab closings.
 *
 *	Delete the info we are storing about this tab if there is any.
@@ -888,17 +898,6 @@ async function init_addon() {
       Test.getTab(true);
     }
   }
-}
-
-
-/**
-*	Loads the contact finder on the given tab ID.
-*/
-async function injectContactFinder(tabId) {
-  await Promise.all([
-    browser.tabs.insertCSS(tabId, { file: '/content/overlay.css', cssOrigin: 'user' }),
-    browser.tabs.executeScript(tabId, { file: '/content/contactFinder.js' }),
-  ]);
 }
 
 init_addon();

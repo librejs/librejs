@@ -44,6 +44,7 @@ describe('LibreJS\' components', () => {
   let unknownLicensed = `// @license ${unknownLicense.magnet} ${unknownLicense.id}\n${nontrivial}\n// @license-end`;
   let malformedLicensed = `// @license\n${nontrivial}`;
   let tab, documentUrl;
+  const enableContactFinderTests = false;
 
   beforeAll(async () => {
     let url = browser.extension.getURL('/test/resources/index.html');
@@ -291,35 +292,37 @@ describe('LibreJS\' components', () => {
     });
   });
 
-  describe('The contact finder', () => {
-    it('should display the contact finder iframe', async (done) => {
-      await browser.runtime.connect({ name: "port-from-cs" }).postMessage({ invoke_contact_finder: 1 });
-      // Direct await / async does not work as executeScript does not wait
-      // for the listener
-      setTimeout(async () => {
-        const frame = await browser.tabs.executeScript(tab.id, {
-          code: 'document.getElementById("_LibreJS_frame").outerHTML'
-        })
-        expect(frame).toBeTruthy();
-        done();
-      }, 100);
+  if (enableContactFinderTests) {
+    describe('The contact finder', () => {
+      it('should display the contact finder iframe', async (done) => {
+        await browser.runtime.connect({ name: "port-from-cs" }).postMessage({ invoke_contact_finder: 1 });
+        // Direct await / async does not work as executeScript does not wait
+        // for the listener
+        setTimeout(async () => {
+          const frame = await browser.tabs.executeScript(tab.id, {
+            code: 'document.getElementById("_LibreJS_frame").outerHTML'
+          })
+          expect(frame).toBeTruthy();
+          done();
+        }, 100);
+      });
+      it('should display the correct contact info in the contact finder iframe', async (done) => {
+        await browser.runtime.connect({ name: "port-from-cs" }).postMessage({ invoke_contact_finder: 1 });
+        // Direct await / async does not work as executeScript does not wait
+        // for the listener
+        setTimeout(async () => {
+          const [frameBody] = await browser.tabs.executeScript(tab.id, {
+            code: 'document.getElementById("_LibreJS_frame").contentWindow.document.body.innerHTML'
+          });
+          expect(frameBody).not.toContain('About Us');
+          expect(frameBody).toContain('Contact Us');
+          expect(frameBody).toContain('Website Feedback');
+          expect(frameBody).toContain('lib@re.js');
+          done();
+        }, 200);
+      });
     });
-    it('should display the correct contact info in the contact finder iframe', async (done) => {
-      await browser.runtime.connect({ name: "port-from-cs" }).postMessage({ invoke_contact_finder: 1 });
-      // Direct await / async does not work as executeScript does not wait
-      // for the listener
-      setTimeout(async () => {
-        const [frameBody] = await browser.tabs.executeScript(tab.id, {
-          code: 'document.getElementById("_LibreJS_frame").contentWindow.document.body.innerHTML'
-        });
-        expect(frameBody).not.toContain('About Us');
-        expect(frameBody).toContain('Contact Us');
-        expect(frameBody).toContain('Website Feedback');
-        expect(frameBody).toContain('lib@re.js');
-        done();
-      }, 200);
-    });
-  });
+  }
 
   describe('The prefs', () => {
     it('should have the defaults', async () => {
