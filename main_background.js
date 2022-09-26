@@ -533,8 +533,8 @@ var ResponseHandler = {
   */
   async post(response) {
     const { type } = response.request;
-    const handle_it = type === 'script' ? handleScript : handle_html;
-    return await handle_it(response, response.whitelisted);
+    const handler = type === 'script' ? handleScript : handleHtml;
+    return await handler(response, response.whitelisted);
   }
 }
 
@@ -792,9 +792,9 @@ const findLine = (finder, html) => finder.test(html) && html.substring(0, finder
 /**
 * Here we handle html document responses
 */
-async function handle_html(response, whitelisted) {
-  let { text, request } = response;
-  let { url, tabId, frameId, type } = request;
+async function handleHtml(response, whitelisted) {
+  const { text, request } = response;
+  const { url, tabId, frameId, type } = request;
   if (type === 'main_frame') {
     activityReports[tabId] = await createReport({ url, tabId });
     updateBadge(tabId);
