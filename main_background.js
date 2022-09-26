@@ -889,7 +889,7 @@ async function init_addon() {
     // export testable functions to the global scope
     this.LibreJS = {
       editHtml,
-      handle_script: handleScript,
+      handleScript,
       ExternalLicenses,
       ListManager, ListStore, Storage,
     };

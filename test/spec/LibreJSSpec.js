@@ -95,7 +95,7 @@ describe('LibreJS\' components', () => {
     let url = 'https://www.gnu.org/mock-script.js';
 
     let processScript = async (source, whitelisted = false) =>
-      await LibreJS.handle_script({
+      await LibreJS.handleScript({
         text: source,
         request: { url, tabId: tab.id, documentUrl, frameId: 0 },
       }, whitelisted);
