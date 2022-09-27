@@ -29,7 +29,7 @@ const { ExternalLicenses } = require('./bg/ExternalLicenses');
 const { makeDebugLogger } = require('./common/debug.js');
 
 const PRINT_DEBUG = false;
-const dbg_print = makeDebugLogger('main_background.js', PRINT_DEBUG, Date.now());
+const dbgPrint = makeDebugLogger('main_background.js', PRINT_DEBUG, Date.now());
 
 /*
 *
@@ -43,22 +43,14 @@ const dbg_print = makeDebugLogger('main_background.js', PRINT_DEBUG, Date.now())
 *	with its code to update accordingly
 *
 */
-function options_listener(changes, area) {
-  dbg_print('Items updated in area' + area + ': ');
-
-  var changedItems = Object.keys(changes);
-  var changed_items = '';
-  for (var i = 0; i < changedItems.length; i++) {
-    var item = changedItems[i];
-    changed_items += item + ',';
-  }
-  dbg_print(changed_items);
-
+function optionsListener(changes, area) {
+  dbgPrint('Items updated in area' + area + ': ');
+  dbgPrint(Object.keys(changes).join(','));
 }
 
+const activeMessagePorts = {};
+const activityReports = {};
 
-var activeMessagePorts = {};
-var activityReports = {};
 async function createReport(initializer) {
   if (!(initializer && (initializer.url || initializer.tabId))) {
     throw new Error('createReport() needs an URL or a tabId at least');
@@ -75,7 +67,7 @@ async function createReport(initializer) {
   template.url = url;
   template.site = ListStore.siteItem(url);
   template.siteStatus = listManager.getStatus(template.site);
-  let list = { 'whitelisted': whitelist, 'blacklisted': blacklist }[template.siteStatus];
+  const list = { 'whitelisted': whitelist, 'blacklisted': blacklist }[template.siteStatus];
   if (list) {
     template.listedSite = ListManager.siteMatch(template.site, list);
   }
@@ -88,19 +80,17 @@ async function createReport(initializer) {
 *	at the moment.
 */
 async function openReportInTab(data) {
-  let popupURL = await browser.browserAction.getPopup({});
-  let tab = await browser.tabs.create({ url: `${popupURL}#fromTab=${data.tabId}` });
+  const popupURL = await browser.browserAction.getPopup({});
+  const tab = await browser.tabs.create({ url: `${popupURL}#fromTab=${data.tabId}` });
   activityReports[tab.id] = await createReport(data);
 }
 
 /**
-*
 *	Clears local storage (the persistent data)
-*
 */
-function debug_delete_local() {
+function debugDeleteLocal() {
   browser.storage.local.clear();
-  dbg_print('Local storage cleared');
+  dbgPrint('Local storage cleared');
 }
 
 /**
@@ -108,16 +98,16 @@ function debug_delete_local() {
 *	Prints local storage (the persistent data) as well as the temporary popup object
 *
 */
-function debug_print_local() {
-  function storage_got(items) {
+function debugPrintLocal() {
+  function storageGot(items) {
     console.log('%c Local storage: ', 'color: red;');
-    for (var i in items) {
+    for (const i in items) {
       console.log('%c ' + i + ' = ' + items[i], 'color: blue;');
     }
   }
   console.log('%c Variable \'activityReports\': ', 'color: red;');
   console.log(activityReports);
-  browser.storage.local.get(storage_got);
+  browser.storage.local.get(storageGot);
 }
 
 /**
@@ -136,22 +126,22 @@ function debug_print_local() {
 *
 */
 async function updateReport(tabId, oldReport, updateUI = false) {
-  let { url } = oldReport;
-  let newReport = await createReport({ url, tabId });
-  for (let property of Object.keys(oldReport)) {
-    let entries = oldReport[property];
+  const { url } = oldReport;
+  const newReport = await createReport({ url, tabId });
+  for (const property of Object.keys(oldReport)) {
+    const entries = oldReport[property];
     if (!Array.isArray(entries)) continue;
-    let defValue = property === 'accepted' || property === 'blocked' ? property : 'unknown';
-    for (let script of entries) {
-      let status = listManager.getStatus(script[0], defValue);
+    const defValue = property === 'accepted' || property === 'blocked' ? property : 'unknown';
+    for (const script of entries) {
+      const status = listManager.getStatus(script[0], defValue);
       if (Array.isArray(newReport[status])) newReport[status].push(script);
     }
   }
   activityReports[tabId] = newReport;
   if (browser.sessions) browser.sessions.setTabValue(tabId, url, newReport);
-  dbg_print(newReport);
+  dbgPrint(newReport);
   if (updateUI && activeMessagePorts[tabId]) {
-    dbg_print(`[TABID: ${tabId}] Sending script blocking report directly to browser action.`);
+    dbgPrint(`[TABID: ${tabId}] Sending script blocking report directly to browser action.`);
     activeMessagePorts[tabId].postMessage({ show_info: newReport });
   }
 }
@@ -203,9 +193,9 @@ async function addReportEntry(tabId, action) {
     entryType = listManager.getStatus(scriptName, actionType);
     const entries = report[entryType];
     if (!entries.find(e => e[0] === scriptName)) {
-      dbg_print(activityReports);
-      dbg_print(activityReports[tabId]);
-      dbg_print(entryType);
+      dbgPrint(activityReports);
+      dbgPrint(activityReports[tabId]);
+      dbgPrint(entryType);
       entries.push(actionValue);
     }
   } catch (e) {
@@ -238,10 +228,11 @@ function getDomain(url) {
 }
 
 /**
-*
-*	This is the callback where the content scripts of the browser action will contact the background script.
-*
-*/
+ *
+ *	This is the callback where the content scripts of the browser action
+ *	will contact the background script.
+ *
+ */
 async function connected(p) {
   if (p.name === 'contact_finder') {
     // style the contact finder panel
@@ -257,10 +248,10 @@ async function connected(p) {
     return;
   }
   p.onMessage.addListener(async function(m) {
-    var update = false;
-    var contact_finder = false;
+    let update = false;
+    let contactFinder = false;
 
-    for (let action of ['whitelist', 'blacklist', 'forget']) {
+    for (const action of ['whitelist', 'blacklist', 'forget']) {
       if (m[action]) {
         let [key] = m[action];
         if (m.site) {
@@ -279,42 +270,41 @@ async function connected(p) {
     // a debug feature
     if (m['printlocalstorage'] !== undefined) {
       console.log('Print local storage');
-      debug_print_local();
+      debugPrintLocal();
     }
     // invoke_contact_finder
     if (m['invoke_contact_finder'] !== undefined) {
-      contact_finder = true;
+      contactFinder = true;
       await injectContactFinder();
     }
     // a debug feature (maybe give the user an option to do this?)
     if (m['deletelocalstorage'] !== undefined) {
       console.log('Delete local storage');
-      debug_delete_local();
+      debugDeleteLocal();
     }
 
-    let tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 
-    if (contact_finder) {
-      let tab = tabs.pop();
-      dbg_print(`[TABID:${tab.id}] Injecting contact finder`);
-      //inject_contact_finder(tabs[0]["id"]);
+    if (contactFinder) {
+      const tab = tabs.pop();
+      dbgPrint(`[TABID:${tab.id}] Injecting contact finder`);
     }
     if (update || m.update && activityReports[m.tabId]) {
-      let tabId = 'tabId' in m ? m.tabId : tabs.pop().id;
-      dbg_print(`%c updating tab ${tabId}`, 'color: red;');
+      const tabId = 'tabId' in m ? m.tabId : tabs.pop().id;
+      dbgPrint(`%c updating tab ${tabId}`, 'color: red;');
       activeMessagePorts[tabId] = p;
       await updateReport(tabId, activityReports[tabId], true);
     } else {
-      for (let tab of tabs) {
+      for (const tab of tabs) {
         if (activityReports[tab.id]) {
           // If we have some data stored here for this tabID, send it
-          dbg_print(`[TABID: ${tab.id}] Sending stored data associated with browser action'`);
+          dbgPrint(`[TABID: ${tab.id}] Sending stored data associated with browser action'`);
           p.postMessage({ 'show_info': activityReports[tab.id] });
         } else {
           // create a new entry
-          let report = activityReports[tab.id] = await createReport({ 'url': tab.url, tabId: tab.id });
+          const report = activityReports[tab.id] = await createReport({ 'url': tab.url, tabId: tab.id });
           p.postMessage({ show_info: report });
-          dbg_print(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);
+          dbgPrint(`[TABID: ${tab.id}] No data found, creating a new entry for this window.`);
         }
       }
     }
@@ -337,8 +327,8 @@ async function injectContactFinder(tabId) {
 *	Delete the info we are storing about this tab if there is any.
 *
 */
-function delete_removed_tab_info(tab_id, _) {
-  dbg_print('[TABID:' + tab_id + ']' + 'Deleting stored info about closed tab');
+function deleteRemovedTabInfo(tab_id, _) {
+  dbgPrint('[TABID:' + tab_id + ']' + 'Deleting stored info about closed tab');
   if (activityReports[tab_id] !== undefined) {
     delete activityReports[tab_id];
   }
@@ -357,10 +347,10 @@ function delete_removed_tab_info(tab_id, _) {
 */
 
 async function onTabUpdated(tabId, _, tab) {
-  let [url] = tab.url.split('#');
-  let report = activityReports[tabId];
+  const [url] = tab.url.split('#');
+  const report = activityReports[tabId];
   if (!(report && report.url === url)) {
-    let cache = browser.sessions &&
+    const cache = browser.sessions &&
       await browser.sessions.getTabValue(tabId, url) || null;
     // on session restore tabIds may change
     if (cache && cache.tabId !== tabId) cache.tabId = tabId;
@@ -445,9 +435,10 @@ function updateBadge(tabId, report = null, forceRed = false) {
   }
 }
 
+// TODO: is this the only way google analytics can show up?
 function blockGoogleAnalytics(request) {
-  let { url } = request;
-  let res = {};
+  const { url } = request;
+  const res = {};
   if (url === 'https://www.google-analytics.com/analytics.js' ||
     /^https:\/\/www\.google\.com\/analytics\/[^#]/.test(url)
   ) {
@@ -457,16 +448,16 @@ function blockGoogleAnalytics(request) {
 }
 
 async function blockBlacklistedScripts(request) {
-  let { url, tabId, documentUrl } = request;
-  url = ListStore.urlItem(url);
-  let status = listManager.getStatus(url);
+  const { tabId, documentUrl } = request;
+  const url = ListStore.urlItem(request.url);
+  const status = listManager.getStatus(url);
   if (status !== 'blacklisted') return {};
-  let blacklistedSite = ListManager.siteMatch(url, blacklist);
+  const blacklistedSite = ListManager.siteMatch(url, blacklist);
   await addReportEntry(tabId, {
     url: documentUrl,
     'blacklisted': [url, /\*/.test(blacklistedSite) ? `User blacklisted ${blacklistedSite}` : 'Blacklisted by user']
   });
-  return { cancel: true };
+  return BLOCKING_RESPONSES.REJECT;
 }
 
 /**
@@ -575,7 +566,7 @@ async function handleScript(response, whitelisted) {
 function doc2HTML(doc) {
   let s = doc.documentElement.outerHTML;
   if (doc.doctype) {
-    let dt = doc.doctype;
+    const dt = doc.doctype;
     let sDoctype = `<!DOCTYPE ${dt.name || 'html'}`;
     if (dt.publicId) sDoctype += ` PUBLIC "${dt.publicId}"`;
     if (dt.systemId) sDoctype += ` "${dt.systemId}"`;
@@ -596,7 +587,7 @@ function createHTMLElement(doc, name) {
 * NOSCRIPT elements to visible the same way as NoScript and uBlock do)
 */
 function forceElement(doc, element) {
-  let replacement = createHTMLElement(doc, 'span');
+  const replacement = createHTMLElement(doc, 'span');
   replacement.innerHTML = element.innerHTML;
   element.replaceWith(replacement);
   return replacement;
@@ -610,10 +601,10 @@ function forceElement(doc, element) {
 function forceNoscriptElements(doc) {
   let shown = 0;
   // inspired by NoScript's onScriptDisabled.js
-  for (let noscript of doc.querySelectorAll('noscript:not([data-librejs-nodisplay])')) {
-    let replacement = forceElement(doc, noscript);
+  for (const noscript of doc.querySelectorAll('noscript:not([data-librejs-nodisplay])')) {
+    const replacement = forceElement(doc, noscript);
     // emulate meta-refresh
-    let meta = replacement.querySelector('meta[http-equiv="refresh"]');
+    const meta = replacement.querySelector('meta[http-equiv="refresh"]');
     if (meta) {
       doc.head.appendChild(meta);
     }
@@ -621,6 +612,7 @@ function forceNoscriptElements(doc) {
   }
   return shown;
 }
+
 /**
 *	Forces displaying any element having the "data-librejs-display" attribute and
 * <noscript> elements on pages where LibreJS disabled inline scripts (unless
@@ -628,7 +620,7 @@ function forceNoscriptElements(doc) {
 */
 function showConditionalElements(doc) {
   let shown = 0;
-  for (let element of document.querySelectorAll('[data-librejs-display]')) {
+  for (const element of document.querySelectorAll('[data-librejs-display]')) {
     forceElement(doc, element);
     shown++;
   }
@@ -823,9 +815,9 @@ async function handleHtml(response, whitelisted) {
   return await editHtml(text, url, tabId, frameId, whitelisted);
 }
 
-var whitelist = new ListStore('pref_whitelist', Storage.CSV);
-var blacklist = new ListStore('pref_blacklist', Storage.CSV);
-var listManager = new ListManager(whitelist, blacklist,
+const whitelist = new ListStore('pref_whitelist', Storage.CSV);
+const blacklist = new ListStore('pref_blacklist', Storage.CSV);
+const listManager = new ListManager(whitelist, blacklist,
   // built-in whitelist of script hashes, e.g. jQuery
   Object.values(require('./utilities/hash_script/whitelist').whitelist)
     .reduce((a, b) => a.concat(b)) // as a flat array
@@ -834,15 +826,15 @@ var listManager = new ListManager(whitelist, blacklist,
 
 
 async function initDefaults() {
-  let defaults = {
+  const defaults = {
     pref_subject: 'Issues with Javascript on your website',
     pref_body: `Please consider using a free license for the Javascript on your website.
 
 [Message generated by LibreJS. See https://www.gnu.org/software/librejs/ for more information]
 `
   };
-  let keys = Object.keys(defaults);
-  let prefs = await browser.storage.local.get(keys);
+  const keys = Object.keys(defaults);
+  const prefs = await browser.storage.local.get(keys);
   let changed = false;
   for (let k of keys) {
     if (!(k in prefs)) {
@@ -859,16 +851,16 @@ async function initDefaults() {
 *	Initializes various add-on functions
 *	only meant to be called once when the script starts
 */
-async function init_addon() {
+async function initAddon() {
   await initDefaults();
   await whitelist.load();
   browser.runtime.onConnect.addListener(connected);
-  browser.storage.onChanged.addListener(options_listener);
-  browser.tabs.onRemoved.addListener(delete_removed_tab_info);
+  browser.storage.onChanged.addListener(optionsListener);
+  browser.tabs.onRemoved.addListener(deleteRemovedTabInfo);
   browser.tabs.onUpdated.addListener(onTabUpdated);
   browser.tabs.onActivated.addListener(onTabActivated);
   // Prevents Google Analytics from being loaded from Google servers
-  let all_types = [
+  const all_types = [
     'beacon', 'csp_report', 'font', 'image', 'imageset', 'main_frame', 'media',
     'object', 'object_subrequest', 'ping', 'script', 'stylesheet', 'sub_frame',
     'web_manifest', 'websocket', 'xbl', 'xml_dtd', 'xmlhttprequest', 'xslt',
@@ -883,8 +875,8 @@ async function init_addon() {
     ['blocking']
   );
   browser.webRequest.onResponseStarted.addListener(request => {
-    let { tabId } = request;
-    let report = activityReports[tabId];
+    const { tabId } = request;
+    const report = activityReports[tabId];
     if (report) {
       updateBadge(tabId, activityReports[tabId]);
     }
@@ -911,4 +903,4 @@ async function init_addon() {
   }
 }
 
-init_addon();
+initAddon();
