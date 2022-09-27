@@ -378,10 +378,11 @@ async function onTabActivated({ tabId }) {
 /**
  * Checks script and updates the report entry accordingly.
  *
- * Asynchronous function, returns the final edited script as a
- * string.
+ * Asynchronous function, returns the final edited script as a string,
+ * or unedited script if passAccWlist is true and the script is
+ * accepted or whitelisted.
  */
-async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, isExternal = false) {
+async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, isExternal = false, passAccWlist = false) {
   const scriptName = url.split('/').pop();
   if (whitelisted) {
     if (tabId !== -1) {
@@ -392,7 +393,7 @@ async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, is
         : 'Address whitelisted by user';
       addReportEntry(tabId, { 'whitelisted': [site || url, reason], url });
     }
-    if (scriptSrc.startsWith('javascript:'))
+    if (scriptSrc.startsWith('javascript:') || passAccWlist)
       return scriptSrc;
     else
       return `/* LibreJS: script whitelisted by user preference. */\n${scriptSrc}`;
@@ -414,15 +415,17 @@ async function checkScriptAndUpdateReport(scriptSrc, url, tabId, whitelisted, is
       return scriptSrc.startsWith('javascript:')
         ? `javascript:void(${encodeURIComponent(edited)})` : edited;
     }
-    case 'whitelisted': {
-      return scriptSrc.startsWith('javascript:')
-        ? scriptSrc : `/* LibreJS: script ${actionType} by user. */\n${scriptSrc}`;
-    }
+    case 'whitelisted':
+    case 'accepted':
+      {
+        return (scriptSrc.startsWith('javascript:') || passAccWlist)
+          ? scriptSrc : `/* LibreJS: script ${actionType} by user. */\n${scriptSrc}`;
+      }
+    // blocked
     default: {
-      const scriptSource = accepted ? scriptSrc : editedSource;
       return scriptSrc.startsWith('javascript:')
-        ? (accepted ? scriptSource : `javascript:void(/* ${scriptSource} */)`)
-        : `/* LibreJS: script ${actionType}. */\n${scriptSource}`;
+        ? `javascript:void(/* ${editedSource} */)`
+        : `/* LibreJS: script ${actionType}. */\n${editedSource}`;
     }
   }
 }
@@ -472,7 +475,7 @@ async function blockBlacklistedScripts(request) {
 * and external script inclusions in search of non-free JavaScript
 */
 
-var ResponseHandler = {
+const ResponseHandler = {
   /**
   *	Enforce white/black lists for url/site early (hashes will be handled later)
   */
@@ -554,7 +557,7 @@ var ResponseHandler = {
 async function handleScript(response, whitelisted) {
   const { text, request } = response;
   const { url, tabId } = request;
-  return await checkScriptAndUpdateReport(text, ListStore.urlItem(url), tabId, whitelisted, isExternal = true);
+  return await checkScriptAndUpdateReport(text, ListStore.urlItem(url), tabId, whitelisted, isExternal = true, passAccWlist = true);
 }
 
 /**

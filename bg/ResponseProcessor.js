@@ -83,6 +83,8 @@ class ResponseTextFilter {
     if (res) return res;
 
     const { requestId } = request;
+    // create a filter to modify response data, see
+    // Mozilla/Add-ons/WebExtensions/API/webRequest/filterResponseData
     const filter = browser.webRequest.filterResponseData(requestId);
     let buffer = [];
 
@@ -118,7 +120,7 @@ class ResponseTextFilter {
       } catch (e) {
         console.error(e);
       }
-      if (editedText !== null && editedText.indexOf('/* LibreJS: script accepted') !== 0) {
+      if (editedText !== null && editedText !== response.text) {
         // we changed the content, let's re-encode
         const encoded = new TextEncoder().encode(editedText);
         // pre-pending the UTF-8 BOM will force the charset per HTML 5 specs
