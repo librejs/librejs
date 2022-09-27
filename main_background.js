@@ -22,7 +22,7 @@
 */
 
 const checkLib = require('./common/checks.js');
-const { ResponseProcessor } = require('./bg/ResponseProcessor');
+const { ResponseProcessor, BLOCKING_RESPONSES } = require('./bg/ResponseProcessor');
 const { Storage, ListStore, hash } = require('./common/Storage');
 const { ListManager } = require('./bg/ListManager');
 const { ExternalLicenses } = require('./bg/ExternalLicenses');
@@ -470,15 +470,23 @@ async function blockBlacklistedScripts(request) {
 }
 
 /**
-*	This listener gets called as soon as we've got all the HTTP headers, can guess
-* content type and encoding, and therefore correctly parse HTML documents
-* and external script inclusions in search of non-free JavaScript
-*/
-
+ * An onHeadersReceived handler.  See bg/ResponseProcessor.js for how
+ * it is used.
+ * 
+ *	This listener gets called as soon as we've got all the HTTP
+ * headers, can guess content type and encoding, and therefore
+ * correctly parse HTML documents and external script inclusions in
+ * search of non-free JavaScript
+ */
 const ResponseHandler = {
   /**
-  *	Enforce white/black lists for url/site early (hashes will be handled later)
-  */
+   * Checks black/whitelists and web labels.  Returns a
+   * BlockingResponse (if we can determine) or null (if further work
+   * is needed).
+   * 
+   * Enforce white/black lists for url/site early (hashes will be
+   * handled later)
+   */
   async pre(response) {
     let { request } = response;
     let { url, type, tabId, frameId, documentUrl } = request;
@@ -494,7 +502,7 @@ const ResponseHandler = {
     if (blacklisted) {
       if (type === 'script') {
         // this shouldn't happen, because we intercept earlier in blockBlacklistedScripts()
-        return ResponseProcessor.REJECT;
+        return BLOCKING_RESPONSES.REJECT;
       }
       if (type === 'main_frame') { // we handle the page change here too, since we won't call edit_html()
         activityReports[tabId] = await createReport({ url: fullUrl, tabId });
@@ -520,12 +528,12 @@ const ResponseHandler = {
             url: topUrl,
             'whitelisted': [url, whitelistedSite ? `User whitelisted ${whitelistedSite}` : 'Whitelisted by user']
           });
-          return ResponseProcessor.ACCEPT;
+          return BLOCKING_RESPONSES.ACCEPT;
         } else {
           // Check for the weblabel method
           const scriptInfo = await ExternalLicenses.check({ url: fullUrl, tabId, frameId, documentUrl });
           if (scriptInfo) {
-            const [verdict, ret] = scriptInfo.free ? ['accepted', ResponseProcessor.ACCEPT] : ['blocked', ResponseProcessor.REJECT];
+            const [verdict, ret] = scriptInfo.free ? ['accepted', BLOCKING_RESPONSES.ACCEPT] : ['blocked', BLOCKING_RESPONSES.REJECT];
             const licenseIds = [...scriptInfo.licenses].map(l => l.identifier).sort().join(', ');
             const msg = licenseIds
               ? `Free license${scriptInfo.licenses.size > 1 ? 's' : ''} (${licenseIds})`
@@ -538,7 +546,7 @@ const ResponseHandler = {
     }
     // it's a page (it's too early to report) or an unknown script:
     //  let's keep processing
-    return ResponseProcessor.CONTINUE;
+    return null;
   },
 
   /**

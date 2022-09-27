@@ -29,6 +29,11 @@ const { ResponseMetaData } = require('./ResponseMetaData');
 
 const listeners = new WeakMap();
 const webRequestEvent = browser.webRequest.onHeadersReceived;
+// Some hardcoded return values for the onHeadersReceived callback.
+const BLOCKING_RESPONSES = {
+  ACCEPT: {}, // Do nothing
+  REJECT: { cancel: true }, // Cancel the request.  See docs of BlockingResponse
+};
 
 class ResponseProcessor {
 
@@ -53,13 +58,6 @@ class ResponseProcessor {
   }
 }
 
-Object.assign(ResponseProcessor, {
-  // control flow values to be returned by handler.pre() callbacks
-  ACCEPT: {},
-  REJECT: { cancel: true },
-  CONTINUE: null
-});
-
 class ResponseTextFilter {
   constructor(request) {
     this.request = request;
@@ -72,13 +70,16 @@ class ResponseTextFilter {
   }
 
   async process(handler) {
-    if (!this.canProcess) return ResponseProcessor.ACCEPT;
+    if (!this.canProcess) return BlockingResponses.ACCEPT;
     const { metaData, request } = this;
     const response = { request, metaData }; // we keep it around allowing callbacks to store state
 
     if (typeof handler.pre !== 'function' || typeof handler.post !== 'function') {
       throw new Error('handler should have a pre and post function.');
     }
+
+    // If can determine without checking and filtering response
+    // payload then return.
     const res = await handler.pre(response);
     if (res) return res;
 
@@ -132,8 +133,9 @@ class ResponseTextFilter {
       filter.close();
     }
 
-    return ResponseProcessor.ACCEPT;
+    // Accepting the filtered payload.
+    return BLOCKING_RESPONSES.ACCEPT;
   }
 }
 
-module.exports = { ResponseProcessor };
+module.exports = { ResponseProcessor, BLOCKING_RESPONSES };

@@ -48,7 +48,17 @@ const ExternalLicenses = {
     cachedHrefs.delete(tabId);
   },
 
-  // Checks external script using web labels
+  /**
+   * Checks external script using web labels
+   * 
+   * If the script cannot be found in the web labels table, returns null.
+   * 
+   * If the script can be found in the web labels table, and at least
+   * one of its licenses can be found in our free license DB, returns
+   * "free".
+   *
+   * Otherwise returns "nonfree".
+   */
   async check(script) {
     const { url, tabId, frameId, documentUrl } = script;
     const tabCache = cachedHrefs.get(tabId);
