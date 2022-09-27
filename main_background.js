@@ -488,26 +488,25 @@ const ResponseHandler = {
    * handled later)
    */
   async pre(response) {
-    let { request } = response;
-    let { url, type, tabId, frameId, documentUrl } = request;
-
-    let fullUrl = url;
-    url = ListStore.urlItem(url);
-    let site = ListStore.siteItem(url);
-
-    let blacklistedSite = ListManager.siteMatch(site, blacklist);
-    let blacklisted = blacklistedSite || blacklist.contains(url);
-    let topUrl = type === 'sub_frame' && request.frameAncestors && request.frameAncestors.pop() || documentUrl;
+    const { request } = response;
+    const { type, tabId, frameId, documentUrl } = request;
+    const fullUrl = request.url;
+    const url = ListStore.urlItem(fullUrl);
+    const site = ListStore.siteItem(url);
+    const blacklistedSite = ListManager.siteMatch(site, blacklist);
+    const blacklisted = blacklistedSite || blacklist.contains(url);
+    const topUrl = type === 'sub_frame' && request.frameAncestors && request.frameAncestors.pop() || documentUrl;
 
     if (blacklisted) {
       if (type === 'script') {
         // this shouldn't happen, because we intercept earlier in blockBlacklistedScripts()
         return BLOCKING_RESPONSES.REJECT;
       }
-      if (type === 'main_frame') { // we handle the page change here too, since we won't call edit_html()
+      // we handle the page change here too, since we won't call editHtml()
+      if (type === 'main_frame') {
         activityReports[tabId] = await createReport({ url: fullUrl, tabId });
         // Go on without parsing the page: it was explicitly blacklisted
-        let reason = blacklistedSite
+        const reason = blacklistedSite
           ? `All ${blacklistedSite} blacklisted by user`
           : 'Address blacklisted by user';
         await addReportEntry(tabId, { 'blacklisted': [blacklistedSite || url, reason], url: fullUrl });
@@ -517,10 +516,11 @@ const ResponseHandler = {
         name: 'Content-security-policy',
         value: 'script-src \'none\';'
       });
-      return { responseHeaders: request.responseHeaders }; // let's skip the inline script parsing, since we block by CSP
+      // let's skip the inline script parsing, since we block by CSP
+      return { responseHeaders: request.responseHeaders };
     } else {
-      let whitelistedSite = ListManager.siteMatch(site, whitelist);
-      let whitelisted = response.whitelisted = whitelistedSite || whitelist.contains(url);
+      const whitelistedSite = ListManager.siteMatch(site, whitelist);
+      const whitelisted = response.whitelisted = whitelistedSite || whitelist.contains(url);
       if (type === 'script') {
         if (whitelisted) {
           // accept the script and stop processing
@@ -530,7 +530,7 @@ const ResponseHandler = {
           });
           return BLOCKING_RESPONSES.ACCEPT;
         } else {
-          // Check for the weblabel method
+          // Check the web labels
           const scriptInfo = await ExternalLicenses.check({ url: fullUrl, tabId, frameId, documentUrl });
           if (scriptInfo) {
             const [verdict, ret] = scriptInfo.free ? ['accepted', BLOCKING_RESPONSES.ACCEPT] : ['blocked', BLOCKING_RESPONSES.REJECT];
