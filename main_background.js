@@ -594,9 +594,8 @@ function forceElement(doc, element) {
 }
 
 /**
-*	Forces displaying any element having the "data-librejs-display" attribute and
-* <noscript> elements on pages where LibreJS disabled inline scripts (unless
-* they have the "data-librejs-nodisplay" attribute).
+ *	Forces displaying any noscript element not having the "data-librejs-nodisplay" attribute on pages.
+ * returns number of elements forced, mutates doc.
 */
 function forceNoscriptElements(doc) {
   let shown = 0;
@@ -614,9 +613,7 @@ function forceNoscriptElements(doc) {
 }
 
 /**
-*	Forces displaying any element having the "data-librejs-display" attribute and
-* <noscript> elements on pages where LibreJS disabled inline scripts (unless
-* they have the "data-librejs-nodisplay" attribute).
+*	Forces displaying any element having the "data-librejs-display" attribute.
 */
 function showConditionalElements(doc) {
   let shown = 0;
