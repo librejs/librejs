@@ -42,7 +42,11 @@ describe('LibreJS\' components', () => {
   const trivialCall = 'foo();';
   let licensed = `// @license ${license.magnet} ${license.id}\n${nontrivial}\n// @license-end`;
   let unknownLicensed = `// @license ${unknownLicense.magnet} ${unknownLicense.id}\n${nontrivial}\n// @license-end`;
+  let commentedOutUnknownLicensed =
+    unknownLicensed.split('\n').map(y => '// ' + y).join('\n');
   let malformedLicensed = `// @license\n${nontrivial}`;
+  let commentedOutMalformedLicensed =
+    malformedLicensed.split('\n').map(y => '// ' + y).join('\n');
   let tab, documentUrl;
   const enableContactFinderTests = false;
 
@@ -124,9 +128,19 @@ describe('LibreJS\' components', () => {
       expect(processed).not.toContain(nontrivial);
     });
 
+    it('should leave alone scripts with commented out unknown license tags', async () => {
+      let processed = await processScript(commentedOutUnknownLicensed);
+      expect(processed).toContain(nontrivial);
+    });
+
     it('should block scripts with malformed license tags', async () => {
       let processed = await processScript(malformedLicensed);
       expect(processed).not.toContain(nontrivial);
+    });
+
+    it('should leave alone scripts with commented out malformed license tags', async () => {
+      let processed = await processScript(commentedOutMalformedLicensed);
+      expect(processed).toContain(nontrivial);
     });
   });
 

@@ -56,8 +56,8 @@ const LOOPKEYS = new Set(['for', 'if', 'while', 'switch']);
 const OPERATORS = new Set(['||', '&&', '=', '==', '++', '--', '+=', '-=', '*']);
 // @license match, second and third capture groups are canonicalUrl
 // and license name
-const OPENING_LICENSE_RE = /\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi;
-const CLOSING_LICENSE_RE = /\/([*/])\s*@license-end\s*(\*\/)?/mi;
+const OPENING_LICENSE_RE = /^\s*\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi;
+const CLOSING_LICENSE_RE = /^\s*\/([*/])\s*@license-end\s*(\*\/)?/mi;
 /**
 *	If this is true, it evaluates entire scripts instead of returning as soon as it encounters a violation.
 *
