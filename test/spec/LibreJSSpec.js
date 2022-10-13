@@ -41,12 +41,16 @@ describe('LibreJS\' components', () => {
   // code calling anything else is trivial
   const trivialCall = 'foo();';
   const licensed = `// @license ${license.magnet} ${license.id}\n${nontrivial}\n// @license-end`;
+  const licensedStarCommented = `/* @license ${license.magnet} ${license.id} */${nontrivial}/* @license-end */`;
   const unknownLicensed = `// @license ${unknownLicense.magnet} ${unknownLicense.id}\n${nontrivial}\n// @license-end`;
   const commentedOutUnknownLicensed =
     unknownLicensed.split('\n').map(y => '// ' + y).join('\n');
   const malformedLicensed = `// @license\n${nontrivial}`;
   const commentedOutMalformedLicensed =
     malformedLicensed.split('\n').map(y => '// ' + y).join('\n');
+  const emptyLicensed = `// @license ${license.magnet} ${license.id}\n// @license-end`;
+  const licensedNontrivialTrivial = `${emptyLicensed}\n${nontrivial}\n${trivial}`;
+
   let tab, documentUrl;
   const enableContactFinderTests = false;
 
@@ -121,6 +125,8 @@ describe('LibreJS\' components', () => {
     it('should accept scripts with known free license tags', async () => {
       const processed = await processScript(licensed);
       expect(processed || licensed).toContain(nontrivial);
+      const processed1 = await processScript(licensedStarCommented);
+      expect(processed1 || licensed).toContain(nontrivial);
     });
 
     it('should block scripts with unknown license tags', async () => {
@@ -207,6 +213,12 @@ describe('LibreJS\' components', () => {
     it('should block scripts with malformed license tags', async () => {
       const malformedInHtml = addScript(html, malformedLicensed);
       const processed = await processHtml(malformedInHtml);
+      expect(extractScripts(processed, nontrivial)).not.toContain(nontrivial);
+    });
+
+    it('should block the unlicensed nontrivial part sandwiched between licensed and trivial parts', async () => {
+      const modifiedHtml = addScript(html, licensedNontrivialTrivial);
+      const processed = await processHtml(modifiedHtml);
       expect(extractScripts(processed, nontrivial)).not.toContain(nontrivial);
     });
 

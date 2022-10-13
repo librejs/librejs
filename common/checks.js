@@ -56,8 +56,13 @@ const LOOPKEYS = new Set(['for', 'if', 'while', 'switch']);
 const OPERATORS = new Set(['||', '&&', '=', '==', '++', '--', '+=', '-=', '*']);
 // @license match, second and third capture groups are canonicalUrl
 // and license name
-const OPENING_LICENSE_RE = /^\s*\/[/*]\s*?(@license)\s+(\S+)\s+(\S+).*$/mi;
-const CLOSING_LICENSE_RE = /^\s*\/([*/])\s*@license-end\s*(\*\/)?/mi;
+// Caveat: will not work in a commented out star comments:
+// '// /* @license */ ... /* @license-end */' will be checked, though
+// the whole thing is a comment
+const OPENING_LICENSE_RE1 = /^\s*\/\/\s*@license\s+(\S+)\s+(\S+).*$/mi;
+const OPENING_LICENSE_RE2 = /\/\*\s*?@license\s+(\S+)\s+([^/*]+).*\*\//mi;
+const CLOSING_LICENSE_RE1 = /^\s*\/\/\s*@license-end\s*/mi;
+const CLOSING_LICENSE_RE2 = /\/\*\s*@license-end\s*\*\//mi;
 /**
 *	If this is true, it evaluates entire scripts instead of returning as soon as it encounters a violation.
 *
@@ -383,7 +388,13 @@ function checkScriptSource(scriptSrc, name, external = false) {
   // Consume inSrc by checking licenses in all @license / @license-end
   // blocks and triviality outside these blocks
   while (inSrc) {
-    const openingMatch = OPENING_LICENSE_RE.exec(inSrc);
+    const openingMatch1 = OPENING_LICENSE_RE1.exec(inSrc);
+    const openingMatch2 = OPENING_LICENSE_RE2.exec(inSrc);
+    const openingMatch =
+      (openingMatch1 && openingMatch2) ?
+        (openingMatch1.index < openingMatch2.index ? openingMatch1
+          : openingMatch2)
+        : (openingMatch1 || openingMatch2);
     const openingIndex = openingMatch ? openingMatch.index : inSrc.length;
     // checks the triviality of the code before the license tag, if any
     checkTriviality(inSrc.substring(0, openingIndex));
@@ -391,21 +402,23 @@ function checkScriptSource(scriptSrc, name, external = false) {
     if (!inSrc) break;
 
     // checks the remaining part, that starts with an @license
-    const closureMatch = CLOSING_LICENSE_RE.exec(inSrc);
+    const closureMatch1 = CLOSING_LICENSE_RE1.exec(inSrc);
+    const closureMatch2 = CLOSING_LICENSE_RE2.exec(inSrc);
+    const closureMatch =
+      (closureMatch1 && closureMatch2) ?
+        (closureMatch1.index < closureMatch2.index ? closureMatch1
+          : closureMatch2)
+        : (closureMatch1 || closureMatch2);
     if (!closureMatch) {
       const msg = 'ERROR: @license with no @license-end';
       return [false, `\n/*\n ${msg} \n*/\n`, msg];
     }
-    let closureEndIndex = closureMatch.index + closureMatch[0].length;
-    const commentEndOffset = inSrc.substring(closureEndIndex).indexOf(closureMatch[1] === '*' ? '*/' : '\n');
-    if (commentEndOffset !== -1) {
-      closureEndIndex += commentEndOffset;
-    }
+    const closureEndIndex = closureMatch.index + closureMatch[0].length;
 
-    if (!(Array.isArray(openingMatch) && openingMatch.length >= 4)) {
+    if (!(Array.isArray(openingMatch) && openingMatch.length >= 3)) {
       return [false, 'Malformed or unrecognized license tag.'];
     }
-    const licenseName = checkMagnet(openingMatch[2]);
+    const licenseName = checkMagnet(openingMatch[1]);
     let message;
     if (licenseName) {
       outSrc += inSrc.substr(0, closureEndIndex);
