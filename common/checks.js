@@ -21,7 +21,7 @@
 */
 
 const acorn = require('acorn');
-const { licenses } = require('./license_definitions.js');
+const licenses = require('./license_definitions.json');
 const { patternUtils } = require('./pattern_utils.js');
 const { makeDebugLogger } = require('./debug.js');
 const fnameData = require('./fname_data.json').fname_data;
