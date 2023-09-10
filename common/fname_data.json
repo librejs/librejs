@@ -714,7 +714,7 @@
 		"RadioNodeList": true,
 		"KeyframeEffectReadOnly": true,
 		"InstallTrigger": true,
-		"Function": false,
+		"Function": true,
 		"Object": false,
 		"eval": true,
 		"Window": false,
