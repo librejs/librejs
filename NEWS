@@ -1,3 +1,8 @@
+New in 7.21.1
+
+  * Fix eval loophole with Function constructor
+  * Fix a few problems with @license / @license-end regexes
+
 New in 7.21.0
 
 	* Fix bug #59021
