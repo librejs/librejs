@@ -343,7 +343,7 @@ LibreJS @value{VERSION} depends on a number of Node.js-based libraries that
 can be installed using the @code{npm} utility:
 
 @verbatim
-  $ npm install acorn-loose jassha browserify
+  $ npm install acorn@"<=8.7.1" jssha browserify
   $ export PATH=$PATH:./node_modules/.bin
 @end verbatim
 
