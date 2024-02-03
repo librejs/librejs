@@ -4,7 +4,7 @@
 BUILD:
 
 First, you need to get some stuff with npm:
-  $ npm install acorn@"<=8.7.1" jssha browserify
+  $ npm install acorn jssha browserify
   $ export PATH=$PATH:./node_modules/.bin
 
 To build the extension run:
